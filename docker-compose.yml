@@ -4,8 +4,9 @@ services:
     ports:
       - "8765:8765"
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY:-}
       - DEBATE_ENGINE_PROVIDER_MODE=stable
       - DEBATE_ENGINE_LOG_LEVEL=INFO
     healthcheck:
