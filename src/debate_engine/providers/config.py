@@ -31,10 +31,10 @@ _DEFAULT_FAILOVER_CHAIN: list[ProviderEntry] = [
 class ProviderConfig:
     mode: ProviderMode = ProviderMode.STABLE
     providers: list[ProviderEntry] = field(default_factory=list)
-    primary_provider: str = "openai"
-    primary_model: str = "gpt-4o-mini"
+    primary_provider: str = "nvidia"
+    primary_model: str = "minimax-m2.7"
     primary_api_key: str | None = None
-    primary_api_base: str | None = None
+    primary_api_base: str = "https://integrate.api.nvidia.com/v1"
     backup_provider: str | None = None
     backup_model: str | None = None
     backup_api_key: str | None = None
@@ -70,10 +70,10 @@ class ProviderConfig:
         mode_str = os.getenv("DEBATE_ENGINE_MODE", "stable")
         try: mode = ProviderMode(mode_str)
         except ValueError: mode = ProviderMode.STABLE
-        primary_provider = os.getenv("DEBATE_ENGINE_PROVIDER", "openai")
-        primary_model = os.getenv("DEBATE_ENGINE_MODEL", "gpt-4o-mini")
-        primary_api_key = os.getenv("OPENAI_API_KEY")
-        primary_api_base = os.getenv("OPENAI_API_BASE")
+        primary_provider = os.getenv("DEBATE_ENGINE_PROVIDER", "nvidia")
+        primary_model = os.getenv("DEBATE_ENGINE_MODEL", "minimax-m2.7")
+        primary_api_key = os.getenv("NVIDIA_API_KEY") or os.getenv("OPENAI_API_KEY")
+        primary_api_base = os.getenv("NVIDIA_API_BASE", "https://integrate.api.nvidia.com/v1") or os.getenv("OPENAI_API_BASE")
         backup_provider = os.getenv("DEBATE_ENGINE_BACKUP_PROVIDER")
         backup_model = os.getenv("DEBATE_ENGINE_BACKUP_MODEL")
         backup_api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -86,7 +86,7 @@ class ProviderConfig:
         groq_key = os.getenv("GROQ_API_KEY")
         nvidia_key = os.getenv("NVIDIA_API_KEY")
         providers = []
-        if google_key: providers.append(ProviderEntry(name="Google AI Studio", model="gemini-2.5-flash", api_key=google_key, priority=1))
-        if groq_key: providers.append(ProviderEntry(name="Groq", model="llama-3.3-70b-versatile", api_key=groq_key, priority=2))
-        if nvidia_key: providers.append(ProviderEntry(name="NVIDIA NIM", model="minimax-m2.7", api_key=nvidia_key, priority=3))
+        if nvidia_key: providers.append(ProviderEntry(name="NVIDIA NIM", model="minimax-m2.7", api_key=nvidia_key, api_base="https://integrate.api.nvidia.com/v1", priority=1))
+        if google_key: providers.append(ProviderEntry(name="Google AI Studio", model="gemini-2.5-flash", api_key=google_key, priority=2))
+        if groq_key: providers.append(ProviderEntry(name="Groq", model="llama-3.3-70b-versatile", api_key=groq_key, priority=3))
         return cls(mode=mode, providers=providers, primary_provider=primary_provider, primary_model=primary_model, primary_api_key=primary_api_key, primary_api_base=primary_api_base, backup_provider=backup_provider, backup_model=backup_model, backup_api_key=backup_api_key, backup_api_base=backup_api_base, judge_model=judge_model, timeout_seconds=timeout, max_transport_retries=max_transport, max_parse_retries=max_parse)

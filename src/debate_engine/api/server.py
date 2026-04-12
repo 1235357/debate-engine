@@ -235,6 +235,9 @@ def _validate_api_key(request: Request) -> None:
     api_key = request.headers.get("X-API-Key")
     openai_key = os.getenv("OPENAI_API_KEY")
     anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+    nvidia_key = os.getenv("NVIDIA_API_KEY")
+    google_key = os.getenv("GOOGLE_API_KEY")
+    groq_key = os.getenv("GROQ_API_KEY")
 
     # If an explicit API key header is provided, accept it
     # (in production this would validate against a proper auth system)
@@ -242,11 +245,11 @@ def _validate_api_key(request: Request) -> None:
         return
 
     # Otherwise, require at least one provider key in the environment
-    if not openai_key and not anthropic_key:
+    if not openai_key and not anthropic_key and not nvidia_key and not google_key and not groq_key:
         raise HTTPException(
             status_code=401,
             detail=(
                 "No API key provided. Set X-API-Key header or configure "
-                "OPENAI_API_KEY / ANTHROPIC_API_KEY environment variables."
+                "OPENAI_API_KEY / ANTHROPIC_API_KEY / NVIDIA_API_KEY / GOOGLE_API_KEY / GROQ_API_KEY environment variables."
             ),
         )

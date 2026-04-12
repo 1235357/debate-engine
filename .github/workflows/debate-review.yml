@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install DebateEngine
-        run: pip install debate-engine
+        run: pip install -e .
       - name: Get changed files
         id: changed
         uses: tj-actions/changed-files@v44

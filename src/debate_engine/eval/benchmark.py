@@ -20,7 +20,7 @@ from .metrics import (
     compute_far,
     compute_hd,
     compute_rd,
-    compute_cs,
+    compute_cis,
 )
 
 logger = logging.getLogger(__name__)
