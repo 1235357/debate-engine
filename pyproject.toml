@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "debate-engine"
-version = "0.1.0"
+version = "0.2.0"
 description = "Structured Multi-Agent Critique & Consensus Engine"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [{name = "Tony Ye", email = "tony@debate-engine.dev"}]
 keywords = ["multi-agent", "debate", "critique", "consensus", "llm", "ai"]
 classifiers = [
@@ -29,9 +29,20 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0.0", "pytest-asyncio>=0.23.0", "ruff>=0.4.0", "mypy>=1.10.0"]
-eval = ["sentence-transformers>=3.0.0", "ragas>=0.2.0"]
-mcp = ["mcp[cli]>=1.0.0"]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
+    "pre-commit>=3.7.0",
+]
+eval = [
+    "sentence-transformers>=3.0.0",
+    "ragas>=0.2.0",
+]
+mcp = [
+    "mcp[cli]>=1.0.0",
+]
 all = ["debate-engine[dev,eval,mcp]"]
 
 [project.scripts]
