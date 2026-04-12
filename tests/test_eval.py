@@ -2,6 +2,7 @@
 
 Covers all 7 metrics, the DebateEvalScores container, BenchmarkCase
 data structures, and the DebateEvaluator orchestrator.
+
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ from debate_engine.eval.metrics import (
     MetricResult,
     compute_bdr,
     compute_ce,
-    compute_cs,
+    compute_cis,
     compute_cv,
     compute_far,
     compute_hd,
@@ -45,7 +46,7 @@ def _make_defect(description: str, defect_type: str = "SECURITY_RISK", target_ar
 class TestMetricName:
     def test_all_values_exist(self):
         expected = {"bug_discovery_rate", "false_alarm_rate", "consensus_validity",
-                     "conformity_score", "convergence_efficiency", "reasoning_depth",
+                     "conformity_impact_score", "convergence_efficiency", "reasoning_depth",
                      "hallucination_delta"}
         actual = {m.value for m in MetricName}
         assert actual == expected
@@ -236,51 +237,12 @@ class TestCV:
 
 
 # ===================================================================
-# CS (Conformity Score)
+# CIS (Conformity Impact Score)
 # ===================================================================
 
-class TestCS:
-    def test_evidence_driven(self):
-        """High CS when stance changes correlate with high severity."""
-        revision_history = [
-            {
-                "round": 1,
-                "role": "ROLE_A",
-                "old_claim": "The code is perfectly secure",
-                "new_claim": "The code has a critical SQL injection vulnerability",
-            },
-        ]
-        critiques = [
-            {"severity": "CRITICAL", "target_role": "ROLE_A", "round": 1},
-        ]
-        result = compute_cs(revision_history, critiques)
-        assert result.name == MetricName.CS
-        # Large stance change matching CRITICAL severity -> high CS
-        assert result.value >= 0.7
-
-    def test_sycophantic(self):
-        """Low CS when stance changes don't correlate with severity."""
-        revision_history = [
-            {
-                "round": 1,
-                "role": "ROLE_A",
-                "old_claim": "The code is perfectly secure",
-                "new_claim": "The code is perfectly secure and well-written",
-            },
-        ]
-        critiques = [
-            {"severity": "CRITICAL", "target_role": "ROLE_A", "round": 1},
-        ]
-        result = compute_cs(revision_history, critiques)
-        # Small stance delta with high severity weight -> low CS
-        assert result.value < 0.5
-
-    def test_empty_history(self):
-        result = compute_cs([], [])
-        assert result.value == 0.0
-
-    def test_no_stance_change(self):
-        """No actual stance change -> CS is 0.0."""
+class TestCIS:
+    def test_no_stance_changes(self):
+        """CIS is 0.0 when there are no stance changes."""
         revision_history = [
             {
                 "round": 1,
@@ -290,25 +252,91 @@ class TestCS:
             },
         ]
         critiques = [{"severity": "CRITICAL", "target_role": "ROLE_A", "round": 1}]
-        result = compute_cs(revision_history, critiques)
+        result = compute_cis(revision_history, critiques)
+        assert result.name == MetricName.CIS
         assert result.value == 0.0
 
-    def test_minor_severity(self):
-        """Low severity weight reduces CS when stance change is large."""
+    def test_empty_history(self):
+        """CIS is 0.0 when revision history is empty."""
+        result = compute_cis([], [])
+        assert result.value == 0.0
+
+    def test_high_severity_driven_low_cis(self):
+        """CIS close to 0.0 when stance changes are driven by high-severity critiques."""
         revision_history = [
             {
                 "round": 1,
                 "role": "ROLE_A",
-                "old_claim": "The code works fine",
-                "new_claim": "The code works but could use better variable names",
+                "old_claim": "The code is perfectly secure",
+                "new_claim": "The code has a critical SQL injection vulnerability",
+                "adopted": True,
+            },
+        ]
+        critiques = [
+            {"severity": "CRITICAL", "target_role": "ROLE_A", "round": 1},
+        ]
+        result = compute_cis(revision_history, critiques)
+        assert result.name == MetricName.CIS
+        assert result.value == pytest.approx(0.0, abs=1e-4)
+
+    def test_low_severity_driven_high_cis(self):
+        """CIS close to 1.0 when stance changes are driven by low-severity critiques."""
+        revision_history = [
+            {
+                "round": 1,
+                "role": "ROLE_A",
+                "old_claim": "The code is perfectly secure",
+                "new_claim": "The code has a critical SQL injection vulnerability",
+                "adopted": True,
             },
         ]
         critiques = [
             {"severity": "MINOR", "target_role": "ROLE_A", "round": 1},
         ]
-        result = compute_cs(revision_history, critiques)
-        # Large stance change for a MINOR critique -> moderate-to-low CS
-        assert result.value < 0.7
+        result = compute_cis(revision_history, critiques)
+        assert result.value == pytest.approx(1.0, abs=1e-4)
+
+    def test_mixed_severity_moderate_cis(self):
+        """CIS is moderate when mix of high and low severity critiques."""
+        revision_history = [
+            {
+                "round": 1,
+                "role": "ROLE_A",
+                "old_claim": "The code is secure",
+                "new_claim": "The code has SQL injection vulnerability",
+                "adopted": True,
+            },
+            {
+                "round": 1,
+                "role": "ROLE_B",
+                "old_claim": "The code works fine",
+                "new_claim": "The code needs refactoring",
+                "adopted": True,
+            },
+        ]
+        critiques = [
+            {"severity": "CRITICAL", "target_role": "ROLE_A", "round": 1},
+            {"severity": "MINOR", "target_role": "ROLE_B", "round": 1},
+        ]
+        result = compute_cis(revision_history, critiques)
+        assert result.value == pytest.approx(0.5, abs=1e-4)
+
+    def test_not_adopted_high_severity(self):
+        """High-severity critique not adopted should not reduce CIS."""
+        revision_history = [
+            {
+                "round": 1,
+                "role": "ROLE_A",
+                "old_claim": "The code is secure",
+                "new_claim": "The code has a vulnerability",
+                "adopted": False,
+            },
+        ]
+        critiques = [
+            {"severity": "CRITICAL", "target_role": "ROLE_A", "round": 1},
+        ]
+        result = compute_cis(revision_history, critiques)
+        assert result.value == pytest.approx(1.0, abs=1e-4)
 
 
 # ===================================================================
@@ -319,7 +347,6 @@ class TestCE:
     def test_normal_computation(self):
         result = compute_ce(cv_score=0.8, rounds_completed=2, total_cost_usd=0.05)
         assert result.name == MetricName.CE
-        # CE = 0.8 / (2 * 0.05) = 8.0
         assert result.value == 8.0
 
     def test_zero_rounds(self):
@@ -328,12 +355,10 @@ class TestCE:
 
     def test_zero_cost(self):
         result = compute_ce(cv_score=0.9, rounds_completed=2, total_cost_usd=0.0)
-        # CE = 0.9 / 2 = 0.45 (cost is zero, rounds-only denominator)
         assert result.value == 0.45
 
     def test_high_efficiency(self):
         result = compute_ce(cv_score=0.95, rounds_completed=1, total_cost_usd=0.01)
-        # CE = 0.95 / (1 * 0.01) = 95.0
         assert result.value == 95.0
 
 
@@ -351,7 +376,6 @@ class TestRD:
         ]
         result = compute_rd(critiques, adopted_count=2)
         assert result.name == MetricName.RD
-        # concrete_ratio = 1.0, adoption_ratio = 2/3
         assert result.value == pytest.approx(2 / 3, abs=1e-4)
 
     def test_mixed_fix_kinds(self):
@@ -361,7 +385,6 @@ class TestRD:
             {"fix_kind": "NEED_MORE_DATA"},
         ]
         result = compute_rd(critiques, adopted_count=0)
-        # concrete_ratio = 1/3, no adoption data
         assert result.value == pytest.approx(1 / 3, abs=1e-4)
 
     def test_no_concrete_fixes(self):
@@ -384,7 +407,6 @@ class TestRD:
             {"fix_kind": "NEED_MORE_DATA"},
         ]
         result = compute_rd(critiques, adopted_count=2)
-        # concrete_ratio = 2/4 = 0.5, adoption_ratio = 2/2 = 1.0
         assert result.value == pytest.approx(0.5, abs=1e-4)
 
 
@@ -538,13 +560,10 @@ class TestDebateEvaluator:
         evaluator = DebateEvaluator()
         consensus = self._make_mock_consensus()
         gold = [_make_defect("SQL injection vulnerability in database query")]
-
         scores = evaluator.evaluate(
             consensus=consensus,
             gold_standard=gold,
         )
-
-        # Should have BDR and FAR at minimum
         assert scores.get(MetricName.BDR) is not None
         assert scores.get(MetricName.FAR) is not None
 
@@ -554,13 +573,11 @@ class TestDebateEvaluator:
             conclusion="The code has a SQL injection vulnerability in the database query"
         )
         gold = [_make_defect("SQL injection vulnerability")]
-
         scores = evaluator.evaluate(
             consensus=consensus,
             gold_standard=gold,
             reference_answer="SQL injection vulnerability found in the database query",
         )
-
         assert scores.get(MetricName.CV) is not None
         assert scores.get(MetricName.CE) is not None
 
@@ -569,14 +586,12 @@ class TestDebateEvaluator:
         consensus = self._make_mock_consensus(
             conclusion="SQL injection vulnerability in the database query"
         )
-
         scores = evaluator.evaluate(
             consensus=consensus,
             gold_standard=[],
             reference_answer="SQL injection vulnerability found in database query",
             baseline_faithfulness=0.5,
         )
-
         assert scores.get(MetricName.HD) is not None
 
     def test_evaluate_with_revision_history(self):
@@ -590,14 +605,12 @@ class TestDebateEvaluator:
                 "new_claim": "The code has SQL injection vulnerability",
             },
         ]
-
         scores = evaluator.evaluate(
             consensus=consensus,
             gold_standard=[],
             revision_history=revision_history,
         )
-
-        assert scores.get(MetricName.CS) is not None
+        assert scores.get(MetricName.CIS) is not None
 
     def test_evaluate_empty_consensus(self):
         evaluator = DebateEvaluator()
@@ -605,13 +618,10 @@ class TestDebateEvaluator:
             conclusion="No issues found",
             critiques_summary=[],
         )
-
         scores = evaluator.evaluate(
             consensus=consensus,
             gold_standard=[_make_defect("SQL injection")],
         )
-
-        # BDR should be 0 (nothing discovered)
         bdr = scores.get(MetricName.BDR)
         assert bdr is not None
         assert bdr.value == 0.0
@@ -619,12 +629,9 @@ class TestDebateEvaluator:
     def test_evaluate_returns_scores_object(self):
         evaluator = DebateEvaluator()
         consensus = self._make_mock_consensus()
-
         scores = evaluator.evaluate(consensus=consensus, gold_standard=[])
-
         assert isinstance(scores, DebateEvalScores)
         assert len(scores.metrics) > 0
-        # to_dict should work
         d = scores.to_dict()
         assert isinstance(d, dict)
 
@@ -644,13 +651,9 @@ class TestIntegration:
             _make_defect("SQL injection vulnerability in database query"),
             _make_defect("Code style issue with variable naming"),
         ]
-
         bdr = compute_bdr(discovered, gold)
         far = compute_far(discovered, gold)
-
-        # BDR: 1/2 = 0.5 (one gold defect found)
         assert bdr.value == 0.5
-        # FAR: 1/2 = 0.5 (one false alarm out of two discovered)
         assert far.value == 0.5
 
     def test_all_metrics_on_realistic_data(self):
@@ -670,11 +673,12 @@ class TestIntegration:
             [{"fix_kind": "CONCRETE_FIX"}, {"fix_kind": "VALIDATION_STEP"}],
             adopted_count=1,
         ))
-        scores.add(compute_cs(
+        scores.add(compute_cis(
             revision_history=[{
                 "round": 1, "role": "ROLE_A",
                 "old_claim": "Code is secure",
                 "new_claim": "Code has SQL injection vulnerability",
+                "adopted": True,
             }],
             critiques=[{"severity": "CRITICAL", "target_role": "ROLE_A", "round": 1}],
         ))
@@ -684,7 +688,6 @@ class TestIntegration:
         assert scores.get(MetricName.FAR).value == 0.0
         assert scores.get(MetricName.HD).value > 0
 
-        # Summary should include all metrics
         summary = scores.summary()
         for m in MetricName:
             assert m.value in summary
