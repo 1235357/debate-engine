@@ -13,7 +13,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from debate_engine.providers.config import ProviderConfig, ProviderMode
+from debate_engine.providers.config import ProviderConfig, ProviderEntry, ProviderMode
 from debate_engine.providers.llm_provider import CallResult, LLMProvider
 
 
@@ -353,3 +353,139 @@ class TestErrorClassification:
 
     def test_generic_error_is_not_retryable(self) -> None:
         assert LLMProvider._is_retryable(RuntimeError("Something unexpected")) is False
+
+
+# ===================================================================
+# ProviderEntry and failover chain tests
+# ===================================================================
+
+
+class TestProviderEntry:
+    """Test ProviderEntry dataclass."""
+
+    def test_creation(self) -> None:
+        entry = ProviderEntry(
+            name="Google AI Studio",
+            model="gemini-2.5-flash",
+            api_key="test-key",
+            api_base=None,
+            priority=1,
+        )
+        assert entry.name == "Google AI Studio"
+        assert entry.model == "gemini-2.5-flash"
+        assert entry.api_key == "test-key"
+        assert entry.priority == 1
+
+    def test_defaults(self) -> None:
+        entry = ProviderEntry()
+        assert entry.name == ""
+        assert entry.model == ""
+        assert entry.api_key is None
+        assert entry.api_base is None
+        assert entry.priority == 1
+
+
+class TestFailoverChain:
+    """Test failover chain resolution and provider selection."""
+
+    def test_resolved_chain_from_providers_field(self) -> None:
+        """When providers field is set, it takes precedence."""
+        config = ProviderConfig(
+            providers=[
+                ProviderEntry(name="groq", model="llama-3.3-70b", priority=2),
+                ProviderEntry(name="google", model="gemini-2.5-flash", priority=1),
+            ],
+        )
+        chain = config._resolved_chain
+        assert len(chain) == 2
+        assert chain[0].name == "google"  # priority 1 first
+        assert chain[1].name == "groq"    # priority 2 second
+
+    def test_resolved_chain_backward_compat(self) -> None:
+        """When providers is empty, chain is synthesised from primary/backup."""
+        config = ProviderConfig(
+            primary_provider="openai",
+            primary_model="gpt-4o-mini",
+            backup_provider="anthropic",
+            backup_model="claude-sonnet-4-20250514",
+        )
+        chain = config._resolved_chain
+        assert len(chain) == 2
+        assert chain[0].name == "openai"
+        assert chain[0].model == "gpt-4o-mini"
+        assert chain[1].name == "anthropic"
+        assert chain[1].model == "claude-sonnet-4-20250514"
+
+    def test_resolved_chain_no_backup(self) -> None:
+        """When no backup, chain has only primary."""
+        config = ProviderConfig(
+            primary_provider="openai",
+            primary_model="gpt-4o-mini",
+        )
+        chain = config._resolved_chain
+        assert len(chain) == 1
+        assert chain[0].name == "openai"
+
+    def test_get_failover_chain_for_role(self) -> None:
+        """Test _get_failover_chain returns correct chain for a role."""
+        config = ProviderConfig(
+            providers=[
+                ProviderEntry(name="google", model="gemini-2.5-flash", priority=1),
+                ProviderEntry(name="groq", model="llama-3.3-70b", priority=2),
+            ],
+        )
+        provider = LLMProvider(config)
+        chain = provider._get_failover_chain("critic_a")
+        assert len(chain) == 2
+        assert chain[0][0] == "google"
+        assert chain[0][1] == "gemini-2.5-flash"
+        assert chain[1][0] == "groq"
+        assert chain[1][1] == "llama-3.3-70b"
+
+    def test_from_env_with_failover_keys(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Test that failover chain is built when failover env keys are present."""
+        monkeypatch.setenv("GOOGLE_API_KEY", "google-test-key")
+        monkeypatch.setenv("GROQ_API_KEY", "groq-test-key")
+        monkeypatch.setenv("NVIDIA_API_KEY", "nvidia-test-key")
+
+        config = ProviderConfig.from_env()
+        assert len(config.providers) == 3
+        assert config.providers[0].name == "Google AI Studio"
+        assert config.providers[0].api_key == "google-test-key"
+        assert config.providers[1].name == "Groq"
+        assert config.providers[1].api_key == "groq-test-key"
+        assert config.providers[2].name == "NVIDIA NIM"
+        assert config.providers[2].api_key == "nvidia-test-key"
+
+    def test_from_env_partial_failover_keys(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Test that only configured providers appear in chain."""
+        monkeypatch.setenv("GOOGLE_API_KEY", "google-test-key")
+        # No GROQ or NVIDIA keys
+
+        config = ProviderConfig.from_env()
+        assert len(config.providers) == 1
+        assert config.providers[0].name == "Google AI Studio"
+
+    def test_from_env_no_failover_keys(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Test backward compat when no failover keys are present."""
+        monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+        monkeypatch.delenv("GROQ_API_KEY", raising=False)
+        monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+
+        config = ProviderConfig.from_env()
+        assert config.providers == []
+        # Should still work with primary/backup fields
+        assert config.primary_provider == "openai"
+        assert config.primary_model == "gpt-4o-mini"
+
+    def test_model_selection_uses_failover_chain(self) -> None:
+        """Test that _get_model_for_role uses the failover chain."""
+        config = ProviderConfig(
+            providers=[
+                ProviderEntry(name="google", model="gemini-2.5-flash", priority=1),
+            ],
+        )
+        provider = LLMProvider(config)
+        prov, model = provider._get_model_for_role("critic_a")
+        assert prov == "google"
+        assert model == "gemini-2.5-flash"
