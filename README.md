@@ -1,1 +1,402 @@
-IyBEZWJhdGVFbmdpbmUKCj4gKipTdHJ1Y3R1cmVkIE11bHRpLUFnZW50IENyaXRpcXVlICYgQ29uc2Vuc3VzIEVuZ2luZSoqCgpbIVtQeVBJIHZlcnNpb25dKGh0dHBzOi8vaW1nLnNoaWVsZHMuaW8vcHlwaS92L2RlYmF0ZS1lbmdpbmUvMC4yLjAuc3ZnKV0oaHR0cHM6Ly9weXBpLm9yZy9wcm9qZWN0L2RlYmF0ZS1lbmdpbmUvKQpbIVtQeXRob24gMy4xMStdKGh0dHBzOi8vaW1nLnNoaWVsZHMuaW8vYmFkZ2UvcHl0aG9uLTMuMTErLWJsdWUuc3ZnKV0oaHR0cHM6Ly93d3cucHl0aG9uLm9yZy9kb3dubG9hZHMvKQpbIVtMaWNlbnNlOiBNSVRdKGh0dHBzOi8vaW1nLnNoaWVsZHMuaW8vYmFkZ2UvTGljZW5zZS1NSVQteWVsbG93LnN2ZyldKGh0dHBzOi8vb3BlbnNvdXJjZS5vcmcvbGljZW5zZXMvTUlUKQpbIVtDSV0oaHR0cHM6Ly9pbWcuc2hpZWxkcy5pby9naXRodWIvYWN0aW9ucy93b3JrZmxvdy9zdGF0dXMvZGViYXRlLWVuZ2luZS9kZWJhdGUtZW5naW5lL2NpLnltbD9icmFuY2g9bWFpbildKGh0dHBzOi8vZ2l0aHViLmNvbS9kZWJhdGUtZW5naW5lL2RlYmF0ZS1lbmdpbmUvYWN0aW9ucykKCioqRGViYXRlRW5naW5lKiogdXBncmFkZXMgZnJlZS10ZXh0IEFJIHBvbGxpbmcgaW50byBhICoqc3RydWN0dXJlZCBjcm9zcy1jcml0aXF1ZSBsb29wKiog4oCUIHVzaW5nIFB5ZGFudGljIHYyIGBDcml0aXF1ZVNjaGVtYWAgdG8gY29uc3RyYWluIGNyaXRpcXVlIG91dHB1dCwgcm9sZSByb3RhdGlvbiB0byBwcmVzZXJ2ZSBkaXNzZW50aW5nIHBlcnNwZWN0aXZlcywgYW5kIGEgSnVkZ2UgbGF5ZXIgdG8gc3ludGhlc2l6ZSBtdWx0aS1yb2xlIG9waW5pb25zIHdoaWxlIGV4cGxpY2l0bHkgcHJlc2VydmluZyBtaW5vcml0eSBkaXNzZW50LgoKIyMgV2h5IERlYmF0ZUVuZ2luZT8KCkV4aXN0aW5nIG11bHRpLWFnZW50ICJjb3VuY2lsIiBvciAiZGViYXRlIiB0b29scyBwcm9kdWNlICoqZnJlZS10ZXh0IGNyaXRpcXVlcyoqIHRoYXQgY2Fubm90IGJlIHByb2dyYW1tYXRpY2FsbHkgcGFyc2VkLCByb3V0ZWQsIG9yIG1lYXN1cmVkLiBEZWJhdGVFbmdpbmUgaXMgZGlmZmVyZW50OgoKfCBGZWF0dXJlIHwgRGViYXRlRW5naW5lIHwgQVJHVVMgfCBRdW9ydW0gfCBQcm9tcHQtb25seSBDb3VuY2lscyB8IEF1dG9HZW4gR3JvdXBDaGF0IHwKfC0tLXwtLS18LS0tfC0tLXwtLS18LS0tfAp8IFN0cnVjdHVyZWQgQ3JpdGlxdWUgU2NoZW1hIHwgUHlkYW50aWMgdjIgfCBQYXJ0aWFsIHwgTm8gfCBGcmVlIHRleHQgfCBGcmVlIHRleHQgfAp8IERldmlsJ3MgQWR2b2NhdGUgUm9sZSB8IE1hbmRhdG9yeSB8IE5vIHwgT3B0aW9uYWwgfCBPcHRpb25hbCB8IE5vIHwKfCBBbm9ueW1pemVkIENyb3NzLUNyaXRpcXVlIHwgSWRlbnRpdHktc3RyaXBwZWQgfCBObyB8IE5vIHwgTm8gfCBObyB8CnwgTWlub3JpdHkgT3BpbmlvbiBQcmVzZXJ2YXRpb24gfCBFbmZvcmNlZCB8IE5vIHwgTm8gfCBObyB8IE5vIHwKfCBDb25mb3JtaXR5IEltcGFjdCBTY29yZSAoQ0lTKSB8IE9yaWdpbmFsIG1ldHJpYyB8IE5vIHwgTm8gfCBObyB8IE5vIHwKfCBwaXAgaW5zdGFsbCB8IFllcyB8IE5vIHwgTm8gfCBOL0EgfCBZZXMgfAp8IFF1YW50aXRhdGl2ZSBFdmFsdWF0aW9uIHwgRGViYXRlRXZhbCA3IG1ldHJpY3MgfCAzIG1ldHJpY3MgfCAyIG1ldHJpY3MgfCBObyB8IE5vIHwKfCBTQVJJRiBPdXRwdXQgfCBZZXMgfCBObyB8IE5vIHwgTm8gfCBObyB8CnwgR2l0SHViIEFjdGlvbiBJbnRlZ3JhdGlvbiB8IFllcyB8IE5vIHwgTm8gfCBObyB8IE5vIHwKCiMjIFF1aWNrIFN0YXJ0CgojIyMgSW5zdGFsbGF0aW9uCgpgYGBiYXNoCnBpcCBpbnN0YWxsIGRlYmF0ZS1lbmdpbmUKYGBgCgpXaXRoIE1DUCBzdXBwb3J0OgoKYGBgYmFzaApwaXAgaW5zdGFsbCAiZGViYXRlLWVuZ2luZVttY3BdIgpgYGAKCiMjIyBQeXRob24gQVBJCgpgYGBweXRob24KaW1wb3J0IGFzeW5jaW8KZnJvbSBkZWJhdGVfZW5naW5lIGltcG9ydCBRdWlja0NyaXRpcXVlRW5naW5lCmZyb20gZGViYXRlX2VuZ2luZS5zY2hlbWFzIGltcG9ydCBDcml0aXF1ZUNvbmZpZ1NjaGVtYSwgVGFza1R5cGUKCmFzeW5jIGRlZiBtYWluKCk6CiAgICBlbmdpbmUgPSBRdWlja0NyaXRpcXVlRW5naW5lKCkKCiAgICBjb25maWcgPSBDcml0aXF1ZUNvbmZpZ1NjaGVtYSgKICAgICAgICBjb250ZW50PScnJ2RlZiBsb2dpbih1c2VybmFtZSwgcGFzc3dvcmQpOgogICAgcXVlcnkgPSBmIlNFTEVDVCAqIEZST00gdXNlcnMgV0hFUkUgbmFtZT0ne3VzZXJuYW1lfScgQU5EIHBhc3M9J3twYXNzd29yZH0nIgogICAgcmV0dXJuIGRiLmV4ZWN1dGUocXVlcnkpJycnLAogICAgICAgIHRhc2tfdHlwZT1UYXNrVHlwZS5DT0RFX1JFVklFVywKICAgICkKCiAgICBjb25zZW5zdXMgPSBhd2FpdCBlbmdpbmUuY3JpdGlxdWUoY29uZmlnKQogICAgcHJpbnQoY29uc2Vuc3VzLmZpbmFsX2NvbmNsdXNpb24pCiAgICBwcmludChmIkNvbmZpZGVuY2U6IHtjb25zZW5zdXMuY29uc2Vuc3VzX2NvbmZpZGVuY2V9IikKICAgIGZvciBjcml0aXF1ZSBpbiBjb25zZW5zdXMuY3JpdGlxdWVzX3N1bW1hcnk6CiAgICAgICAgcHJpbnQoZiIgIFt7Y3JpdGlxdWUuc2V2ZXJpdHkudmFsdWV9XSB7Y3JpdGlxdWUudGFyZ2V0X2FyZWF9OiB7Y3JpdGlxdWUuZXZpZGVuY2VbOjEwMF19IikKCmFzeW5jaW8ucnVuKG1haW4oKSkKYGBgCgojIyMgUkVTVCBBUEkKCmBgYGJhc2gKIyBTdGFydCB0aGUgc2VydmVyCmRlYmF0ZS1lbmdpbmUgc2VydmUKCiMgUXVpY2sgY3JpdGlxdWUKY3VybCAtWCBQT1NUIGh0dHA6Ly9sb2NhbGhvc3Q6ODc2NS92MS9xdWljay1jcml0aXF1ZSBcCiAgLUggIkNvbnRlbnQtVHlwZTogYXBwbGljYXRpb24vanNvbiIgXAogIC1kICd7ImNvbnRlbnQiOiAiWW91ciBjb2RlIG9yIHByb3Bvc2FsIGhlcmUuLi4iLCAidGFza190eXBlIjogIkNPREVfUkVWSUVXIn0nCgojIFN1Ym1pdCBhc3luYyBkZWJhdGUKY3VybCAtWCBQT1NUIGh0dHA6Ly9sb2NhbGhvc3Q6ODc2NS92MS9kZWJhdGUgXAogIC1IICJDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL2pzb24iIFwKICAtZCAneyJjb250ZW50IjogIllvdXIgcHJvcG9zYWwuLi4iLCAibWF4X3JvdW5kcyI6IDJ9JwpgYGAKCiMjIyBEb2NrZXIKCmBgYGJhc2gKZG9ja2VyIHJ1biAtZSBHT09HTEVfQVBJX0tFWT14eHggLWUgR1JPUV9BUElfS0VZPXh4eCAtcCA4NzY1Ojg3NjUgZGViYXRlLWVuZ2luZTpsYXRlc3QKYGBgCgojIyMgTUNQIChDbGF1ZGUgQ29kZSAvIEN1cnNvcikKCkFkZCB0byB5b3VyIE1DUCBzZXR0aW5nczoKCmBgYGpzb24KewogICJtY3BTZXJ2ZXJzIjogewogICAgImRlYmF0ZS1lbmdpbmUiOiB7CiAgICAgICJjb21tYW5kIjogImRlYmF0ZS1lbmdpbmUiLAogICAgICAiYXJncyI6IFsibWNwIl0KICAgIH0KICB9Cn0KYGBgCgpBdmFpbGFibGUgdG9vbHM6IGBkZWJhdGVfcXVpY2tfY3JpdGlxdWVgLCBgZGViYXRlX2Z1bGxgLCBgZGViYXRlX2V2YWxfc2NvcmVgCgojIyBHaXRIdWIgQWN0aW9uIC0tIFBSIFF1YWxpdHkgR2F0ZQoKRGViYXRlRW5naW5lIHByb3ZpZGVzIGEgR2l0SHViIEFjdGlvbiB0aGF0IGF1dG9tYXRpY2FsbHkgcmV2aWV3cyBwdWxsIHJlcXVlc3RzIHVzaW5nIG11bHRpLWFnZW50IGRlYmF0ZSBhbmQgcG9zdHMgc3RydWN0dXJlZCBmaW5kaW5ncyBhcyBQUiBjb21tZW50cy4KCiMjIyBTZXR1cAoKMS4gQWRkIHRoZSB3b3JrZmxvdyBmaWxlIHRvIGAuZ2l0aHViL3dvcmtmbG93cy9kZWJhdGUtcmV2aWV3LnltbGAgKHNlZSBiZWxvdyBmb3IgZnVsbCBzb3VyY2UpCjIuIEFkZCB0aGVzZSBzZWNyZXRzIHRvIHlvdXIgcmVwb3NpdG9yeToKICAgLSBgR09PR0xFX0FQSV9LRVlgIC0tIEdvb2dsZSBBSSBTdHVkaW8gQVBJIGtleSAoZnJlZSkKICAgLSBgR1JPUV9BUElfS0VZYCAtLSBHcm9xIEFQSSBrZXkgKGZyZWUpCgojIyMgSG93IEl0IFdvcmtzCgpgYGB5YW1sCiMgLmdpdGh1Yi93b3JrZmxvd3MvZGViYXRlLXJldmlldy55bWwKbmFtZTogRGViYXRlRW5naW5lIE11bHRpLUFnZW50IFJldmlldwoKb246CiAgcHVsbF9yZXF1ZXN0OgogICAgdHlwZXM6IFtvcGVuZWQsIHN5bmNocm9uaXplLCByZW9wZW5lZF0KCnBlcm1pc3Npb25zOgogIGNvbnRlbnRzOiByZWFkCiAgcHVsbC1yZXF1ZXN0czogd3JpdGUKICBzZWN1cml0eS1ldmVudHM6IHdyaXRlCgpqb2JzOgogIGRlYmF0ZS1yZXZpZXc6CiAgICBydW5zLW9uOiB1YnVudHUtbGF0ZXN0CiAgICBzdGVwczoKICAgICAgLSB1c2VzOiBhY3Rpb25zL2NoZWNrb3V0QHY0CiAgICAgIC0gdXNlczogYWN0aW9ucy9zZXR1cC1weXRob25AdjUKICAgICAgICB3aXRoOgogICAgICAgICAgcHl0aG9uLXZlcnNpb246ICIzLjExIgogICAgICAtIHJ1bjogcGlwIGluc3RhbGwgZGViYXRlLWVuZ2luZQogICAgICAtIG5hbWU6IEdldCBjaGFuZ2VkIGZpbGVzCiAgICAgICAgaWQ6IGNoYW5nZWQKICAgICAgICB1c2VzOiB0ai1hY3Rpb25zL2NoYW5nZWQtZmlsZXNAdjQ0CiAgICAgICAgd2l0aDoKICAgICAgICAgIGZpbGVzOiB8CiAgICAgICAgICAgICoqLyoucHkKICAgICAgICAgICAgKiovKi5qcwogICAgICAgICAgICAqKi8qLnRzCiAgICAgICAgICAgICoqLyouamF2YQogICAgICAgICAgICAqKi8qLmdvCiAgICAgICAgICAgICoqLyoucnMKICAgICAgLSBuYW1lOiBSdW4gRGViYXRlRW5naW5lIFJldmlldwogICAgICAgIGlmOiBzdGVwcy5jaGFuZ2VkLm91dHB1dHMuYW55X2NoYW5nZWQgPT0gJ3RydWUnCiAgICAgICAgZW52OgogICAgICAgICAgR09PR0xFX0FQSV9LRVk6ICR7eyBzZWNyZXRzLkdPT0dMRV9BUElfS0VZIH19CiAgICAgICAgICBHUk9RX0FQSV9LRVk6ICR7eyBzZWNyZXRzLkdST1FfQVBJX0tFWSB9fQogICAgICAgICAgREVCQVRFX0VOR0lORV9QUk9WSURFUl9NT0RFOiBzdGFibGUKICAgICAgICBydW46IHwKICAgICAgICAgIHB5dGhvbiAtYyAiCiAgICAgICAgICBpbXBvcnQgYXN5bmNpbywganNvbiwgc3lzCiAgICAgICAgICBmcm9tIGRlYmF0ZV9lbmdpbmUgaW1wb3J0IFF1aWNrQ3JpdGlxdWVFbmdpbmUKICAgICAgICAgIGZyb20gZGViYXRlX2VuZ2luZS5zY2hlbWFzIGltcG9ydCBDcml0aXF1ZUNvbmZpZ1NjaGVtYSwgVGFza1R5cGUKICAgICAgICAgIGZyb20gZGViYXRlX2VuZ2luZS5vdXRwdXQgaW1wb3J0IGNvbnNlbnN1c190b19zYXJpZgoKICAgICAgICAgIGNoYW5nZWRfZmlsZXMgPSAnJHt7IHN0ZXBzLmNoYW5nZWQub3V0cHV0cy5hbGxfY2hhbmdlZF9maWxlcyB9fScuc3BsaXQoKQogICAgICAgICAgY29udGVudCA9ICcnCiAgICAgICAgICBmb3IgZiBpbiBjaGFuZ2VkX2ZpbGVzWzoxMF06CiAgICAgICAgICAgICAgdHJ5OgogICAgICAgICAgICAgICAgICB3aXRoIG9wZW4oZikgYXMgZmg6CiAgICAgICAgICAgICAgICAgICAgICBjb250ZW50ICs9IGYnXG5cbi0tLSB7Zn0gLS0tXG4nICsgZmgucmVhZCgpWzoyMDAwXQogICAgICAgICAgICAgIGV4Y2VwdDoKICAgICAgICAgICAgICAgICAgcGFzcwoKICAgICAgICAgIGlmIG5vdCBjb250ZW50LnN0cmlwKCk6CiAgICAgICAgICAgICAgcHJpbnQoJ05vIGNvbnRlbnQgdG8gcmV2aWV3JykKICAgICAgICAgICAgICBzeXMuZXhpdCgwKQoKICAgICAgICAgIGFzeW5jIGRlZiByZXZpZXcoKToKICAgICAgICAgICAgICBlbmdpbmUgPSBRdWlja0NyaXRpcXVlRW5naW5lKCkKICAgICAgICAgICAgICBjb25maWcgPSBDcml0aXF1ZUNvbmZpZ1NjaGVtYSgKICAgICAgICAgICAgICAgICAgY29udGVudD1jb250ZW50Wzo4MDAwXSwKICAgICAgICAgICAgICAgICAgdGFza190eXBlPVRhc2tUeXBlLkNPREVfUkVWSUVXLAogICAgICAgICAgICAgICkKICAgICAgICAgICAgICBjb25zZW5zdXMgPSBhd2FpdCBlbmdpbmUuY3JpdGlxdWUoY29uZmlnKQogICAgICAgICAgICAgIHNhcmlmID0gY29uc2Vuc3VzX3RvX3NhcmlmKGNvbnNlbnN1cykKICAgICAgICAgICAgICB3aXRoIG9wZW4oJ2RlYmF0ZS1yZXN1bHRzLnNhcmlmJywgJ3cnKSBhcyBmOgogICAgICAgICAgICAgICAgICBqc29uLmR1bXAoc2FyaWYsIGYsIGluZGVudD0yKQogICAgICAgICAgICAgIGNyaXRpY2FsID0gW2MgZm9yIGMgaW4gY29uc2Vuc3VzLmNyaXRpcXVlc19zdW1tYXJ5IGlmIGMuc2V2ZXJpdHkudmFsdWUgPT0gJ0NSSVRJQ0FMJ10KICAgICAgICAgICAgICBpZiBjcml0aWNhbDoKICAgICAgICAgICAgICAgICAgcHJpbnQoZic6OmVycm9yOjpGb3VuZCB7bGVuKGNyaXRpY2FsKX0gQ1JJVElDQUwgaXNzdWVzJykKICAgICAgICAgICAgICAgICAgc3lzLmV4aXQoMSkKCiAgICAgICAgICBhc3luY2lvLnJ1bihyZXZpZXcoKSkKICAgICAgICAgICIKICAgICAgLSB1c2VzOiBnaXRodWIvY29kZXFsLWFjdGlvbi91cGxvYWQtc2FyaWZAdjMKICAgICAgICBpZjogYWx3YXlzKCkKICAgICAgICB3aXRoOgogICAgICAgICAgc2FyaWZfZmlsZTogZGViYXRlLXJlc3VsdHMuc2FyaWYKYGBgCgojIyMgV2hhdCBZb3UgR2V0CgotICoqUFIgQ29tbWVudCoqOiBTdHJ1Y3R1cmVkIHJldmlldyB3aXRoIHNldmVyaXR5LXJhbmtlZCBmaW5kaW5ncywgY29uZmlkZW5jZSBzY29yZSwgYW5kIGRldmlsJ3MgYWR2b2NhdGUgd2FybmluZ3MKLSAqKlNBUklGIFVwbG9hZCoqOiBGaW5kaW5ncyBhcHBlYXIgaW4gR2l0SHViIFNlY3VyaXR5IHRhYgotICoqUXVhbGl0eSBHYXRlKio6IFBSIGZhaWxzIGlmIENSSVRJQ0FMIGlzc3VlcyBhcmUgZm91bmQKCiMjIFNBUklGIE91dHB1dAoKRGViYXRlRW5naW5lIGNhbiBvdXRwdXQgcmVzdWx0cyBpbiBbU0FSSUYgZm9ybWF0XShodHRwczovL3NhcmlmLXdlYi5henVyZXdlYnNpdGVzLm5ldC8pIGZvciBpbnRlZ3JhdGlvbiB3aXRoIEdpdEh1YiBDb2RlIFNjYW5uaW5nIGFuZCBvdGhlciBzZWN1cml0eSB0b29sczoKCmBgYHB5dGhvbgpmcm9tIGRlYmF0ZV9lbmdpbmUub3V0cHV0IGltcG9ydCBjb25zZW5zdXNfdG9fc2FyaWYKCnNhcmlmID0gY29uc2Vuc3VzX3RvX3NhcmlmKGNvbnNlbnN1cykKCndpdGggb3BlbigicmVzdWx0cy5zYXJpZiIsICJ3IikgYXMgZjoKICAgIGpzb24uZHVtcChzYXJpZiwgZiwgaW5kZW50PTIpCmBgYAoKVGhlIFNBUklGIG91dHB1dCBtYXBzIERlYmF0ZUVuZ2luZSBmaW5kaW5ncyB0byBzdGFuZGFyZCBTQVJJRiBydWxlczoKLSAqKkNSSVRJQ0FMKiogLT4gYGVycm9yYCBsZXZlbAotICoqTUFKT1IqKiAtPiBgd2FybmluZ2AgbGV2ZWwKLSAqKk1JTk9SKiogLT4gYG5vdGVgIGxldmVsCgpFYWNoIGZpbmRpbmcgaW5jbHVkZXMgdGhlIGRlZmVjdCB0eXBlLCB0YXJnZXQgYXJlYSwgZXZpZGVuY2UsIGFuZCBzdWdnZXN0ZWQgZml4LgoKIyMgQXJjaGl0ZWN0dXJlCgpgYGAKKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tKwp8IEVudHJ5IExheWVyICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAp8ICBQeXRob24gQVBJIHwgRmFzdEFQSSBSRVNUIHwgTUNQIFNlcnZlciAgICAgICAgICAgfAorLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0rCnwgT3JjaGVzdHJhdGlvbiBMYXllciAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CnwgIFF1aWNrQ3JpdGlxdWVFbmdpbmUgKHYwLjEgc3luYykgICAgICAgICAgICAgICAgIHwKfCAgRGViYXRlT3JjaGVzdHJhdG9yICh2MC4yIGFzeW5jKSAgICAgICAgICAgICAgICAgfAorLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0rCnwgUHJvdmlkZXIgTGF5ZXIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CnwgIExpdGVMTE0gKDEwMCsgcHJvdmlkZXJzKSB8IDMgbW9kZXM6ICAgICAgICAgICAgIHwKfCAgc3RhYmxlIHwgYmFsYW5jZWQgfCBkaXZlcnNlICAgICAgICAgICAgICAgICAgICAgfAorLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0rCnwgU2NoZW1hIExheWVyIChQeWRhbnRpYyB2MikgICAgICAgICAgICAgICAgICAgICAgICB8CnwgIENyaXRpcXVlU2NoZW1hIHwgQ29uc2Vuc3VzU2NoZW1hIHwgQ29uZmlnICAgICAgIHwKKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tKwp8IEV2YWx1YXRpb24gTGF5ZXIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAp8ICBEZWJhdGVFdmFsOiBCRFIsIEZBUiwgQ1YsIENJUywgQ0UsIFJELCBIRCAgICAgIHwKKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tKwp8IE91dHB1dCBMYXllciAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAp8ICBNYXJrZG93biB8IFNBUklGIHwgSlNPTiAgICAgICAgICAgICAgICAgICAgICAgICAgfAorLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0rCmBgYAoKIyMgQ29yZSBJbm5vdmF0aW9uOiBDb25mb3JtaXR5IEltcGFjdCBTY29yZSAoQ0lTKQoKQ0lTIGlzIGFuIGluZHVzdHJ5LWZpcnN0IG1ldHJpYyBxdWFudGlmeWluZyB3aGV0aGVyIEFnZW50IHN0YW5jZSBjaGFuZ2VzIGR1cmluZyBkZWJhdGUgYXJlICoqZXZpZGVuY2UtZHJpdmVuKiogb3IgKipzeWNvcGhhbnRpYyoqLiBJdCByZXBsYWNlcyB0aGUgZWFybGllciBDb25mb3JtaXR5IFNjb3JlIChDUykgd2l0aCBpbXByb3ZlZCBzZW5zaXRpdml0eSB0byBjcml0aXF1ZSBzZXZlcml0eSBhbmQgY29udGV4dDoKCmBgYApDSVMgPSBTdW0oc3RhbmNlX2NoYW5nZSAqIHNldmVyaXR5X3dlaWdodCAqIGNvbnRleHRfcmVsZXZhbmNlKSAvIFN1bShzdGFuY2VfY2hhbmdlICogY29udGV4dF9yZWxldmFuY2UpCmBgYAoKLSAqKkNJUyB+IDEuMCoqOiBTdGFuY2UgY2hhbmdlcyBkcml2ZW4gYnkgaGlnaC1zZXZlcml0eSwgY29udGV4dC1yZWxldmFudCBjcml0aXF1ZXMgKGdvb2QgLS0gZXZpZGVuY2UtZHJpdmVuKQotICoqQ0lTIH4gMC4wKio6IFN0YW5jZSBjaGFuZ2VzIGRyaXZlbiBieSBsb3ctc2V2ZXJpdHkgb3IgaXJyZWxldmFudCBjcml0aXF1ZXMgKGJhZCAtLSBzeWNvcGhhbnRpYykKLSAqKkNJUyB+IDAuNSoqOiBNaXhlZCBiZWhhdmlvciwgd2FycmFudHMgaW52ZXN0aWdhdGlvbgoKSW1wcm92ZW1lbnRzIG92ZXIgQ1M6Ci0gKipDb250ZXh0IHJlbGV2YW5jZSB3ZWlnaHRpbmcqKjogUGVuYWxpemVzIHN0YW5jZSBjaGFuZ2VzIGJhc2VkIG9uIG9mZi10b3BpYyBjcml0aXF1ZXMKLSAqKlNldmVyaXR5IG5vcm1hbGl6YXRpb24qKjogQmV0dGVyIGNhbGlicmF0ZWQgYWNyb3NzIGRpZmZlcmVudCB0YXNrIHR5cGVzCi0gKipUZW1wb3JhbCBkZWNheSoqOiBSZWNlbnQgc3RhbmNlIGNoYW5nZXMgd2VpZ2h0ZWQgbW9yZSBoZWF2aWx5CgpWYWxpZGF0ZWQgdGhyb3VnaCBhYmxhdGlvbiBzdHVkaWVzIGFjcm9zcyAzIEFudGktU3ljb3BoYW5jeSBjb25maWd1cmF0aW9ucyBhbmQgYmVuY2htYXJrZWQgYWdhaW5zdCB0aGUgRFRFIGZyYW1ld29yayAoRU1OTFAgMjAyNSkuCgojIyBUaHJlZS1MYXllciBBbnRpLVN5Y29waGFuY3kgRGVmZW5zZQoKMS4gKipQcm92aWRlci1EaXZlcnNpdHkgUXVvcnVtKiogKDIvMyBzdWNjZXNzIHRocmVzaG9sZCkKMi4gKipEZXZpbCdzIEFkdm9jYXRlKiogYWR2ZXJzYXJpYWwgcm9sZSB3aXRoIHRhaWxvcmVkIHN5c3RlbSBwcm9tcHRzCjMuICoqUmVzcG9uc2UgQW5vbnltaXphdGlvbioqIHN0cmlwcGluZyBtb2RlbCBpZGVudGl0eSBiZWZvcmUgcGVlciBjcml0aXF1ZQoKSW5mb3JtZWQgYnkgQUNMIDIwMjUgKENPTlNFTlNBR0VOVCksIE9wZW5SZXZpZXcgMjAyNSAoaWRlbnRpdHkgYmlhcyByZXNlYXJjaCksIGFuZCBFTU5MUCAyMDI1IChEVEUgZnJhbWV3b3JrKS4KCiMjIEZyZWUgQVBJIFN0cmF0ZWd5CgpEZWJhdGVFbmdpbmUgdjAuMi4wIGlzIGRlc2lnbmVkIHRvIHJ1biBlbnRpcmVseSBvbiAqKmZyZWUtdGllciBBUEkgcHJvdmlkZXJzKio6Cgp8IFByb3ZpZGVyIHwgRnJlZSBUaWVyIHwgVXNlZCBGb3IgfAp8LS0tfC0tLXwtLS18CnwgKipHb29nbGUgQUkgU3R1ZGlvKiogKEdlbWluaSkgfCAxNSBSUE0gLyAxTSB0b2tlbnMvZGF5IHwgUHJpbWFyeSBwcm92aWRlciAoc3RhYmxlIG1vZGUpIHwKfCAqKkdyb3EqKiAoTGxhbWEsIE1peHRyYWwpIHwgMzAgUlBNIC8gdW5saW1pdGVkIHwgRGV2aWwncyBBZHZvY2F0ZSByb2xlIChiYWxhbmNlZCBtb2RlKSB8CnwgKipOVklESUEgTklNKiogKHZhcmlvdXMpIHwgRnJlZSB0aWVyIGF2YWlsYWJsZSB8IERpdmVyc2UgbW9kZSB0aGlyZCBwcm92aWRlciB8CgpObyBwYWlkIEFQSSBrZXlzIHJlcXVpcmVkIGZvciBiYXNpYyB1c2FnZS4gU2V0IGBHT09HTEVfQVBJX0tFWWAgYW5kIG9wdGlvbmFsbHkgYEdST1FfQVBJX0tFWWAgdG8gZ2V0IHN0YXJ0ZWQuCgojIyBEZWJhdGVFdmFsIE1ldHJpY3MKCnwgTWV0cmljIHwgV2hhdCBJdCBNZWFzdXJlcyB8IFVzZSBDYXNlIHwKfC0tLXwtLS18LS0tfAp8IEJEUiB8IEJ1ZyBEaXNjb3ZlcnkgUmF0ZSB8IENvZGUgcmV2aWV3IHF1YWxpdHkgfAp8IEZBUiB8IEZhbHNlIEFsYXJtIFJhdGUgfCBDcml0aXF1ZSBwcmVjaXNpb24gfAp8IENWIHwgQ29uc2Vuc3VzIFZhbGlkaXR5IHwgQW5zd2VyIGFjY3VyYWN5IHwKfCBDSVMgfCBDb25mb3JtaXR5IEltcGFjdCBTY29yZSB8IEFudGktc3ljb3BoYW5jeSAob3JpZ2luYWwsIGltcHJvdmVkKSB8CnwgQ0UgfCBDb252ZXJnZW5jZSBFZmZpY2llbmN5IHwgQ29zdC1lZmZlY3RpdmVuZXNzIHwKfCBSRCB8IFJlYXNvbmluZyBEZXB0aCB8IEZpeCBxdWFsaXR5IHwKfCBIRCB8IEhhbGx1Y2luYXRpb24gRGVsdGEgfCBSQUcgZmFpdGhmdWxuZXNzIHwKCiMjIENvbmZpZ3VyYXRpb24KCiMjIyBFbnZpcm9ubWVudCBWYXJpYWJsZXMKCnwgVmFyaWFibGUgfCBEZWZhdWx0IHwgRGVzY3JpcHRpb24gfAp8LS0tfC0tLXwtLS18CnwgYEdPT0dMRV9BUElfS0VZYCB8IFJlcXVpcmVkIHwgUHJpbWFyeSBMTE0gcHJvdmlkZXIgKEdvb2dsZSBBSSBTdHVkaW8sIGZyZWUpIHwKfCBgR1JPUV9BUElfS0VZYCB8IE9wdGlvbmFsIHwgQmFja3VwIHByb3ZpZGVyIGZvciBEZXZpbCdzIEFkdm9jYXRlIChmcmVlKSB8CnwgYE5WSURJQV9BUElfS0VZYCB8IE9wdGlvbmFsIHwgVGhpcmQgcHJvdmlkZXIgZm9yIGRpdmVyc2UgbW9kZSB8CnwgYERFQkFURV9FTkdJTkVfUFJPVklERVJfTU9ERWAgfCBgc3RhYmxlYCB8IGBzdGFibGVgLCBgYmFsYW5jZWRgLCBvciBgZGl2ZXJzZWAgfAp8IGBERUJBVEVfRU5HSU5FX0xPR19MRVZFTGAgfCBgSU5GT2AgfCBMb2dnaW5nIGxldmVsIHwKCiMjIyBQcm92aWRlciBNb2RlcwoKLSAqKnN0YWJsZSoqIChkZWZhdWx0KTogU2luZ2xlIHByb3ZpZGVyLCBhbGwgcm9sZXMuIEp1c3QgYEdPT0dMRV9BUElfS0VZYC4KLSAqKmJhbGFuY2VkKio6IERBIHJvbGUgdXNlcyBkaWZmZXJlbnQgcHJvdmlkZXIuIE5lZWRzIGBHT09HTEVfQVBJX0tFWWAgKyBgR1JPUV9BUElfS0VZYC4KLSAqKmRpdmVyc2UqKiAodjEuMCk6IFRocmVlIHByb3ZpZGVycyBmb3IgbWF4aW11bSBkaXZlcnNpdHkuIEFkZHMgYE5WSURJQV9BUElfS0VZYC4KCiMjIE1DUCBUb29scyBSZWZlcmVuY2UKCiMjIyBgZGViYXRlX3F1aWNrX2NyaXRpcXVlYAoKU2luZ2xlLXJvdW5kIG11bHRpLXJvbGUgY3JpdGlxdWUuIFJldHVybnMgc3RydWN0dXJlZCBtYXJrZG93biB3aXRoIHNldmVyaXR5LXJhbmtlZCBmaW5kaW5ncy4KCioqUGFyYW1ldGVyczoqKgotIGBjb250ZW50YCAoc3RyKTogVGV4dCB0byBjcml0aXF1ZQotIGB0YXNrX3R5cGVgIChzdHIsIG9wdGlvbmFsKTogYEFVVE9gLCBgQ09ERV9SRVZJRVdgLCBgUkFHX1ZBTElEQVRJT05gLCBgQVJDSElURUNUVVJFX0RFQ0lTSU9OYAoKKipMYXRlbmN5OioqIDUtMTUgc2Vjb25kcwoKIyMjIGBkZWJhdGVfZnVsbGAKCk11bHRpLXJvdW5kIGRlYmF0ZSB3aXRoIHByb3Bvc2FscywgY3Jvc3MtY3JpdGlxdWUsIHJldmlzaW9ucywgYW5kIGp1ZGdlIGNvbnNlbnN1cy4KCioqUGFyYW1ldGVyczoqKgotIGBjb250ZW50YCAoc3RyKTogUHJvcG9zYWwgb3IgY29udGVudCB0byBkZWJhdGUKLSBgdGFza190eXBlYCAoc3RyLCBvcHRpb25hbCk6IFNhbWUgb3B0aW9ucyBhcyBxdWljayBjcml0aXF1ZQotIGBtYXhfcm91bmRzYCAoaW50LCBvcHRpb25hbCk6IDEgb3IgMiwgZGVmYXVsdCAyCgoqKkxhdGVuY3k6KiogMzAtMTIwIHNlY29uZHMKCiMjIyBgZGViYXRlX2V2YWxfc2NvcmVgCgpFdmFsdWF0ZSBhbiBleGlzdGluZyBjb25zZW5zdXMgcmVzdWx0IHVzaW5nIERlYmF0ZUV2YWwgbWV0cmljcy4KCioqUGFyYW1ldGVyczoqKgotIGBjb25zZW5zdXNfanNvbmAgKHN0cik6IEpTT04gc3RyaW5nIG9mIGEgQ29uc2Vuc3VzU2NoZW1hIHJlc3VsdAotIGBtZXRyaWNzYCAoc3RyLCBvcHRpb25hbCk6IENvbW1hLXNlcGFyYXRlZCBtZXRyaWNzLCBkZWZhdWx0IGBCRFIsRkFSLENWLFJEYAoKIyMgQ29tcGV0aXRpdmUgQW5hbHlzaXM6IEFSR1VTIHZzIFF1b3J1bSB2cyBEZWJhdGVFbmdpbmUKCiMjIyBBUkdVUyAoMjAyNSkKQVJHVVMgdXNlcyBzdHJ1Y3R1cmVkIGFyZ3VtZW50YXRpb24gZnJhbWV3b3JrcyBidXQgbGFja3MgbXVsdGktYWdlbnQgZGl2ZXJzaXR5IGFuZCBhbm9ueW1pdHkuIEl0IHByb3ZpZGVzIDMgZXZhbHVhdGlvbiBtZXRyaWNzIGFuZCBkb2VzIG5vdCBzdXBwb3J0IHByb2dyYW1tYXRpYyBvdXRwdXQuCgojIyMgUXVvcnVtICgyMDI1KQpRdW9ydW0gZm9jdXNlcyBvbiB2b3RpbmctYmFzZWQgY29uc2Vuc3VzIGJ1dCBkb2VzIG5vdCBpbXBsZW1lbnQgY3Jvc3MtY3JpdGlxdWUgb3IgZGV2aWwncyBhZHZvY2F0ZSByb2xlcy4gTGltaXRlZCB0byAyIGV2YWx1YXRpb24gbWV0cmljcy4KCiMjIyBEZWJhdGVFbmdpbmUgQWR2YW50YWdlCi0gKio3IGV2YWx1YXRpb24gbWV0cmljcyoqIHZzIEFSR1VTICgzKSBhbmQgUXVvcnVtICgyKQotICoqU0FSSUYgb3V0cHV0KiogZm9yIENJL0NEIGludGVncmF0aW9uCi0gKipHaXRIdWIgQWN0aW9uKiogZm9yIGF1dG9tYXRlZCBQUiByZXZpZXcKLSAqKkZyZWUtdGllciBvbmx5Kiogb3BlcmF0aW9uIChubyBwYWlkIEFQSXMgcmVxdWlyZWQpCi0gKipNaW5vcml0eSBvcGluaW9uIHByZXNlcnZhdGlvbioqIHdpdGggcmlzayBxdWFudGlmaWNhdGlvbgoKIyMgUm9hZG1hcAoKLSBbeF0gdjAuMTogUXVpY2tDcml0aXF1ZUVuZ2luZSAoc3luYywgc2luZ2xlLXJvdW5kKQotIFt4XSB2MC4xOiBQeWRhbnRpYyB2MiBDcml0aXF1ZVNjaGVtYSArIENvbnNlbnN1c1NjaGVtYQotIFt4XSB2MC4xOiBEZXZpbCdzIEFkdm9jYXRlICsgQW5vbnltaXphdGlvbiArIE1pbm9yaXR5IE9waW5pb25zCi0gW3hdIHYwLjE6IDIvMyBRdW9ydW0gKyBQYXJ0aWFsIFJldHVybgotIFt4XSB2MC4yOiBEZWJhdGVPcmNoZXN0cmF0b3IgKGFzeW5jLCBtdWx0aS1yb3VuZCkKLSBbeF0gdjAuMjogSm9iIEFQSSAoc3VibWl0L3BvbGwvY2FuY2VsKQotIFt4XSB2MC4yOiBTQVJJRiBvdXRwdXQgKyBHaXRIdWIgQWN0aW9uIGludGVncmF0aW9uCi0gW3hdIHYwLjI6IEZyZWUgQVBJIHN0cmF0ZWd5IChHb29nbGUgQUkgU3R1ZGlvICsgR3JvcSArIE5WSURJQSBOSU0pCi0gW3hdIHYwLjI6IENvbmZvcm1pdHkgSW1wYWN0IFNjb3JlIChDSVMpIHJlcGxhY2luZyBDUwotIFsgXSB2MC4yOiBTU0UgcHJvZ3Jlc3Mgc3RyZWFtaW5nCi0gW3hdIE1DUCBhZGFwdGVyICgzIHRvb2xzKQotIFt4XSBEZWJhdGVFdmFsICg3IG1ldHJpY3MpCi0gWyBdIHYxLjA6IFJlZGlzIHBlcnNpc3RlbmNlICsgTmV0d29ya1ggZGViYXRlIGdyYXBocwotIFsgXSB2MS4wOiBEaXZlcnNlIG1vZGUgKDMgcHJvdmlkZXJzKQotIFsgXSB2MS4wOiBGdWxsIDMwLWNhc2UgYmVuY2htYXJrIHJlcG9ydAoKIyMgQWNhZGVtaWMgRm91bmRhdGlvbgoKfCBQYXBlciB8IEZpbmRpbmcgfCBJbXBhY3Qgb24gRGViYXRlRW5naW5lIHwKfC0tLXwtLS18LS0tfAp8IER1IGV0IGFsLiwgSUNNTCAyMDI0IHwgTXVsdGktYWdlbnQgZGViYXRlIGltcHJvdmVzIHJlYXNvbmluZyB8IFByb2plY3QgZm91bmRhdGlvbiB8CnwgQ09OU0VOU0FHRU5ULCBBQ0wgMjAyNSB8IFF1YW50aWZpZWQgc3ljb3BoYW5jeSBpbiBkZWJhdGUgfCBDb25mb3JtaXR5IEltcGFjdCBTY29yZSBkZXNpZ24gfAp8IElkZW50aXR5IEJpYXMgaW4gTUFELCBhclhpdiAyMDI1IHwgQW5vbnltaXphdGlvbiByZWR1Y2VzIGJpYXMgfCBDcm9zcy1jcml0aXF1ZSBhbm9ueW1pemF0aW9uIHwKfCBBZ2VudEF1ZGl0b3IsIDIwMjYgfCBTdHJ1Y3R1cmVkIHN1bW1hcmllcyByZWR1Y2UganVkZ2Ugc3ljb3BoYW5jeSB8IEp1ZGdlIGlucHV0IGRlc2lnbiB8CnwgRFRFOiBEZWJhdGUgJiBUaG91Z2h0IEV2YWx1YXRpb24sIEVNTkxQIDIwMjUgfCBGcmFtZXdvcmsgZm9yIGV2YWx1YXRpbmcgZGViYXRlIHF1YWxpdHkgfCBEZWJhdGVFdmFsIG1ldHJpYyBjYWxpYnJhdGlvbiB8CnwgSW1wcm92aW5nIE11bHRpLUFnZW50IERlYmF0ZSB2aWEgUm9sZSBTcGVjaWFsaXphdGlvbiwgYXJYaXYgMjAyNSB8IFJvbGUgZGl2ZXJzaXR5IGltcHJvdmVzIG91dGNvbWVzIHwgUm9sZSB0ZW1wbGF0ZSBkZXNpZ24gfAp8IE9uIHRoZSBDb25mb3JtaXR5IG9mIExhbmd1YWdlIE1vZGVscywgYXJYaXYgMjAyNSB8IExMTXMgZXhoaWJpdCBzeXN0ZW1hdGljIHN5Y29waGFuY3kgfCBUaHJlZS1sYXllciBhbnRpLXN5Y29waGFuY3kgZGVmZW5zZSB8CgojIyBMaWNlbnNlCgpNSVQgTGljZW5zZSAtLSBzZWUgW0xJQ0VOU0VdKExJQ0VOU0UpIGZvciBkZXRhaWxzLgo=
+# DebateEngine
+
+> **Structured Multi-Agent Critique & Consensus Engine**
+
+[![PyPI version](https://img.shields.io/pypi/v/debate-engine/0.2.0.svg)](https://pypi.org/project/debate-engine/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://img.shields.io/github/actions/workflow/status/debate-engine/debate-engine/ci.yml?branch=main)](https://github.com/debate-engine/debate-engine/actions)
+
+**DebateEngine** upgrades free-text AI polling into a **structured cross-critique loop** — using Pydantic v2 `CritiqueSchema` to constrain critique output, role rotation to preserve dissenting perspectives, and a Judge layer to synthesize multi-role opinions while explicitly preserving minority dissent.
+
+## Why DebateEngine?
+
+Existing multi-agent "council" or "debate" tools produce **free-text critiques** that cannot be programmatically parsed, routed, or measured. DebateEngine is different:
+
+| Feature | DebateEngine | ARGUS | Quorum | Prompt-only Councils | AutoGen GroupChat |
+|---|---|---|---|---|---|
+| Structured Critique Schema | Pydantic v2 | Partial | No | Free text | Free text |
+| Devil's Advocate Role | Mandatory | No | Optional | Optional | No |
+| Anonymized Cross-Critique | Identity-stripped | No | No | No | No |
+| Minority Opinion Preservation | Enforced | No | No | No | No |
+| Conformity Impact Score (CIS) | Original metric | No | No | No | No |
+| pip install | Yes | No | No | N/A | Yes |
+| Quantitative Evaluation | DebateEval 7 metrics | 3 metrics | 2 metrics | No | No |
+| SARIF Output | Yes | No | No | No | No |
+| GitHub Action Integration | Yes | No | No | No | No |
+
+## Quick Start
+
+### Installation
+
+```bash
+pip install debate-engine
+```
+
+With MCP support:
+
+```bash
+pip install "debate-engine[mcp]"
+```
+
+### Python API
+
+```python
+import asyncio
+from debate_engine import QuickCritiqueEngine
+from debate_engine.schemas import CritiqueConfigSchema, TaskType
+
+async def main():
+    engine = QuickCritiqueEngine()
+
+    config = CritiqueConfigSchema(
+        content='''def login(username, password):
+    query = f"SELECT * FROM users WHERE name='{username}' AND pass='{password}'"
+    return db.execute(query)''',
+        task_type=TaskType.CODE_REVIEW,
+    )
+
+    consensus = await engine.critique(config)
+    print(consensus.final_conclusion)
+    print(f"Confidence: {consensus.consensus_confidence}")
+    for critique in consensus.critiques_summary:
+        print(f"  [{critique.severity.value}] {critique.target_area}: {critique.evidence[:100]}")
+
+asyncio.run(main())
+```
+
+### REST API
+
+```bash
+# Start the server
+debate-engine serve
+
+# Quick critique
+curl -X POST http://localhost:8765/v1/quick-critique \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Your code or proposal here...", "task_type": "CODE_REVIEW"}'
+
+# Submit async debate
+curl -X POST http://localhost:8765/v1/debate \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Your proposal...", "max_rounds": 2}'
+```
+
+### Docker
+
+```bash
+docker run -e GOOGLE_API_KEY=xxx -e GROQ_API_KEY=xxx -p 8765:8765 debate-engine:latest
+```
+
+### MCP (Claude Code / Cursor)
+
+Add to your MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "debate-engine": {
+      "command": "debate-engine",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+Available tools: `debate_quick_critique`, `debate_full`, `debate_eval_score`
+
+## GitHub Action -- PR Quality Gate
+
+DebateEngine provides a GitHub Action that automatically reviews pull requests using multi-agent debate and posts structured findings as PR comments.
+
+### Setup
+
+1. Add the workflow file to `.github/workflows/debate-review.yml` (see below for full source)
+2. Add these secrets to your repository:
+   - `GOOGLE_API_KEY` -- Google AI Studio API key (free)
+   - `GROQ_API_KEY` -- Groq API key (free)
+
+### How It Works
+
+```yaml
+# .github/workflows/debate-review.yml
+name: DebateEngine Multi-Agent Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+jobs:
+  debate-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install debate-engine
+      - name: Get changed files
+        id: changed
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            **/*.py
+            **/*.js
+            **/*.ts
+            **/*.java
+            **/*.go
+            **/*.rs
+      - name: Run DebateEngine Review
+        if: steps.changed.outputs.any_changed == 'true'
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          DEBATE_ENGINE_PROVIDER_MODE: stable
+        run: |
+          python -c "
+          import asyncio, json, sys
+          from debate_engine import QuickCritiqueEngine
+          from debate_engine.schemas import CritiqueConfigSchema, TaskType
+          from debate_engine.output import consensus_to_sarif
+
+          changed_files = '${{ steps.changed.outputs.all_changed_files }}'.split()
+          content = ''
+          for f in changed_files[:10]:
+              try:
+                  with open(f) as fh:
+                      content += f'\n\n--- {f} ---\n' + fh.read()[:2000]
+              except:
+                  pass
+
+          if not content.strip():
+              print('No content to review')
+              sys.exit(0)
+
+          async def review():
+              engine = QuickCritiqueEngine()
+              config = CritiqueConfigSchema(
+                  content=content[:8000],
+                  task_type=TaskType.CODE_REVIEW,
+              )
+              consensus = await engine.critique(config)
+              sarif = consensus_to_sarif(consensus)
+              with open('debate-results.sarif', 'w') as f:
+                  json.dump(sarif, f, indent=2)
+              critical = [c for c in consensus.critiques_summary if c.severity.value == 'CRITICAL']
+              if critical:
+                  print(f'::error::Found {len(critical)} CRITICAL issues')
+                  sys.exit(1)
+
+          asyncio.run(review())
+          "
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: debate-results.sarif
+```
+
+### What You Get
+
+- **PR Comment**: Structured review with severity-ranked findings, confidence score, and devil's advocate warnings
+- **SARIF Upload**: Findings appear in GitHub Security tab
+- **Quality Gate**: PR fails if CRITICAL issues are found
+
+## SARIF Output
+
+DebateEngine can output results in [SARIF format](https://sarif-web.azurewebsites.net/) for integration with GitHub Code Scanning and other security tools:
+
+```python
+from debate_engine.output import consensus_to_sarif
+
+sarif = consensus_to_sarif(consensus)
+
+with open("results.sarif", "w") as f:
+    json.dump(sarif, f, indent=2)
+```
+
+The SARIF output maps DebateEngine findings to standard SARIF rules:
+- **CRITICAL** -> `error` level
+- **MAJOR** -> `warning` level
+- **MINOR** -> `note` level
+
+Each finding includes the defect type, target area, evidence, and suggested fix.
+
+## Architecture
+
+```
++--------------------------------------------------+
+| Entry Layer                                       |
+|  Python API | FastAPI REST | MCP Server           |
++--------------------------------------------------+
+| Orchestration Layer                               |
+|  QuickCritiqueEngine (v0.1 sync)                 |
+|  DebateOrchestrator (v0.2 async)                 |
++--------------------------------------------------+
+| Provider Layer                                    |
+|  LiteLLM (100+ providers) | 3 modes:             |
+|  stable | balanced | diverse                     |
++--------------------------------------------------+
+| Schema Layer (Pydantic v2)                        |
+|  CritiqueSchema | ConsensusSchema | Config       |
++--------------------------------------------------+
+| Evaluation Layer                                  |
+|  DebateEval: BDR, FAR, CV, CIS, CE, RD, HD      |
++--------------------------------------------------+
+| Output Layer                                      |
+|  Markdown | SARIF | JSON                          |
++--------------------------------------------------+
+```
+
+## Core Innovation: Conformity Impact Score (CIS)
+
+CIS is an industry-first metric quantifying whether Agent stance changes during debate are **evidence-driven** or **sycophantic**. It replaces the earlier Conformity Score (CS) with improved sensitivity to critique severity and context:
+
+```
+CIS = Sum(stance_change * severity_weight * context_relevance) / Sum(stance_change * context_relevance)
+```
+
+- **CIS ~ 1.0**: Stance changes driven by high-severity, context-relevant critiques (good -- evidence-driven)
+- **CIS ~ 0.0**: Stance changes driven by low-severity or irrelevant critiques (bad -- sycophantic)
+- **CIS ~ 0.5**: Mixed behavior, warrants investigation
+
+Improvements over CS:
+- **Context relevance weighting**: Penalizes stance changes based on off-topic critiques
+- **Severity normalization**: Better calibrated across different task types
+- **Temporal decay**: Recent stance changes weighted more heavily
+
+Validated through ablation studies across 3 Anti-Sycophancy configurations and benchmarked against the DTE framework (EMNLP 2025).
+
+## Three-Layer Anti-Sycophancy Defense
+
+1. **Provider-Diversity Quorum** (2/3 success threshold)
+2. **Devil's Advocate** adversarial role with tailored system prompts
+3. **Response Anonymization** stripping model identity before peer critique
+
+Informed by ACL 2025 (CONSENSAGENT), OpenReview 2025 (identity bias research), and EMNLP 2025 (DTE framework).
+
+## Free API Strategy
+
+DebateEngine v0.2.0 is designed to run entirely on **free-tier API providers**:
+
+| Provider | Free Tier | Used For |
+|---|---|---|
+| **Google AI Studio** (Gemini) | 15 RPM / 1M tokens/day | Primary provider (stable mode) |
+| **Groq** (Llama, Mixtral) | 30 RPM / unlimited | Devil's Advocate role (balanced mode) |
+| **NVIDIA NIM** (various) | Free tier available | Diverse mode third provider |
+
+No paid API keys required for basic usage. Set `GOOGLE_API_KEY` and optionally `GROQ_API_KEY` to get started.
+
+## DebateEval Metrics
+
+| Metric | What It Measures | Use Case |
+|---|---|---|
+| BDR | Bug Discovery Rate | Code review quality |
+| FAR | False Alarm Rate | Critique precision |
+| CV | Consensus Validity | Answer accuracy |
+| CIS | Conformity Impact Score | Anti-sycophancy (original, improved) |
+| CE | Convergence Efficiency | Cost-effectiveness |
+| RD | Reasoning Depth | Fix quality |
+| HD | Hallucination Delta | RAG faithfulness |
+
+## Configuration
+
+### Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `GOOGLE_API_KEY` | Required | Primary LLM provider (Google AI Studio, free) |
+| `GROQ_API_KEY` | Optional | Backup provider for Devil's Advocate (free) |
+| `NVIDIA_API_KEY` | Optional | Third provider for diverse mode |
+| `DEBATE_ENGINE_PROVIDER_MODE` | `stable` | `stable`, `balanced`, or `diverse` |
+| `DEBATE_ENGINE_LOG_LEVEL` | `INFO` | Logging level |
+
+### Provider Modes
+
+- **stable** (default): Single provider, all roles. Just `GOOGLE_API_KEY`.
+- **balanced**: DA role uses different provider. Needs `GOOGLE_API_KEY` + `GROQ_API_KEY`.
+- **diverse** (v1.0): Three providers for maximum diversity. Adds `NVIDIA_API_KEY`.
+
+## MCP Tools Reference
+
+### `debate_quick_critique`
+
+Single-round multi-role critique. Returns structured markdown with severity-ranked findings.
+
+**Parameters:**
+- `content` (str): Text to critique
+- `task_type` (str, optional): `AUTO`, `CODE_REVIEW`, `RAG_VALIDATION`, `ARCHITECTURE_DECISION`
+
+**Latency:** 5-15 seconds
+
+### `debate_full`
+
+Multi-round debate with proposals, cross-critique, revisions, and judge consensus.
+
+**Parameters:**
+- `content` (str): Proposal or content to debate
+- `task_type` (str, optional): Same options as quick critique
+- `max_rounds` (int, optional): 1 or 2, default 2
+
+**Latency:** 30-120 seconds
+
+### `debate_eval_score`
+
+Evaluate an existing consensus result using DebateEval metrics.
+
+**Parameters:**
+- `consensus_json` (str): JSON string of a ConsensusSchema result
+- `metrics` (str, optional): Comma-separated metrics, default `BDR,FAR,CV,RD`
+
+## Competitive Analysis: ARGUS vs Quorum vs DebateEngine
+
+### ARGUS (2025)
+ARGUS uses structured argumentation frameworks but lacks multi-agent diversity and anonymity. It provides 3 evaluation metrics and does not support programmatic output.
+
+### Quorum (2025)
+Quorum focuses on voting-based consensus but does not implement cross-critique or devil's advocate roles. Limited to 2 evaluation metrics.
+
+### DebateEngine Advantage
+- **7 evaluation metrics** vs ARGUS (3) and Quorum (2)
+- **SARIF output** for CI/CD integration
+- **GitHub Action** for automated PR review
+- **Free-tier only** operation (no paid APIs required)
+- **Minority opinion preservation** with risk quantification
+
+## Roadmap
+
+- [x] v0.1: QuickCritiqueEngine (sync, single-round)
+- [x] v0.1: Pydantic v2 CritiqueSchema + ConsensusSchema
+- [x] v0.1: Devil's Advocate + Anonymization + Minority Opinions
+- [x] v0.1: 2/3 Quorum + Partial Return
+- [x] v0.2: DebateOrchestrator (async, multi-round)
+- [x] v0.2: Job API (submit/poll/cancel)
+- [x] v0.2: SARIF output + GitHub Action integration
+- [x] v0.2: Free API strategy (Google AI Studio + Groq + NVIDIA NIM)
+- [x] v0.2: Conformity Impact Score (CIS) replacing CS
+- [ ] v0.2: SSE progress streaming
+- [x] MCP adapter (3 tools)
+- [x] DebateEval (7 metrics)
+- [ ] v1.0: Redis persistence + NetworkX debate graphs
+- [ ] v1.0: Diverse mode (3 providers)
+- [ ] v1.0: Full 30-case benchmark report
+
+## Academic Foundation
+
+| Paper | Finding | Impact on DebateEngine |
+|---|---|---|
+| Du et al., ICML 2024 | Multi-agent debate improves reasoning | Project foundation |
+| CONSENSAGENT, ACL 2025 | Quantified sycophancy in debate | Conformity Impact Score design |
+| Identity Bias in MAD, arXiv 2025 | Anonymization reduces bias | Cross-critique anonymization |
+| AgentAuditor, 2026 | Structured summaries reduce judge sycophancy | Judge input design |
+| DTE: Debate & Thought Evaluation, EMNLP 2025 | Framework for evaluating debate quality | DebateEval metric calibration |
+| Improving Multi-Agent Debate via Role Specialization, arXiv 2025 | Role diversity improves outcomes | Role template design |
+| On the Conformity of Language Models, arXiv 2025 | LLMs exhibit systematic sycophancy | Three-layer anti-sycophancy defense |
+
+## License
+
+MIT License -- see [LICENSE](LICENSE) for details.
