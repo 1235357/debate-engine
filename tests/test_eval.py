@@ -432,7 +432,7 @@ class TestHD:
         """Same hallucination level."""
         result = compute_hd(debate_faithfulness=0.75, baseline_faithfulness=0.75)
         assert result.value == 0.0
-        assert "same hallucination level" in result.description
+        assert "same hallucinations than baseline" in result.description
 
     def test_details(self):
         result = compute_hd(0.85, 0.6)

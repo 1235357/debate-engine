@@ -39,8 +39,8 @@ class TestProviderConfigFromEnv:
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
         config = ProviderConfig.from_env()
-        assert config.primary_provider == "openai"
-        assert config.primary_model == "gpt-4o-mini"
+        assert config.primary_provider == "nvidia"
+        assert config.primary_model == "minimax-m2.7"
         assert config.mode == ProviderMode.STABLE
         assert config.timeout_seconds == 25.0
         assert config.max_transport_retries == 2
@@ -96,12 +96,12 @@ class TestModelSelection:
         provider = LLMProvider(ProviderConfig(mode=ProviderMode.STABLE))
 
         prov, model = provider._get_model_for_role("critic_a")
-        assert prov == "openai"
-        assert model == "gpt-4o-mini"
+        assert prov == "nvidia"
+        assert model == "minimax-m2.7"
 
         prov, model = provider._get_model_for_role("critic_b")
-        assert prov == "openai"
-        assert model == "gpt-4o-mini"
+        assert prov == "nvidia"
+        assert model == "minimax-m2.7"
 
     def test_stable_mode_judge(self) -> None:
         provider = LLMProvider(
@@ -111,7 +111,7 @@ class TestModelSelection:
             ),
         )
         prov, model = provider._get_model_for_role("judge")
-        assert prov == "openai"
+        assert prov == "nvidia"
         assert model == "gpt-4o"
 
     def test_balanced_mode_devil_advocate_uses_backup(self) -> None:
@@ -130,8 +130,8 @@ class TestModelSelection:
         provider = LLMProvider(ProviderConfig(mode=ProviderMode.BALANCED))
         prov, model = provider._get_model_for_role("devil_advocate")
         # Falls back to primary when backup not configured
-        assert prov == "openai"
-        assert model == "gpt-4o-mini"
+        assert prov == "nvidia"
+        assert model == "minimax-m2.7"
 
     def test_balanced_mode_judge_uses_backup(self) -> None:
         provider = LLMProvider(
@@ -145,7 +145,7 @@ class TestModelSelection:
         # In BALANCED mode, judge uses backup provider but primary model
         # (effective_judge_model defaults to primary_model unless judge_model is set)
         assert prov == "anthropic"
-        assert model == "gpt-4o-mini"  # primary_model since judge_model not set
+        assert model == "minimax-m2.7"  # primary_model since judge_model not set
 
     def test_balanced_mode_non_da_roles_use_primary(self) -> None:
         provider = LLMProvider(
@@ -156,8 +156,8 @@ class TestModelSelection:
             ),
         )
         prov, model = provider._get_model_for_role("critic_a")
-        assert prov == "openai"
-        assert model == "gpt-4o-mini"
+        assert prov == "nvidia"
+        assert model == "minimax-m2.7"
 
 
 # ===================================================================
@@ -450,12 +450,12 @@ class TestFailoverChain:
 
         config = ProviderConfig.from_env()
         assert len(config.providers) == 3
-        assert config.providers[0].name == "Google AI Studio"
-        assert config.providers[0].api_key == "google-test-key"
-        assert config.providers[1].name == "Groq"
-        assert config.providers[1].api_key == "groq-test-key"
-        assert config.providers[2].name == "NVIDIA NIM"
-        assert config.providers[2].api_key == "nvidia-test-key"
+        assert config.providers[0].name == "NVIDIA NIM"
+        assert config.providers[0].api_key == "nvidia-test-key"
+        assert config.providers[1].name == "Google AI Studio"
+        assert config.providers[1].api_key == "google-test-key"
+        assert config.providers[2].name == "Groq"
+        assert config.providers[2].api_key == "groq-test-key"
 
     def test_from_env_partial_failover_keys(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that only configured providers appear in chain."""
@@ -475,8 +475,8 @@ class TestFailoverChain:
         config = ProviderConfig.from_env()
         assert config.providers == []
         # Should still work with primary/backup fields
-        assert config.primary_provider == "openai"
-        assert config.primary_model == "gpt-4o-mini"
+        assert config.primary_provider == "nvidia"
+        assert config.primary_model == "minimax-m2.7"
 
     def test_model_selection_uses_failover_chain(self) -> None:
         """Test that _get_model_for_role uses the failover chain."""
