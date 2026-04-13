@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DebateEngine - Real-time Multi-Agent Critique Demo</title>
+    <title>DebateEngine - Multi-Agent Debate Visualization</title>
     <style>
         * {
             margin: 0;
@@ -20,7 +20,7 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -46,6 +46,48 @@
             border-radius: 16px;
             padding: 40px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .flow-diagram {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .flow-steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .flow-step {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            width: 250px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .flow-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        .flow-step h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .flow-step-icon {
+            font-size: 2rem;
+            margin-bottom: 15px;
         }
 
         .chat-container {
@@ -85,9 +127,14 @@
             border-bottom-left-radius: 4px;
         }
 
-        .agent-message.critique {
+        .agent-message.critic {
             background: #e8f5e9;
             border-left: 4px solid #4caf50;
+        }
+
+        .agent-message.devil-advocate {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
         }
 
         .agent-message.judge {
@@ -219,24 +266,118 @@
             opacity: 0.9;
             margin-top: 40px;
         }
+
+        .architecture {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .architecture h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .architecture-diagram {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .arch-layer {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 15px 20px;
+            text-align: center;
+            width: 90%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .arch-layer h3 {
+            color: #667eea;
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .arch-layer p {
+            font-size: 0.9rem;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>🎯 DebateEngine Demo</h1>
-            <p class="subtitle">Real-time Multi-Agent Critique & Consensus</p>
+            <p class="subtitle">Real-time Multi-Agent Critique & Consensus Visualization</p>
         </header>
 
         <div class="main-content">
             <div class="info-box">
-                <h3>How It Works</h3>
-                <p>This demo simulates the core functionality of DebateEngine. When you submit content, it will be analyzed by multiple AI agents:</p>
-                <ul style="margin-top: 10px; margin-left: 20px;">
-                    <li><strong>Critics</strong>: Analyze the content from different perspectives</li>
-                    <li><strong>Devil's Advocate</strong>: Challenges the dominant opinion</li>
-                    <li><strong>Judge</strong>: Synthesizes all perspectives and provides a final consensus</li>
-                </ul>
+                <h3>What is DebateEngine?</h3>
+                <p>DebateEngine is a structured multi-agent system that uses multiple AI agents to analyze content from different perspectives, challenge dominant opinions, and reach evidence-based consensus.</p>
+                <p>Try it by entering your code, proposal, or text below!</p>
+            </div>
+
+            <div class="architecture">
+                <h2>🔍 System Architecture</h2>
+                <div class="architecture-diagram">
+                    <div class="arch-layer">
+                        <h3>Entry Layer</h3>
+                        <p>Python API | FastAPI REST | MCP Server</p>
+                    </div>
+                    <div class="arch-layer">
+                        <h3>Orchestration Layer</h3>
+                        <p>QuickCritiqueEngine (sync) | DebateOrchestrator (async)</p>
+                    </div>
+                    <div class="arch-layer">
+                        <h3>Provider Layer</h3>
+                        <p>LiteLLM (100+ providers) | 3 modes: stable, balanced, diverse</p>
+                    </div>
+                    <div class="arch-layer">
+                        <h3>Schema Layer (Pydantic v2)</h3>
+                        <p>CritiqueSchema | ConsensusSchema | Config</p>
+                    </div>
+                    <div class="arch-layer">
+                        <h3>Evaluation Layer</h3>
+                        <p>DebateEval: BDR, FAR, CV, CIS, CE, RD, HD</p>
+                    </div>
+                    <div class="arch-layer">
+                        <h3>Output Layer</h3>
+                        <p>Markdown | SARIF | JSON</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flow-diagram">
+                <h2 style="text-align: center; color: #667eea; margin-bottom: 20px;">🔄 Multi-Agent Debate Flow</h2>
+                <div class="flow-steps">
+                    <div class="flow-step">
+                        <div class="flow-step-icon">📝</div>
+                        <h3>1. Input</h3>
+                        <p>User submits content for analysis</p>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-step-icon">🧐</div>
+                        <h3>2. Critics</h3>
+                        <p>Multiple agents analyze from different perspectives</p>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-step-icon">😈</div>
+                        <h3>3. Devil's Advocate</h3>
+                        <p>Challenges dominant opinions</p>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-step-icon">⚖️</div>
+                        <h3>4. Judge</h3>
+                        <p>Synthesizes all perspectives and provides consensus</p>
+                    </div>
+                </div>
             </div>
 
             <div class="task-selector">
@@ -251,7 +392,7 @@
             <div class="chat-container">
                 <div class="chat-messages" id="chat-messages">
                     <div class="message agent-message">
-                        <strong>DebateEngine:</strong> Hello! I'm ready to analyze your content. Please enter your code, proposal, or text below and select a task type.
+                        <strong>DebateEngine:</strong> Hello! I'm ready to analyze your content. Please enter your code, proposal, or text below and select a task type. I'll show you how multiple AI agents work together to provide a comprehensive analysis.
                     </div>
                 </div>
 
@@ -279,12 +420,19 @@
                     <div class="metric-name">Consensus Confidence</div>
                 </div>
             </div>
+
+            <div class="info-box">
+                <h3>About the Demo</h3>
+                <p>This demo simulates the core functionality of DebateEngine. When you submit content, it demonstrates how multiple AI agents work together to analyze, critique, and reach consensus.</p>
+                <p>To use the real DebateEngine in your project, install it with:</p>
+                <code style="display: block; background: #f0f0f0; padding: 10px; border-radius: 4px; margin-top: 10px;">pip install debate-engine</code>
+            </div>
         </div>
 
         <footer>
             <p>DebateEngine - Structured Multi-Agent Critique & Consensus Engine</p>
             <p style="margin-top: 10px; font-size: 0.9rem;">
-                MIT License © 2026
+                MIT License © 2026 | Available on <a href="https://pypi.org/project/debate-engine/" style="color: white; text-decoration: underline;">PyPI</a>
             </p>
         </footer>
     </div>
@@ -320,9 +468,13 @@
                 }, 1000);
             });
 
-            function addMessage(type, content) {
+            function addMessage(type, content, role = '') {
                 const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${type}-message`;
+                let messageClass = `message ${type}-message`;
+                if (role) {
+                    messageClass += ` ${role}`;
+                }
+                messageDiv.className = messageClass;
                 
                 if (type === 'user') {
                     messageDiv.innerHTML = `<strong>You:</strong> ${content}`;
@@ -355,29 +507,29 @@
             }
 
             async function simulateDebate(content, taskType) {
-                // Simulate Critic A
+                // Simulate Critique Agent 1
                 await delay(1500);
                 addMessage('agent', `
-                    <strong>Critic A:</strong>
+                    <strong>Critique Agent 1:</strong>
                     <p>I've analyzed the content and found several potential issues:</p>
                     <ul style="margin-top: 5px; margin-left: 20px;">
                         <li>Potential security vulnerability in input validation</li>
                         <li>Code structure could be improved for better maintainability</li>
                         <li>Missing error handling in critical sections</li>
                     </ul>
-                `);
+                `, 'critic');
 
-                // Simulate Critic B
+                // Simulate Critique Agent 2
                 await delay(1000);
                 addMessage('agent', `
-                    <strong>Critic B:</strong>
+                    <strong>Critique Agent 2:</strong>
                     <p>From my perspective:</p>
                     <ul style="margin-top: 5px; margin-left: 20px;">
                         <li>Algorithm efficiency could be optimized</li>
                         <li>Documentation is insufficient for complex sections</li>
                         <li>Edge cases are not properly handled</li>
                     </ul>
-                `);
+                `, 'critic');
 
                 // Simulate Devil's Advocate
                 await delay(1500);
@@ -389,7 +541,7 @@
                         <li>Current code structure is appropriate for the problem domain</li>
                         <li>Performance optimizations would add unnecessary complexity</li>
                     </ul>
-                `);
+                `, 'devil-advocate');
 
                 // Simulate Judge
                 await delay(2000);
@@ -404,7 +556,7 @@
                     </ul>
                     <p style="margin-top: 10px;"><strong>Confidence:</strong> 85%</p>
                     <p><strong>Recommendations:</strong> Address the input validation issue first, then improve documentation and error handling.</p>
-                `);
+                `, 'judge');
 
                 // Show metrics
                 metrics.style.display = 'grid';
