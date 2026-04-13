@@ -64,10 +64,13 @@ class LLMProvider:
       ``config.timeout_seconds``.
     * **Structured output** -- uses Instructor patching when available, falls
       back to JSON-mode + manual Pydantic parsing otherwise.
+    * **API Key Load Balancing** -- distributes requests across multiple API keys
+      with failover and success/failure tracking.
     """
 
-    def __init__(self, config: ProviderConfig) -> None:
+    def __init__(self, config: ProviderConfig, key_manager: 'APIKeyManager' | None = None) -> None:
         self.config = config
+        self.key_manager = key_manager
         self._cost_accumulated: float = 0.0
         self._call_count: int = 0
         self._instructor_available: bool | None = None  # lazy-detect
@@ -333,6 +336,22 @@ class LLMProvider:
 
     # -- Role-based model selection -------------------------------------------
 
+    def _map_provider_name(self, provider_name: str) -> str:
+        """Map provider names to LiteLLM official routes.
+        
+        Args:
+            provider_name: The provider name to map
+            
+        Returns:
+            The mapped provider name that matches LiteLLM official routes
+        """
+        mapped_name = provider_name.lower().replace(" ", "_")
+        if mapped_name == "google_ai_studio":
+            return "gemini"
+        elif mapped_name == "nvidia_nim":
+            return "nvidia"
+        return mapped_name
+
     def _get_model_for_role(self, role_type: str) -> tuple[str, str]:
         """Return ``(provider, model)`` based on provider mode and role type.
 
@@ -358,28 +377,27 @@ class LLMProvider:
 
         # Judge role -- always use the judge-specific provider/model
         if role_type == "judge":
-            return cfg.effective_judge_provider, cfg.effective_judge_model
+            return self._map_provider_name(cfg.effective_judge_provider), cfg.effective_judge_model
 
         # BALANCED mode: DA role uses backup provider
         if cfg.mode == ProviderMode.BALANCED and role_type == "devil_advocate":
             if cfg.backup_provider and cfg.backup_model:
-                return cfg.backup_provider, cfg.backup_model
+                return self._map_provider_name(cfg.backup_provider), cfg.backup_model
             # Fallback to primary if backup is not configured
             logger.warning(
                 "BALANCED mode requested but backup provider not configured; "
                 "falling back to primary for devil_advocate role"
             )
-            return cfg.primary_provider, cfg.primary_model
+            return self._map_provider_name(cfg.primary_provider), cfg.primary_model
 
         # Use failover chain if available
         chain = cfg._resolved_chain
         if chain:
             entry = chain[0]
-            provider_name = entry.name.lower().replace(" ", "_")
-            return provider_name, entry.model
+            return self._map_provider_name(entry.name), entry.model
 
         # Default: primary provider/model
-        return cfg.primary_provider, cfg.primary_model
+        return self._map_provider_name(cfg.primary_provider), cfg.primary_model
 
     def _get_failover_chain(self, role_type: str) -> list[tuple[str, str, str | None, str | None]]:
         """Return the full failover chain for a given role type.
@@ -394,10 +412,10 @@ class LLMProvider:
             chain = cfg._resolved_chain
             if chain:
                 return [
-                    (e.name.lower().replace(" ", "_"), e.model, e.api_key, e.api_base)
+                    (self._map_provider_name(e.name), e.model, e.api_key, e.api_base)
                     for e in chain
                 ]
-            return [(cfg.effective_judge_provider, cfg.effective_judge_model,
+            return [(self._map_provider_name(cfg.effective_judge_provider), cfg.effective_judge_model,
                      cfg.primary_api_key, cfg.primary_api_base)]
 
         # BALANCED mode: DA role uses backup first, then primary
@@ -414,18 +432,18 @@ class LLMProvider:
         chain = cfg._resolved_chain
         if chain:
             return [
-                (e.name.lower().replace(" ", "_"), e.model, e.api_key, e.api_base)
+                (self._map_provider_name(e.name), e.model, e.api_key, e.api_base)
                 for e in chain
             ]
 
         # Backward compat: primary only
-        return [(cfg.primary_provider, cfg.primary_model,
+        return [(self._map_provider_name(cfg.primary_provider), cfg.primary_model,
                  cfg.primary_api_key, cfg.primary_api_base)]
 
     # -- LiteLLM completion ---------------------------------------------------
 
-    @staticmethod
     def _build_litellm_params(
+        self,
         provider: str,
         model: str,
         messages: list[dict],
@@ -443,6 +461,12 @@ class LLMProvider:
             "messages": full_messages,
             "temperature": temperature,
         }
+
+        # Add API key from key manager if available
+        if self.key_manager:
+            api_key = self.key_manager.get_next_key()
+            params["api_key"] = api_key
+        
         return params
 
     async def _acompletion(
@@ -457,13 +481,27 @@ class LLMProvider:
         """
         import litellm  # late import to avoid hard dependency at module level
 
-        if response_model is not None and self._check_instructor():
-            return await self._acompletion_with_instructor(params, response_model)
-
-        # Standard litellm.acompletion
-        response = await litellm.acompletion(**params)
-        raw_text = response.choices[0].message.content or ""
-        return raw_text, response
+        api_key = params.get("api_key")
+        
+        try:
+            if response_model is not None and self._check_instructor():
+                result = await self._acompletion_with_instructor(params, response_model)
+            else:
+                # Standard litellm.acompletion
+                response = await litellm.acompletion(**params)
+                raw_text = response.choices[0].message.content or ""
+                result = raw_text, response
+            
+            # Record success if API key was used
+            if self.key_manager and api_key:
+                self.key_manager.record_success(api_key)
+            
+            return result
+        except Exception as e:
+            # Record failure if API key was used
+            if self.key_manager and api_key:
+                self.key_manager.record_failure(api_key)
+            raise
 
     def _check_instructor(self) -> bool:
         """Lazily detect whether Instructor is available."""
@@ -486,20 +524,31 @@ class LLMProvider:
         import instructor
         import litellm
 
+        api_key = params.get("api_key")
+        
         client = instructor.from_litellm(litellm.AsyncOpenAI())
         # Extract model string from params
         model = params.pop("model")
         messages = params.pop("messages")
         temperature = params.pop("temperature", 0.3)
 
-        response = await client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-            response_model=response_model,
-            **params,
-        )
-        return response
+        try:
+            response = await client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=temperature,
+                response_model=response_model,
+                **params,
+            )
+            # Record success if API key was used
+            if self.key_manager and api_key:
+                self.key_manager.record_success(api_key)
+            return response
+        except Exception as e:
+            # Record failure if API key was used
+            if self.key_manager and api_key:
+                self.key_manager.record_failure(api_key)
+            raise
 
     # -- Parsing helpers ------------------------------------------------------
 

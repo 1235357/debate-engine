@@ -101,8 +101,8 @@ class QuickCritiqueEngine:
         is used to read settings from environment variables.
     """
 
-    def __init__(self, provider_config: ProviderConfig | None = None) -> None:
-        self.provider = LLMProvider(provider_config or ProviderConfig.from_env())
+    def __init__(self, provider_config: ProviderConfig | None = None, key_manager: 'APIKeyManager' | None = None) -> None:
+        self.provider = LLMProvider(provider_config or ProviderConfig.from_env(), key_manager=key_manager)
 
     async def critique(self, config: Any) -> Any:
         """Run the full quick_critique pipeline.

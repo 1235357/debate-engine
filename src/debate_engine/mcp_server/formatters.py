@@ -220,7 +220,7 @@ def format_eval_scores_as_markdown(scores: dict[str, Any]) -> str:
         "BDR": "Bug Discovery Rate -- fraction of real bugs found (code review)",
         "FAR": "False Alarm Rate -- fraction of flagged issues that are false positives",
         "CV": "Consensus Validity -- accuracy of the consensus answer",
-        "CS": "Conformity Score -- whether stance changes are evidence-driven (anti-sycophancy)",
+        "CIS": "Conformity Impact Score -- whether stance changes are evidence-driven (anti-sycophancy)",
         "CE": "Convergence Efficiency -- cost-effectiveness of reaching consensus",
         "RD": "Reasoning Depth -- quality and specificity of suggested fixes",
         "HD": "Hallucination Delta -- faithfulness of RAG outputs (RAG tasks)",

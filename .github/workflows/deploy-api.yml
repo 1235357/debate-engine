@@ -33,7 +33,7 @@ jobs:
       
       - name: Test the API
         run: |
-          python -m pytest tests/ -v || echo "Tests skipped"
+          python -m pytest tests/ -v
       
       - name: Test NVIDIA API connection
         run: |

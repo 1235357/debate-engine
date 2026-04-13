@@ -67,7 +67,10 @@ class ProviderConfig:
 
     @classmethod
     def from_env(cls) -> ProviderConfig:
-        mode_str = os.getenv("DEBATE_ENGINE_MODE", "stable")
+        # 同时支持 DEBATE_ENGINE_PROVIDER_MODE 和 DEBATE_ENGINE_MODE
+        mode_str = os.getenv("DEBATE_ENGINE_PROVIDER_MODE", os.getenv("DEBATE_ENGINE_MODE", "stable"))
+        # 确保模式字符串为小写，与枚举值一致
+        mode_str = mode_str.lower()
         try: mode = ProviderMode(mode_str)
         except ValueError: mode = ProviderMode.STABLE
         primary_provider = os.getenv("DEBATE_ENGINE_PROVIDER", "nvidia")

@@ -116,8 +116,8 @@ class DebateOrchestrator:
         is used.
     """
 
-    def __init__(self, provider_config: ProviderConfig | None = None) -> None:
-        self.provider = LLMProvider(provider_config or ProviderConfig.from_env())
+    def __init__(self, provider_config: ProviderConfig | None = None, key_manager: 'APIKeyManager' | None = None) -> None:
+        self.provider = LLMProvider(provider_config or ProviderConfig.from_env(), key_manager=key_manager)
         self._task_store: dict[str, DebateJob] = {}
         self._cleanup_task: asyncio.Task | None = None
         # Initialize Redis storage
@@ -524,6 +524,8 @@ class DebateOrchestrator:
                 )
                 job.progress_pct = 100
                 job.touch()
+                # Save to Redis
+                self._storage.save_job(job)
                 return
 
             judge_summary = build_judge_summary(
@@ -607,6 +609,8 @@ class DebateOrchestrator:
             job.result = final
             job.progress_pct = 100
             job.touch()
+            # Save to Redis
+            self._storage.save_job(job)
 
             logger.info(
                 "Debate completed: job_id=%s rounds=%d cost=%.6f latency=%.0fms",
@@ -619,11 +623,15 @@ class DebateOrchestrator:
         except asyncio.CancelledError:
             job.status = "CANCELLED"
             job.touch()
+            # Save to Redis
+            self._storage.save_job(job)
             logger.info("Debate cancelled: job_id=%s", job_id)
         except Exception as exc:
             job.status = "FAILED"
             job.error = str(exc)
             job.touch()
+            # Save to Redis
+            self._storage.save_job(job)
             logger.exception("Debate failed: job_id=%s error=%s", job_id, exc)
 
     # ------------------------------------------------------------------

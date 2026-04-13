@@ -1017,15 +1017,8 @@
                 }
             }
 
-            // Initialize with random metrics to simulate real-time data
-            setInterval(() => {
-                if (statusMessage.textContent === 'Ready' || statusMessage.textContent === 'API Connected') {
-                    const randomTime = Math.floor(Math.random() * 30) + 20;
-                    const randomTokens = Math.floor(Math.random() * 50) + 100;
-                    const randomConfidence = Math.floor(Math.random() * 10) + 80;
-                    updateMetrics(randomTime, randomTokens, randomConfidence, 0);
-                }
-            }, 5000);
+            // Initialize with default metrics
+            updateMetrics(0, 0, 0, 0);
 
             // Test API connection
             testApiConnection();

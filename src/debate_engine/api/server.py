@@ -8,10 +8,15 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any
+import time
+from typing import Any, List, Dict, Optional
+from collections import defaultdict
+import threading
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from debate_engine.api.middleware import RequestLoggingMiddleware, setup_logging
 from debate_engine.orchestration import DebateOrchestrator, QuickCritiqueEngine
@@ -22,9 +27,84 @@ from debate_engine.schemas import (
     DebateConfigSchema,
     DebateJobSchema,
     JobStatus,
+    TaskType,
 )
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# API Key Manager
+# ---------------------------------------------------------------------------
+
+class APIKeyManager:
+    """Manage multiple API keys with load balancing and failover."""
+    
+    def __init__(self, api_keys: List[str]):
+        self.api_keys = api_keys
+        self.current_index = 0
+        self.lock = threading.Lock()
+        self.key_stats: Dict[str, dict] = defaultdict(lambda: {
+            'success_count': 0,
+            'failure_count': 0,
+            'last_used': 0,
+            'last_failed': 0,
+            'is_active': True
+        })
+        self.cooldown_period = 60
+        
+    def get_next_key(self) -> str:
+        """Get next API key using round-robin with failover."""
+        with self.lock:
+            start_index = self.current_index
+            attempt = 0
+            
+            while attempt < len(self.api_keys):
+                key = self.api_keys[self.current_index]
+                self.current_index = (self.current_index + 1) % len(self.api_keys)
+                
+                stats = self.key_stats[key]
+                now = time.time()
+                
+                if stats['is_active']:
+                    if now - stats['last_failed'] > self.cooldown_period:
+                        return key
+                
+                attempt += 1
+            
+            self.current_index = start_index
+            return self.api_keys[start_index]
+    
+    def record_success(self, api_key: str):
+        """Record a successful API call."""
+        with self.lock:
+            stats = self.key_stats[api_key]
+            stats['success_count'] += 1
+            stats['last_used'] = time.time()
+            stats['is_active'] = True
+    
+    def record_failure(self, api_key: str):
+        """Record a failed API call."""
+        with self.lock:
+            stats = self.key_stats[api_key]
+            stats['failure_count'] += 1
+            stats['last_failed'] = time.time()
+            stats['is_active'] = False
+    
+    def get_stats(self) -> dict:
+        """Get statistics about API key usage."""
+        with self.lock:
+            return {
+                'total_keys': len(self.api_keys),
+                'active_keys': sum(1 for k in self.api_keys if self.key_stats[k]['is_active']),
+                'key_details': {
+                    f'key_{i}': {
+                        'success_count': self.key_stats[k]['success_count'],
+                        'failure_count': self.key_stats[k]['failure_count'],
+                        'is_active': self.key_stats[k]['is_active']
+                    }
+                    for i, k in enumerate(self.api_keys)
+                }
+            }
 
 # ---------------------------------------------------------------------------
 # App factory
@@ -33,13 +113,24 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="DebateEngine",
     description="Structured Multi-Agent Critique & Consensus Engine",
-    version="0.1.0",
+    version="0.2.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
 
 # Register middleware
 app.add_middleware(RequestLoggingMiddleware)
+# Configure CORS
+allow_origins = os.getenv("DEBATE_ENGINE_CORS_ORIGINS", "*").split(",")
+allow_origins = [origin.strip() for origin in allow_origins if origin.strip()]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allow_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "X-API-Key", "X-Request-ID"],
+)
 
 # ---------------------------------------------------------------------------
 # Global engine instances (initialized on startup)
@@ -47,6 +138,7 @@ app.add_middleware(RequestLoggingMiddleware)
 
 _quick_engine: QuickCritiqueEngine | None = None
 _debate_orchestrator: DebateOrchestrator | None = None
+_key_manager: APIKeyManager | None = None
 
 
 def get_quick_engine() -> QuickCritiqueEngine:
@@ -62,6 +154,42 @@ def get_debate_orchestrator() -> DebateOrchestrator:
         raise RuntimeError("DebateOrchestrator not initialized. Is the server running?")
     return _debate_orchestrator
 
+def get_key_manager() -> APIKeyManager:
+    """Return the global APIKeyManager instance."""
+    if _key_manager is None:
+        raise RuntimeError("APIKeyManager not initialized. Is the server running?")
+    return _key_manager
+
+
+# ---------------------------------------------------------------------------
+# Helper functions
+# ---------------------------------------------------------------------------
+
+def load_api_keys() -> List[str]:
+    """Load API keys from environment variables."""
+    keys = []
+    
+    # Load primary API keys
+    google_key = os.getenv("GOOGLE_API_KEY")
+    if google_key:
+        keys.append(google_key)
+    
+    groq_key = os.getenv("GROQ_API_KEY")
+    if groq_key:
+        keys.append(groq_key)
+    
+    nvidia_key = os.getenv("NVIDIA_API_KEY")
+    if nvidia_key:
+        keys.append(nvidia_key)
+    
+    # Load additional NVIDIA API keys
+    for i in range(1, 11):
+        key = os.getenv(f"NVIDIA_API_KEY_{i}")
+        if key:
+            keys.append(key)
+    
+    return keys
+
 
 # ---------------------------------------------------------------------------
 # Startup
@@ -73,12 +201,20 @@ async def startup() -> None:
     log_level = os.getenv("DEBATE_ENGINE_LOG_LEVEL", "INFO")
     setup_logging(log_level)
 
-    global _quick_engine, _debate_orchestrator
+    global _quick_engine, _debate_orchestrator, _key_manager
 
     provider_config = ProviderConfig.from_env()
+    
+    # Initialize API key manager
+    api_keys = load_api_keys()
+    if api_keys:
+        _key_manager = APIKeyManager(api_keys)
+        logger.info(f"APIKeyManager initialized with {len(api_keys)} keys")
+    else:
+        logger.warning("No API keys found for APIKeyManager")
 
-    _quick_engine = QuickCritiqueEngine(provider_config)
-    _debate_orchestrator = DebateOrchestrator(provider_config)
+    _quick_engine = QuickCritiqueEngine(provider_config, key_manager=_key_manager)
+    _debate_orchestrator = DebateOrchestrator(provider_config, key_manager=_key_manager)
 
     logger.info(
         "DebateEngine starting: provider=%s model=%s mode=%s",
@@ -224,32 +360,220 @@ async def cancel_debate(job_id: str) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# Additional endpoints (compatible with api_server.py)
+# ---------------------------------------------------------------------------
+
+@app.get("/health")
+async def health():
+    """Health check endpoint."""
+    stats = {}
+    try:
+        key_manager = get_key_manager()
+        stats = key_manager.get_stats()
+    except RuntimeError:
+        pass
+    return {
+        "status": "healthy",
+        "version": "0.2.0",
+        "api_keys": stats
+    }
+
+
+@app.get("/api/stats")
+async def get_stats():
+    """Get API key usage statistics."""
+    try:
+        key_manager = get_key_manager()
+        return key_manager.get_stats()
+    except RuntimeError:
+        raise HTTPException(status_code=500, detail="API key manager not initialized")
+
+
+class Message(BaseModel):
+    role: str
+    content: str
+
+
+class ChatRequest(BaseModel):
+    messages: list[Message]
+    model: str = "minimaxai/minimax-m2.7"
+
+
+class CritiqueRequest(BaseModel):
+    content: str
+    task_type: str = "CODE_REVIEW"
+
+
+@app.post("/api/chat")
+async def chat(request: ChatRequest):
+    """Chat endpoint using DebateEngine with full multi-agent transparency."""
+    try:
+        # Extract user content from messages
+        user_content = ""
+        for msg in request.messages:
+            if msg.role == "user":
+                user_content = msg.content
+                break
+        
+        if not user_content:
+            raise HTTPException(status_code=400, detail="No user content provided")
+        
+        # Create critique config
+        config = CritiqueConfigSchema(
+            content=user_content,
+            task_type=TaskType.CODE_REVIEW  # Default for now
+        )
+        
+        # Run the full debate engine
+        engine = get_quick_engine()
+        consensus = await engine.critique(config)
+        
+        # Convert to dict for JSON response
+        result = {
+            "final_conclusion": consensus.final_conclusion,
+            "consensus_confidence": consensus.consensus_confidence,
+            "critiques_summary": [
+                {
+                    "role_id": c.role_id,
+                    "severity": c.severity.value,
+                    "target_area": c.target_area,
+                    "defect_type": c.defect_type,
+                    "evidence": c.evidence,
+                    "suggested_fix": c.suggested_fix,
+                    "confidence": c.confidence,
+                    "is_devil_advocate": getattr(c, "is_devil_advocate", False)
+                }
+                for c in consensus.critiques_summary
+            ],
+            "debate_metadata": {
+                "request_id": consensus.debate_metadata.request_id,
+                "task_type": consensus.debate_metadata.task_type.value,
+                "provider_mode": consensus.debate_metadata.provider_mode.value,
+                "rounds_completed": consensus.debate_metadata.rounds_completed,
+                "total_cost_usd": consensus.debate_metadata.total_cost_usd,
+                "total_latency_ms": consensus.debate_metadata.total_latency_ms,
+                "models_used": consensus.debate_metadata.models_used,
+                "quorum_achieved": consensus.debate_metadata.quorum_achieved,
+                "termination_reason": consensus.debate_metadata.termination_reason.value,
+                "parse_attempts_total": consensus.debate_metadata.parse_attempts_total
+            },
+            "adopted_contributions": consensus.adopted_contributions,
+            "rejected_positions": consensus.rejected_positions,
+            "remaining_disagreements": consensus.remaining_disagreements,
+            "disagreement_confirmation": consensus.disagreement_confirmation,
+            "preserved_minority_opinions": consensus.preserved_minority_opinions,
+            "partial_return": consensus.partial_return
+        }
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/quick-critique")
+async def quick_critique_api(request: CritiqueRequest):
+    """Quick critique endpoint using DebateEngine."""
+    try:
+        # Create critique config
+        task_type = request.task_type
+        if task_type != "AUTO":
+            try:
+                task_type = TaskType(task_type)
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"Invalid task_type: {task_type}")
+        
+        config = CritiqueConfigSchema(
+            content=request.content,
+            task_type=task_type
+        )
+        
+        # Run the full debate engine
+        engine = get_quick_engine()
+        consensus = await engine.critique(config)
+        
+        # Convert to dict for JSON response
+        result = {
+            "final_conclusion": consensus.final_conclusion,
+            "consensus_confidence": consensus.consensus_confidence,
+            "critiques_summary": [
+                {
+                    "role_id": c.role_id,
+                    "severity": c.severity.value,
+                    "target_area": c.target_area,
+                    "defect_type": c.defect_type,
+                    "evidence": c.evidence,
+                    "suggested_fix": c.suggested_fix,
+                    "confidence": c.confidence,
+                    "is_devil_advocate": getattr(c, "is_devil_advocate", False)
+                }
+                for c in consensus.critiques_summary
+            ],
+            "debate_metadata": {
+                "request_id": consensus.debate_metadata.request_id,
+                "task_type": consensus.debate_metadata.task_type.value,
+                "provider_mode": consensus.debate_metadata.provider_mode.value,
+                "rounds_completed": consensus.debate_metadata.rounds_completed,
+                "total_cost_usd": consensus.debate_metadata.total_cost_usd,
+                "total_latency_ms": consensus.debate_metadata.total_latency_ms,
+                "models_used": consensus.debate_metadata.models_used,
+                "quorum_achieved": consensus.debate_metadata.quorum_achieved,
+                "termination_reason": consensus.debate_metadata.termination_reason.value,
+                "parse_attempts_total": consensus.debate_metadata.parse_attempts_total
+            },
+            "adopted_contributions": consensus.adopted_contributions,
+            "rejected_positions": consensus.rejected_positions,
+            "remaining_disagreements": consensus.remaining_disagreements,
+            "disagreement_confirmation": consensus.disagreement_confirmation,
+            "preserved_minority_opinions": consensus.preserved_minority_opinions,
+            "partial_return": consensus.partial_return
+        }
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 def _validate_api_key(request: Request) -> None:
-    """Check that at least one LLM API key is configured.
+    """Validate API key for accessing protected endpoints.
 
-    Raises HTTPException 401 if no keys are found in the environment.
+    Raises HTTPException 401 if API key is missing or invalid.
     """
+    # Get configured API keys from environment
+    allowed_api_keys = os.getenv("DEBATE_ENGINE_API_KEYS", "").split(",")
+    allowed_api_keys = [key.strip() for key in allowed_api_keys if key.strip()]
+    
+    # Get API key from header
     api_key = request.headers.get("X-API-Key")
-    openai_key = os.getenv("OPENAI_API_KEY")
-    anthropic_key = os.getenv("ANTHROPIC_API_KEY")
-    nvidia_key = os.getenv("NVIDIA_API_KEY")
-    google_key = os.getenv("GOOGLE_API_KEY")
-    groq_key = os.getenv("GROQ_API_KEY")
-
-    # If an explicit API key header is provided, accept it
-    # (in production this would validate against a proper auth system)
-    if api_key:
-        return
-
-    # Otherwise, require at least one provider key in the environment
-    if not openai_key and not anthropic_key and not nvidia_key and not google_key and not groq_key:
-        raise HTTPException(
-            status_code=401,
-            detail=(
-                "No API key provided. Set X-API-Key header or configure "
-                "OPENAI_API_KEY / ANTHROPIC_API_KEY / NVIDIA_API_KEY / GOOGLE_API_KEY / GROQ_API_KEY environment variables."
-            ),
-        )
+    
+    # Check if API key is required
+    if allowed_api_keys:
+        # If API keys are configured, require a valid one
+        if not api_key or api_key not in allowed_api_keys:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid or missing API key."
+            )
+    else:
+        # If no API keys are configured, check if at least one LLM provider key is set
+        openai_key = os.getenv("OPENAI_API_KEY")
+        anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+        nvidia_key = os.getenv("NVIDIA_API_KEY")
+        google_key = os.getenv("GOOGLE_API_KEY")
+        groq_key = os.getenv("GROQ_API_KEY")
+        
+        if not openai_key and not anthropic_key and not nvidia_key and not google_key and not groq_key:
+            raise HTTPException(
+                status_code=401,
+                detail=(
+                    "No API key provided. Set X-API-Key header or configure "
+                    "OPENAI_API_KEY / ANTHROPIC_API_KEY / NVIDIA_API_KEY / GOOGLE_API_KEY / GROQ_API_KEY environment variables."
+                ),
+            )

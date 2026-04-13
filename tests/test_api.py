@@ -1,0 +1,203 @@
+"""FastAPI integration tests for DebateEngine."""
+
+from __future__ import annotations
+
+import asyncio
+import json
+from unittest.mock import Mock, patch
+
+import pytest
+from fastapi.testclient import TestClient
+
+from debate_engine.api.server import app
+
+
+@pytest.fixture
+def client() -> TestClient:
+    """Create a test client for the FastAPI app."""
+    return TestClient(app)
+
+
+@pytest.mark.asyncio
+async def test_health_endpoint(client: TestClient):
+    """Test the health endpoint."""
+    response = client.get("/v1/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "healthy", "version": "0.1.0"}
+
+
+@pytest.mark.asyncio
+async def test_health_endpoint_compat(client: TestClient):
+    """Test the compatibility health endpoint."""
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert "status" in response.json()
+    assert response.json()["status"] == "healthy"
+
+
+@pytest.mark.asyncio
+async def test_quick_critique_endpoint(client: TestClient):
+    """Test the quick critique endpoint."""
+    # Mock the QuickCritiqueEngine
+    with patch("debate_engine.api.server.get_quick_engine") as mock_get_engine:
+        # Create a mock engine
+        mock_engine = Mock()
+        mock_engine.critique.return_value = Mock(
+            final_conclusion="Test conclusion",
+            consensus_confidence=0.85,
+            critiques_summary=[],
+            debate_metadata=Mock(
+                request_id="test-request-id",
+                task_type=Mock(value="CODE_REVIEW"),
+                provider_mode=Mock(value="STABLE"),
+                rounds_completed=1,
+                total_cost_usd=0.05,
+                total_latency_ms=1000.0,
+                models_used=["test-model"],
+                quorum_achieved=True,
+                termination_reason=Mock(value="COMPLETED"),
+                parse_attempts_total=0
+            ),
+            adopted_contributions={},
+            rejected_positions=[],
+            remaining_disagreements=[],
+            disagreement_confirmation="",
+            preserved_minority_opinions=[],
+            partial_return=False
+        )
+        mock_get_engine.return_value = mock_engine
+
+        # Test the endpoint
+        response = client.post(
+            "/v1/quick-critique",
+            json={
+                "content": "def hello(): print('hello')",
+                "task_type": "CODE_REVIEW"
+            }
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["final_conclusion"] == "Test conclusion"
+        assert data["consensus_confidence"] == 0.85
+
+
+@pytest.mark.asyncio
+async def test_debate_endpoint(client: TestClient):
+    """Test the debate endpoint."""
+    # Mock the DebateOrchestrator
+    with patch("debate_engine.api.server.get_debate_orchestrator") as mock_get_orchestrator:
+        # Create a mock orchestrator
+        mock_orchestrator = Mock()
+        mock_orchestrator.submit.return_value = "test-job-id"
+        mock_get_orchestrator.return_value = mock_orchestrator
+
+        # Test the endpoint
+        response = client.post(
+            "/v1/debate",
+            json={
+                "content": "def hello(): print('hello')",
+                "task_type": "CODE_REVIEW"
+            }
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["job_id"] == "test-job-id"
+        assert data["status"] == "PENDING"
+
+
+@pytest.mark.asyncio
+async def test_chat_endpoint(client: TestClient):
+    """Test the chat endpoint."""
+    # Mock the QuickCritiqueEngine
+    with patch("debate_engine.api.server.get_quick_engine") as mock_get_engine:
+        # Create a mock engine
+        mock_engine = Mock()
+        mock_engine.critique.return_value = Mock(
+            final_conclusion="Test chat conclusion",
+            consensus_confidence=0.9,
+            critiques_summary=[],
+            debate_metadata=Mock(
+                request_id="test-chat-request-id",
+                task_type=Mock(value="CODE_REVIEW"),
+                provider_mode=Mock(value="STABLE"),
+                rounds_completed=1,
+                total_cost_usd=0.08,
+                total_latency_ms=1500.0,
+                models_used=["test-model"],
+                quorum_achieved=True,
+                termination_reason=Mock(value="COMPLETED"),
+                parse_attempts_total=0
+            ),
+            adopted_contributions={},
+            rejected_positions=[],
+            remaining_disagreements=[],
+            disagreement_confirmation="",
+            preserved_minority_opinions=[],
+            partial_return=False
+        )
+        mock_get_engine.return_value = mock_engine
+
+        # Test the endpoint
+        response = client.post(
+            "/api/chat",
+            json={
+                "messages": [
+                    {"role": "user", "content": "def hello(): print('hello')"}
+                ],
+                "model": "test-model"
+            }
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["final_conclusion"] == "Test chat conclusion"
+        assert data["consensus_confidence"] == 0.9
+
+
+@pytest.mark.asyncio
+async def test_quick_critique_api_endpoint(client: TestClient):
+    """Test the quick critique API endpoint."""
+    # Mock the QuickCritiqueEngine
+    with patch("debate_engine.api.server.get_quick_engine") as mock_get_engine:
+        # Create a mock engine
+        mock_engine = Mock()
+        mock_engine.critique.return_value = Mock(
+            final_conclusion="Test API conclusion",
+            consensus_confidence=0.8,
+            critiques_summary=[],
+            debate_metadata=Mock(
+                request_id="test-api-request-id",
+                task_type=Mock(value="CODE_REVIEW"),
+                provider_mode=Mock(value="STABLE"),
+                rounds_completed=1,
+                total_cost_usd=0.06,
+                total_latency_ms=1200.0,
+                models_used=["test-model"],
+                quorum_achieved=True,
+                termination_reason=Mock(value="COMPLETED"),
+                parse_attempts_total=0
+            ),
+            adopted_contributions={},
+            rejected_positions=[],
+            remaining_disagreements=[],
+            disagreement_confirmation="",
+            preserved_minority_opinions=[],
+            partial_return=False
+        )
+        mock_get_engine.return_value = mock_engine
+
+        # Test the endpoint
+        response = client.post(
+            "/api/quick-critique",
+            json={
+                "content": "def hello(): print('hello')",
+                "task_type": "CODE_REVIEW"
+            }
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["final_conclusion"] == "Test API conclusion"
+        assert data["consensus_confidence"] == 0.8

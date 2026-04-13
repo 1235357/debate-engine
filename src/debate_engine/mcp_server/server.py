@@ -227,7 +227,7 @@ async def debate_eval_score(
     - BDR: Bug Discovery Rate (code review tasks)
     - FAR: False Alarm Rate
     - CV: Consensus Validity
-    - CS: Conformity Score (anti-sycophancy measure)
+    - CIS: Conformity Impact Score (anti-sycophancy measure)
     - CE: Convergence Efficiency
     - RD: Reasoning Depth
     - HD: Hallucination Delta (RAG tasks)
@@ -253,7 +253,7 @@ async def debate_eval_score(
     requested = [m.strip().upper() for m in metrics.split(",") if m.strip()]
 
     # Valid metric names
-    valid_metrics = {"BDR", "FAR", "CV", "CS", "CE", "RD", "HD"}
+    valid_metrics = {"BDR", "FAR", "CV", "CIS", "CE", "RD", "HD"}
     invalid = [m for m in requested if m not in valid_metrics]
     if invalid:
         return (
@@ -378,27 +378,27 @@ def _compute_metrics(
 
         scores["CV"] = {"score": round(cv, 4), "interpretation": interp}
 
-    # --- CS: Conformity Score ---
-    if "CS" in requested_metrics:
+    # --- CIS: Conformity Impact Score ---
+    if "CIS" in requested_metrics:
         # Heuristic: based on minority opinions preserved and rejected positions
-        # CS near 1.0 = evidence-driven stance changes (good)
-        # CS near 0.0 = sycophantic agreement (bad)
+        # CIS near 1.0 = evidence-driven stance changes (good)
+        # CIS near 0.0 = sycophantic agreement (bad)
         if total_critiques > 0:
             # Having minority opinions and rejected positions is a sign of
             # healthy debate (not sycophantic)
             dissent_signals = len(minority) + len(rejected)
-            cs = min(1.0, dissent_signals / max(1, total_critiques))
+            cis = min(1.0, dissent_signals / max(1, total_critiques))
         else:
-            cs = 0.5  # Neutral when no data
+            cis = 0.5  # Neutral when no data
 
-        if cs >= 0.7:
+        if cis >= 0.7:
             interp = "Healthy -- significant dissent preserved, low sycophancy risk"
-        elif cs >= 0.3:
+        elif cis >= 0.3:
             interp = "Moderate -- some dissent preserved"
         else:
             interp = "Low -- little dissent preserved; may indicate sycophantic agreement"
 
-        scores["CS"] = {"score": round(cs, 4), "interpretation": interp}
+        scores["CIS"] = {"score": round(cis, 4), "interpretation": interp}
 
     # --- CE: Convergence Efficiency ---
     if "CE" in requested_metrics:
