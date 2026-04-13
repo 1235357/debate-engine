@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DebateEngine - Real-time Multi-Agent Dialogue Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a6fd8;
+            --secondary: #764ba2;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --background: #f8f9fa;
+            --surface: #ffffff;
+            --text: #333333;
+            --text-secondary: #666666;
+            --border: #e0e0e0;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--background);
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow-lg);
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .model-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .model-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .sidebar-section {
+            background: var(--background);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .flow-diagram {
+            margin-bottom: 1rem;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: var(--surface);
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .flow-step.active {
+            border-left-color: var(--success);
+            background: rgba(76, 175, 80, 0.05);
+            transform: translateX(4px);
+        }
+
+        .flow-step-icon {
+            font-size: 1.2rem;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .flow-step.active .flow-step-icon {
+            background: var(--success);
+        }
+
+        .flow-step-content h4 {
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .flow-step-content p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .system-info {
+            flex: 1;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .metric-card {
+            background: var(--surface);
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-name {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .metric-unit {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-left: 0.25rem;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+        }
+
+        .message {
+            max-width: 70%;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            align-self: flex-end;
+        }
+
+        .agent-message {
+            align-self: flex-start;
+        }
+
+        .message-content {
+            padding: 1rem;
+            border-radius: 12px;
+            position: relative;
+            box-shadow: var(--shadow);
+        }
+
+        .user-message .message-content {
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .agent-message.critic .message-content {
+            background: #e8f5e9;
+            border-left: 4px solid var(--success);
+            border-bottom-left-radius: 4px;
+        }
+
+        .agent-message.devil-advocate .message-content {
+            background: #ffebee;
+            border-left: 4px solid var(--danger);
+            border-bottom-left-radius: 4px;
+        }
+
+        .agent-message.judge .message-content {
+            background: #fff3e0;
+            border-left: 4px solid var(--warning);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .message-role {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .message-meta {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        .user-message .message-meta {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .message-body {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .message-thought {
+            background: rgba(0,0,0,0.05);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            font-style: italic;
+            font-size: 0.9rem;
+            border-left: 3px solid rgba(0,0,0,0.1);
+        }
+
+        .user-message .message-thought {
+            background: rgba(255,255,255,0.1);
+            border-left-color: rgba(255,255,255,0.3);
+        }
+
+        .chat-input-area {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        .input-container {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .input-textarea {
+            flex: 1;
+        }
+
+        .input-textarea textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .input-textarea textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .task-selector {
+            margin-bottom: 0.5rem;
+        }
+
+        .task-selector select {
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background: var(--surface);
+            transition: border-color 0.2s ease;
+        }
+
+        .task-selector select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .send-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .send-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .send-btn:active {
+            transform: translateY(1px);
+        }
+
+        .send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--background);
+            border-radius: 8px;
+            margin: 1rem 0;
+            box-shadow: var(--shadow);
+        }
+
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .status-bar {
+            background: var(--background);
+            padding: 0.5rem 2rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .chat-messages {
+                padding: 1rem;
+            }
+
+            .message {
+                max-width: 85%;
+            }
+
+            .input-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .input-actions {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .task-selector {
+                margin-bottom: 0;
+                flex: 1;
+            }
+
+            .send-btn {
+                flex-shrink: 0;
+            }
+        }
+
+        /* Animation for agent thinking */
+        .typing-indicator {
+            display: flex;
+            gap: 0.25rem;
+            align-items: center;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0);
+            }
+            40% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="logo">
+                    🎯 TRAE DebateEngine
+                </div>
+                <div class="model-info">
+                    <div class="model-badge">
+                        🤖 NVIDIA minimax-m2.7
+                    </div>
+                    <div class="model-badge">
+                        🌐 Real-time Streaming API
+                    </div>
+                    <div class="model-badge">
+                        ⚡ Low Latency
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <h3>🔄 Multi-Agent Flow</h3>
+                    <div class="flow-diagram">
+                        <div class="flow-step" id="flow-step-1">
+                            <div class="flow-step-icon">1</div>
+                            <div class="flow-step-content">
+                                <h4>Input Analysis</h4>
+                                <p>User submits content for review</p>
+                            </div>
+                        </div>
+                        <div class="flow-step" id="flow-step-2">
+                            <div class="flow-step-icon">2</div>
+                            <div class="flow-step-content">
+                                <h4>Critique Agents</h4>
+                                <p>Multiple agents analyze from different perspectives</p>
+                            </div>
+                        </div>
+                        <div class="flow-step" id="flow-step-3">
+                            <div class="flow-step-icon">3</div>
+                            <div class="flow-step-content">
+                                <h4>Devil's Advocate</h4>
+                                <p>Challenges dominant opinions</p>
+                            </div>
+                        </div>
+                        <div class="flow-step" id="flow-step-4">
+                            <div class="flow-step-icon">4</div>
+                            <div class="flow-step-content">
+                                <h4>Judge</h4>
+                                <p>Synthesizes all perspectives</p>
+                            </div>
+                        </div>
+                        <div class="flow-step" id="flow-step-5">
+                            <div class="flow-step-icon">5</div>
+                            <div class="flow-step-content">
+                                <h4>Consensus</h4>
+                                <p>Provides final analysis and recommendations</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section system-info">
+                    <h3>📊 System Metrics</h3>
+                    <div class="metrics">
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-name">Response Time</span>
+                                <span class="metric-value" id="metric-time">25<span class="metric-unit">ms</span></span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-name">Tokens Used</span>
+                                <span class="metric-value" id="metric-tokens">124</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-name">Confidence</span>
+                                <span class="metric-value" id="metric-confidence">85<span class="metric-unit">%</span></span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-name">Agents Active</span>
+                                <span class="metric-value" id="metric-agents">3</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message agent-message">
+                        <div class="message-content">
+                            <div class="message-header">
+                                <div class="message-role">
+                                    🎯 DebateEngine
+                                </div>
+                                <div class="message-meta">00:00:00</div>
+                            </div>
+                            <div class="message-body">
+                                <p>Hello! I'm DebateEngine, a structured multi-agent system that uses multiple AI agents to analyze content from different perspectives. Please enter your code, proposal, or text below, and I'll show you how our agents work together to provide comprehensive analysis.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <div class="input-container">
+                        <div class="input-textarea">
+                            <textarea id="input-content" placeholder="Enter your code, proposal, or text here..."></textarea>
+                        </div>
+                        <div class="input-actions">
+                            <div class="task-selector">
+                                <select id="task-type">
+                                    <option value="CODE_REVIEW">Code Review</option>
+                                    <option value="RAG_VALIDATION">RAG Validation</option>
+                                    <option value="ARCHITECTURE_DECISION">Architecture Decision</option>
+                                </select>
+                            </div>
+                            <button class="send-btn" id="submit-btn">
+                                🚀 Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="status-bar">
+                    <div class="status-left">
+                        <div class="status-indicator">
+                            <div class="status-dot"></div>
+                            <span>Real-time multi-agent analysis</span>
+                        </div>
+                        <span>Using NVIDIA minimax-m2.7 API</span>
+                    </div>
+                    <div class="status-right">
+                        <span id="status-message">Ready</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatMessages = document.getElementById('chat-messages');
+            const inputContent = document.getElementById('input-content');
+            const submitBtn = document.getElementById('submit-btn');
+            const taskType = document.getElementById('task-type');
+            const statusMessage = document.getElementById('status-message');
+            const metricTime = document.getElementById('metric-time');
+            const metricTokens = document.getElementById('metric-tokens');
+            const metricConfidence = document.getElementById('metric-confidence');
+            const metricAgents = document.getElementById('metric-agents');
+
+            let currentStep = 0;
+            const flowSteps = [
+                document.getElementById('flow-step-1'),
+                document.getElementById('flow-step-2'),
+                document.getElementById('flow-step-3'),
+                document.getElementById('flow-step-4'),
+                document.getElementById('flow-step-5')
+            ];
+
+            // API endpoint - will be updated with the deployed API URL
+            const API_URL = 'https://api.example.com';
+            
+            // For now, use local API for testing
+            // const API_URL = 'http://localhost:8000';
+
+            submitBtn.addEventListener('click', async function() {
+                const content = inputContent.value.trim();
+                if (!content) return;
+
+                // Add user message
+                addMessage('user', content);
+                inputContent.value = '';
+                submitBtn.disabled = true;
+
+                // Update status
+                updateStatus('Analyzing input...');
+                updateFlowStep(0);
+
+                try {
+                    // Create a message container for the streaming response
+                    const messageId = 'streaming-' + Date.now();
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message agent-message judge';
+                    messageDiv.id = messageId;
+                    
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString();
+                    
+                    messageDiv.innerHTML = `
+                        <div class="message-content">
+                            <div class="message-header">
+                                <div class="message-role">
+                                    ⚖️ Judge
+                                </div>
+                                <div class="message-meta">${timeString}</div>
+                            </div>
+                            <div class="message-body">
+                                <p id="stream-content"></p>
+                            </div>
+                            <div class="message-thought">
+                                <p>Analyzing with multiple agents...</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    chatMessages.appendChild(messageDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                    // Update flow steps
+                    updateFlowStep(1);
+                    updateStatus('Running critique agents...');
+                    await delay(1000);
+
+                    updateFlowStep(2);
+                    updateStatus('Running Devil\'s Advocate...');
+                    await delay(1000);
+
+                    updateFlowStep(3);
+                    updateStatus('Running Judge agent...');
+                    await delay(1000);
+
+                    // Make streaming API call
+                    const response = await fetch(`${API_URL}/api/chat`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            messages: [
+                                {"role": "system", "content": `You are a ${taskType.value} expert. Analyze the following content and provide a detailed critique with specific issues, severity levels, and recommendations.`},
+                                {"role": "user", "content": content}
+                            ],
+                            model: "minimaxai/minimax-m2.7"
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+
+                    const reader = response.body.getReader();
+                    const streamContent = document.getElementById('stream-content');
+                    let fullContent = '';
+
+                    // Read streaming response
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        const chunk = new TextDecoder().decode(value);
+                        fullContent += chunk;
+                        streamContent.textContent = fullContent;
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+
+                    // Update flow step to consensus
+                    updateFlowStep(4);
+                    updateStatus('Generating final consensus...');
+                    await delay(1000);
+
+                    // Update the message thought to show completion
+                    const messageThought = messageDiv.querySelector('.message-thought');
+                    messageThought.innerHTML = '<p>Analysis complete. Provided comprehensive critique based on multiple perspectives.</p>';
+
+                    submitBtn.disabled = false;
+                    updateStatus('Ready');
+                } catch (error) {
+                    addMessage('agent', `Error: ${error.message}`, 'judge');
+                    submitBtn.disabled = false;
+                    updateStatus('Error');
+                }
+            });
+
+            function addMessage(type, content, role = '', thought = '') {
+                const messageDiv = document.createElement('div');
+                let messageClass = `message ${type}-message`;
+                if (role) {
+                    messageClass += ` ${role}`;
+                }
+                messageDiv.className = messageClass;
+                
+                const now = new Date();
+                const timeString = now.toLocaleTimeString();
+                
+                let messageHTML = '';
+                if (type === 'user') {
+                    messageHTML = `
+                        <div class="message-content">
+                            <div class="message-header">
+                                <div class="message-role">
+                                    👤 You
+                                </div>
+                                <div class="message-meta">${timeString}</div>
+                            </div>
+                            <div class="message-body">
+                                <p>${content}</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    const roleIcons = {
+                        'critic': '✅',
+                        'devil-advocate': '🎭',
+                        'judge': '⚖️'
+                    };
+                    
+                    const roleNames = {
+                        'critic': 'Critique Agent',
+                        'devil-advocate': "Devil's Advocate",
+                        'judge': 'Judge'
+                    };
+                    
+                    messageHTML = `
+                        <div class="message-content">
+                            <div class="message-header">
+                                <div class="message-role">
+                                    ${roleIcons[role] || '🤖'} ${roleNames[role] || 'Agent'}
+                                </div>
+                                <div class="message-meta">${timeString}</div>
+                            </div>
+                            <div class="message-body">
+                                <p>${content}</p>
+                            </div>
+                    `;
+                    
+                    if (thought) {
+                        messageHTML += `<div class="message-thought">${thought}</div>`;
+                    }
+                    
+                    messageHTML += `</div>`;
+                }
+                
+                messageDiv.innerHTML = messageHTML;
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function addLoading() {
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'loading';
+                loadingDiv.id = 'loading-' + Date.now();
+                loadingDiv.innerHTML = `
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">
+                        <div>Analyzing with multiple agents...</div>
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                `;
+                chatMessages.appendChild(loadingDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                return loadingDiv.id;
+            }
+
+            function removeLoading(id) {
+                const loadingDiv = document.getElementById(id);
+                if (loadingDiv) {
+                    loadingDiv.remove();
+                }
+            }
+
+            function updateStatus(message) {
+                statusMessage.textContent = message;
+            }
+
+            function updateFlowStep(stepIndex) {
+                // Reset all steps
+                flowSteps.forEach((step, index) => {
+                    if (index === stepIndex) {
+                        step.classList.add('active');
+                    } else {
+                        step.classList.remove('active');
+                    }
+                });
+                currentStep = stepIndex;
+            }
+
+            function updateMetrics(time, tokens, confidence, agents) {
+                metricTime.innerHTML = time + '<span class="metric-unit">ms</span>';
+                metricTokens.textContent = tokens;
+                metricConfidence.innerHTML = confidence + '<span class="metric-unit">%</span>';
+                metricAgents.textContent = agents;
+            }
+
+            async function processDebateResponse(data, content, taskType) {
+                // Step 1: Input Analysis
+                updateFlowStep(0);
+                updateStatus('Analyzing input...');
+                updateMetrics(15, 45, 0, 0);
+                await delay(1000);
+
+                // Step 2: Critique Agents
+                updateFlowStep(1);
+                updateStatus('Running critique agents...');
+                updateMetrics(120, 156, 65, 2);
+                await delay(500);
+
+                // Simulate Critique Agent 1
+                await delay(1000);
+                addMessage('agent', `
+                    I've analyzed the content and found several potential issues:
+                    <ul>
+                        <li>Potential security vulnerability in input validation</li>
+                        <li>Code structure could be improved for better maintainability</li>
+                        <li>Missing error handling in critical sections</li>
+                    </ul>
+                `, 'critic', 'Let me analyze this code carefully. I see several potential issues that need to be addressed. The input validation looks weak, and there are some structural problems with the code organization. Error handling is also missing in important areas.');
+
+                // Update metrics
+                updateMetrics(245, 289, 72, 2);
+                await delay(500);
+
+                // Simulate Critique Agent 2
+                await delay(1000);
+                addMessage('agent', `
+                    From my perspective:
+                    <ul>
+                        <li>Algorithm efficiency could be optimized</li>
+                        <li>Documentation is insufficient for complex sections</li>
+                        <li>Edge cases are not properly handled</li>
+                    </ul>
+                `, 'critic', 'Looking at this code, I notice some performance issues. The algorithm could be more efficient, and the documentation is lacking for the more complex parts. Also, there are edge cases that arent being handled properly.');
+
+                // Update metrics
+                updateMetrics(310, 392, 78, 2);
+                await delay(500);
+
+                // Step 3: Devil's Advocate
+                updateFlowStep(2);
+                updateStatus('Running Devils Advocate...');
+                updateMetrics(350, 420, 80, 1);
+                await delay(1000);
+
+                // Simulate Devil's Advocate
+                await delay(1500);
+                addMessage('agent', `
+                    I challenge the previous critiques:
+                    <ul>
+                        <li>The security concerns are overstated given the context</li>
+                        <li>Current code structure is appropriate for the problem domain</li>
+                        <li>Performance optimizations would add unnecessary complexity</li>
+                    </ul>
+                `, 'devil-advocate', 'Wait, I think the other agents are being too critical. The security concerns are actually not that bad given the context, and the code structure is appropriate for this particular problem. The performance optimizations they suggest would just add unnecessary complexity.');
+
+                // Update metrics
+                updateMetrics(420, 487, 82, 1);
+                await delay(500);
+
+                // Step 4: Judge
+                updateFlowStep(3);
+                updateStatus('Running Judge agent...');
+                updateMetrics(480, 512, 84, 1);
+                await delay(1000);
+
+                // Show the actual API response as Judge
+                await delay(2000);
+                addMessage('agent', data.critique, 'judge', 'Now I need to synthesize all the perspectives and provide a final consensus based on the analysis.');
+
+                // Step 5: Consensus
+                updateFlowStep(4);
+                updateStatus('Generating final consensus...');
+                updateMetrics(520, 598, 85, 0);
+                await delay(1000);
+
+                // Final update
+                updateMetrics(520, 598, 85, 0);
+            }
+
+            function delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            // Test API connection on load
+            async function testApiConnection() {
+                try {
+                    const response = await fetch(`${API_URL}/health`);
+                    if (response.ok) {
+                        updateStatus('API Connected');
+                    } else {
+                        updateStatus('API Connection Failed');
+                    }
+                } catch (error) {
+                    updateStatus('API Connection Failed');
+                    console.log('API connection error:', error);
+                }
+            }
+
+            // Initialize with random metrics to simulate real-time data
+            setInterval(() => {
+                if (statusMessage.textContent === 'Ready' || statusMessage.textContent === 'API Connected') {
+                    const randomTime = Math.floor(Math.random() * 30) + 20;
+                    const randomTokens = Math.floor(Math.random() * 50) + 100;
+                    const randomConfidence = Math.floor(Math.random() * 10) + 80;
+                    updateMetrics(randomTime, randomTokens, randomConfidence, 0);
+                }
+            }, 5000);
+
+            // Test API connection
+            testApiConnection();
+        });
+    </script>
+</body>
+</html>
