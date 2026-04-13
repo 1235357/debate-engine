@@ -736,8 +736,11 @@
                 document.getElementById('flow-step-5')
             ];
 
-            // API endpoint - using GitHub Pages proxy or deployed endpoint
-            const API_URL = '';
+            // API endpoint - will be updated with the deployed API URL
+            const API_URL = 'https://api.example.com';
+            
+            // For now, use local API for testing
+            // const API_URL = 'http://localhost:8000';
 
             submitBtn.addEventListener('click', async function() {
                 const content = inputContent.value.trim();
