@@ -21,6 +21,7 @@ from typing import Any, Literal
 
 from ..providers.config import ProviderConfig
 from ..providers.llm_provider import CallResult, LLMProvider
+from ..storage import RedisStorage
 from .base import (
     anonymize_critiques,
     build_judge_summary,
@@ -119,6 +120,12 @@ class DebateOrchestrator:
         self.provider = LLMProvider(provider_config or ProviderConfig.from_env())
         self._task_store: dict[str, DebateJob] = {}
         self._cleanup_task: asyncio.Task | None = None
+        # Initialize Redis storage
+        import os
+        redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+        self._storage = RedisStorage(redis_url)
+        # Load jobs from Redis on startup
+        self._load_jobs_from_storage()
 
     # ------------------------------------------------------------------
     # Public API
@@ -209,12 +216,28 @@ class DebateOrchestrator:
         job.cancel_requested = True
         job.status = "CANCELLED"
         job.touch()
+        # Save to Redis
+        self._storage.save_job(job)
         logger.info(
             "Cancel requested for job_id=%s cost_so_far=%.6f",
             job_id,
             self.provider.cost_accumulated,
         )
         return True
+
+    def _load_jobs_from_storage(self) -> None:
+        """Load jobs from Redis storage on startup."""
+        try:
+            job_ids = self._storage.list_jobs()
+            for job_id in job_ids:
+                job = self._storage.get_job(job_id)
+                if job:
+                    # Only load jobs that are not in terminal state
+                    if job.status not in ("DONE", "FAILED", "CANCELLED"):
+                        self._task_store[job_id] = job
+                        logger.info("Loaded job %s from storage", job_id)
+        except Exception as exc:
+            logger.warning("Failed to load jobs from storage: %s", exc)
 
     # ------------------------------------------------------------------
     # Background debate execution
@@ -229,6 +252,8 @@ class DebateOrchestrator:
         try:
             job.status = "RUNNING"
             job.touch()
+            # Save to Redis
+            self._storage.save_job(job)
 
             # Lazy imports
             from debate_engine.schemas import (
@@ -294,6 +319,8 @@ class DebateOrchestrator:
             job.current_phase = "round1_proposals"
             job.progress_pct = 10
             job.touch()
+            # Save to Redis
+            self._storage.save_job(job)
 
             # Generate proposals
             proposals = await self._generate_proposals(
@@ -316,6 +343,8 @@ class DebateOrchestrator:
             job.current_phase = "round1_critiques"
             job.progress_pct = 30
             job.touch()
+            # Save to Redis
+            self._storage.save_job(job)
 
             # Cross-critique proposals
             r1_critiques, r1_results = await self._cross_critique(
@@ -383,6 +412,8 @@ class DebateOrchestrator:
                 job.current_phase = "round2_revisions"
                 job.progress_pct = 50
                 job.touch()
+                # Save to Redis
+                self._storage.save_job(job)
 
                 # Generate revisions based on round 1 critiques
                 revisions = await self._generate_revisions(
@@ -407,6 +438,8 @@ class DebateOrchestrator:
                 job.current_phase = "round2_critiques"
                 job.progress_pct = 70
                 job.touch()
+                # Save to Redis
+                self._storage.save_job(job)
 
                 # Cross-critique revisions
                 r2_critiques, r2_results = await self._cross_critique(
@@ -452,6 +485,8 @@ class DebateOrchestrator:
             job.current_phase = "judge_summarization"
             job.progress_pct = 85
             job.touch()
+            # Save to Redis
+            self._storage.save_job(job)
 
             if not final_quorum:
                 job.status = "DONE"
@@ -469,6 +504,8 @@ class DebateOrchestrator:
                 )
                 job.progress_pct = 100
                 job.touch()
+                # Save to Redis
+                self._storage.save_job(job)
                 return
 
             if self.provider.cost_accumulated >= cost_budget:
