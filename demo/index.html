@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DebateEngine - 结构化多智能体批评与共识引擎</title>
+    <title>DebateEngine - Real-time Multi-Agent Critique Demo</title>
     <style>
         * {
             margin: 0;
@@ -20,7 +20,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -48,111 +48,167 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
 
-        .section {
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
             margin-bottom: 40px;
         }
 
-        h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-            font-size: 1.8rem;
-        }
-
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .feature-card {
-            background: #f8f9fa;
-            padding: 25px;
+        .chat-messages {
+            border: 1px solid #e0e0e0;
             border-radius: 12px;
-            border-left: 4px solid #667eea;
-        }
-
-        .feature-card h3 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .code-block {
-            background: #1e1e1e;
-            color: #d4d4d4;
             padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 80%;
+        }
+
+        .user-message {
+            background: #e3f2fd;
+            align-self: flex-end;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .agent-message {
+            background: #f1f1f1;
+            align-self: flex-start;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+
+        .agent-message.critique {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+        }
+
+        .agent-message.judge {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input textarea {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
             border-radius: 8px;
-            overflow-x: auto;
-            font-family: 'Consolas', 'Monaco', monospace;
-            margin: 20px 0;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
         }
 
-        .code-block .keyword {
-            color: #569cd6;
+        .chat-input button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
         }
 
-        .code-block .string {
-            color: #ce9178;
+        .chat-input button:hover {
+            background: #5a6fd8;
         }
 
-        .code-block .comment {
-            color: #6a9955;
+        .chat-input button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
         }
 
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.9rem;
+        .task-selector {
+            margin-bottom: 20px;
+        }
+
+        .task-selector label {
+            display: block;
+            margin-bottom: 8px;
             font-weight: 600;
         }
 
-        .status-success {
-            background: #d4edda;
-            color: #155724;
+        .task-selector select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
         }
 
-        .status-info {
-            background: #d1ecf1;
-            color: #0c5460;
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            margin: 10px 0;
         }
 
-        .metrics-grid {
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .metrics {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
-            margin: 20px 0;
+            margin-top: 30px;
         }
 
         .metric-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #f8f9fa;
             padding: 20px;
             border-radius: 12px;
             text-align: center;
+            border-left: 4px solid #667eea;
         }
 
         .metric-value {
-            font-size: 2rem;
+            font-size: 1.5rem;
             font-weight: bold;
-            margin-bottom: 5px;
+            color: #667eea;
         }
 
         .metric-name {
             font-size: 0.9rem;
-            opacity: 0.9;
+            color: #666;
+            margin-top: 5px;
         }
 
-        .quick-start {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 20px;
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
             border-radius: 8px;
             margin: 20px 0;
         }
 
-        .quick-start h3 {
-            color: #856404;
+        .info-box h3 {
+            color: #1976d2;
             margin-bottom: 10px;
         }
 
@@ -161,206 +217,207 @@
             padding: 30px 0;
             color: white;
             opacity: 0.9;
-        }
-
-        .buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-secondary {
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
+            margin-top: 40px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🎯 DebateEngine</h1>
-            <p class="subtitle">结构化多智能体批评与共识引擎</p>
-            <div style="margin-top: 20px;">
-                <span class="status-badge status-success">✓ 已完成实现</span>
-                <span class="status-badge status-info">v0.2.0</span>
-            </div>
+            <h1>🎯 DebateEngine Demo</h1>
+            <p class="subtitle">Real-time Multi-Agent Critique & Consensus</p>
         </header>
 
         <div class="main-content">
-            <section class="section">
-                <h2>✨ 项目概述</h2>
-                <p>DebateEngine 是一个强大的多智能体系统，用于自动化代码审查、提案评估和内容验证。通过结构化辩论流程，实现高质量、可复现的批评与共识。</p>
-                
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <div class="metric-value">158</div>
-                        <div class="metric-name">测试通过</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value">7</div>
-                        <div class="metric-name">核心评估指标</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value">3</div>
-                        <div class="metric-name">反谄媚防御</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value">100%</div>
-                        <div class="metric-name">开箱即用</div>
-                    </div>
-                </div>
-            </section>
+            <div class="info-box">
+                <h3>How It Works</h3>
+                <p>This demo simulates the core functionality of DebateEngine. When you submit content, it will be analyzed by multiple AI agents:</p>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Critics</strong>: Analyze the content from different perspectives</li>
+                    <li><strong>Devil's Advocate</strong>: Challenges the dominant opinion</li>
+                    <li><strong>Judge</strong>: Synthesizes all perspectives and provides a final consensus</li>
+                </ul>
+            </div>
 
-            <section class="section">
-                <h2>🚀 核心特性</h2>
-                <div class="features">
-                    <div class="feature-card">
-                        <h3>⚡ QuickCritiqueEngine</h3>
-                        <p>同步快速批评引擎，5秒内生成高质量审查结果</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>🔄 DebateOrchestrator</h3>
-                        <p>异步辩论编排器，支持多轮迭代和深度讨论</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>🛡️ 三层反谄媚防御</h3>
-                        <p>提供商多样性、Devil's Advocate、响应匿名化</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>📊 DebateEval 评估</h3>
-                        <p>7项核心指标：BDR、FAR、CV、CIS、CE、RD、HD</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>🔌 REST API</h3>
-                        <p>FastAPI 驱动的 REST API，支持实时集成</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>🐳 Docker 部署</h3>
-                        <p>一键部署，支持 CI/CD 自动化</p>
+            <div class="task-selector">
+                <label for="task-type">Task Type:</label>
+                <select id="task-type">
+                    <option value="CODE_REVIEW">Code Review</option>
+                    <option value="RAG_VALIDATION">RAG Validation</option>
+                    <option value="ARCHITECTURE_DECISION">Architecture Decision</option>
+                </select>
+            </div>
+
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message agent-message">
+                        <strong>DebateEngine:</strong> Hello! I'm ready to analyze your content. Please enter your code, proposal, or text below and select a task type.
                     </div>
                 </div>
-            </section>
 
-            <section class="section">
-                <h2>📦 快速开始</h2>
-                <div class="quick-start">
-                    <h3>💡 开箱即用！</h3>
-                    <p>无需复杂配置，即可开始使用 DebateEngine。</p>
+                <div class="chat-input">
+                    <textarea id="input-content" placeholder="Enter your code, proposal, or text here..."></textarea>
+                    <button id="submit-btn">Analyze</button>
                 </div>
+            </div>
 
-                <h3>1. 安装依赖</h3>
-                <div class="code-block">
-<span class="comment"># 安装开发版本</span>
-pip install -e ".[dev]"
+            <div class="metrics" id="metrics" style="display: none;">
+                <div class="metric-card">
+                    <div class="metric-value" id="bdr">0%</div>
+                    <div class="metric-name">Bug Discovery Rate</div>
                 </div>
-
-                <h3>2. 运行演示</h3>
-                <div class="code-block">
-<span class="comment"># 运行 demo 脚本</span>
-python demo.py
+                <div class="metric-card">
+                    <div class="metric-value" id="far">0%</div>
+                    <div class="metric-name">False Alarm Rate</div>
                 </div>
-
-                <h3>3. 运行测试</h3>
-                <div class="code-block">
-<span class="comment"># 运行完整测试套件</span>
-pytest tests/ -v
+                <div class="metric-card">
+                    <div class="metric-value" id="cis">0.0</div>
+                    <div class="metric-name">Conformity Impact Score</div>
                 </div>
-
-                <h3>4. 启动服务器</h3>
-                <div class="code-block">
-<span class="comment"># 启动 REST API 服务器</span>
-debate-engine serve
+                <div class="metric-card">
+                    <div class="metric-value" id="confidence">0%</div>
+                    <div class="metric-name">Consensus Confidence</div>
                 </div>
-
-                <h3>5. Docker 部署</h3>
-                <div class="code-block">
-<span class="comment"># 使用 Docker Compose 部署</span>
-docker-compose up -d
-                </div>
-            </section>
-
-            <section class="section">
-                <h2>🎨 使用示例</h2>
-                <h3>Python API</h3>
-                <div class="code-block">
-<span class="keyword">import</span> asyncio
-<span class="keyword">from</span> debate_engine <span class="keyword">import</span> QuickCritiqueEngine
-<span class="keyword">from</span> debate_engine.schemas <span class="keyword">import</span> CritiqueConfigSchema, TaskType
-
-<span class="keyword">async</span> <span class="keyword">def</span> <span class="keyword">main</span>():
-    engine = QuickCritiqueEngine()
-    
-    config = CritiqueConfigSchema(
-        content=<span class="string">'''def login(username, password):
-    query = f"SELECT * FROM users WHERE name='{username}' AND pass='{password}'"
-    return db.execute(query)'''</span>,
-        task_type=TaskType.CODE_REVIEW,
-    )
-    
-    consensus = <span class="keyword">await</span> engine.critique(config)
-    print(consensus.final_conclusion)
-    print(<span class="string">f"置信度: {consensus.consensus_confidence}"</span>)
-
-asyncio.run(main())
-                </div>
-
-                <h3>REST API</h3>
-                <div class="code-block">
-<span class="comment"># 快速批评</span>
-curl -X POST http://localhost:8765/v1/quick-critique \
-  -H <span class="string">"Content-Type: application/json"</span> \
-  -d <span class="string">'{
-    "content": "Your code or proposal here...",
-    "task_type": "CODE_REVIEW"
-  }'</span>
-                </div>
-            </section>
-
-            <section class="section">
-                <h2>🔗 重要链接</h2>
-                <div class="buttons">
-                    <a href="http://localhost:8765/docs" class="btn btn-primary" target="_blank">
-                        📚 API 文档
-                    </a>
-                    <a href="README.md" class="btn btn-secondary">
-                        📖 项目文档
-                    </a>
-                    <a href=".env.example" class="btn btn-secondary">
-                        ⚙️ 环境配置
-                    </a>
-                </div>
-            </section>
+            </div>
         </div>
 
         <footer>
-            <p>DebateEngine - 让每一次批评都有价值</p>
+            <p>DebateEngine - Structured Multi-Agent Critique & Consensus Engine</p>
             <p style="margin-top: 10px; font-size: 0.9rem;">
-                MIT License © 2024
+                MIT License © 2026
             </p>
         </footer>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatMessages = document.getElementById('chat-messages');
+            const inputContent = document.getElementById('input-content');
+            const submitBtn = document.getElementById('submit-btn');
+            const taskType = document.getElementById('task-type');
+            const metrics = document.getElementById('metrics');
+
+            submitBtn.addEventListener('click', async function() {
+                const content = inputContent.value.trim();
+                if (!content) return;
+
+                // Add user message
+                addMessage('user', content);
+                inputContent.value = '';
+                submitBtn.disabled = true;
+
+                // Show loading
+                const loadingId = addLoading();
+
+                // Simulate API call with delay
+                setTimeout(async function() {
+                    removeLoading(loadingId);
+                    
+                    // Simulate agent responses
+                    await simulateDebate(content, taskType.value);
+                    
+                    submitBtn.disabled = false;
+                }, 1000);
+            });
+
+            function addMessage(type, content) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${type}-message`;
+                
+                if (type === 'user') {
+                    messageDiv.innerHTML = `<strong>You:</strong> ${content}`;
+                } else {
+                    messageDiv.innerHTML = content;
+                }
+                
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function addLoading() {
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'loading';
+                loadingDiv.id = 'loading-' + Date.now();
+                loadingDiv.innerHTML = `
+                    <div class="loading-spinner"></div>
+                    <span>Analyzing with multiple agents...</span>
+                `;
+                chatMessages.appendChild(loadingDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                return loadingDiv.id;
+            }
+
+            function removeLoading(id) {
+                const loadingDiv = document.getElementById(id);
+                if (loadingDiv) {
+                    loadingDiv.remove();
+                }
+            }
+
+            async function simulateDebate(content, taskType) {
+                // Simulate Critic A
+                await delay(1500);
+                addMessage('agent', `
+                    <strong>Critic A:</strong>
+                    <p>I've analyzed the content and found several potential issues:</p>
+                    <ul style="margin-top: 5px; margin-left: 20px;">
+                        <li>Potential security vulnerability in input validation</li>
+                        <li>Code structure could be improved for better maintainability</li>
+                        <li>Missing error handling in critical sections</li>
+                    </ul>
+                `);
+
+                // Simulate Critic B
+                await delay(1000);
+                addMessage('agent', `
+                    <strong>Critic B:</strong>
+                    <p>From my perspective:</p>
+                    <ul style="margin-top: 5px; margin-left: 20px;">
+                        <li>Algorithm efficiency could be optimized</li>
+                        <li>Documentation is insufficient for complex sections</li>
+                        <li>Edge cases are not properly handled</li>
+                    </ul>
+                `);
+
+                // Simulate Devil's Advocate
+                await delay(1500);
+                addMessage('agent', `
+                    <strong>Devil's Advocate:</strong>
+                    <p>I challenge the previous critiques:</p>
+                    <ul style="margin-top: 5px; margin-left: 20px;">
+                        <li>The security concerns are overstated given the context</li>
+                        <li>Current code structure is appropriate for the problem domain</li>
+                        <li>Performance optimizations would add unnecessary complexity</li>
+                    </ul>
+                `);
+
+                // Simulate Judge
+                await delay(2000);
+                addMessage('agent', `
+                    <strong>Judge:</strong>
+                    <p><strong>Final Consensus:</strong></p>
+                    <p>After reviewing all perspectives, I've identified the following key issues:</p>
+                    <ul style="margin-top: 5px; margin-left: 20px;">
+                        <li><strong>MAJOR:</strong> Input validation needs improvement to prevent potential security issues</li>
+                        <li><strong>MINOR:</strong> Documentation should be enhanced for complex sections</li>
+                        <li><strong>MINOR:</strong> Error handling could be more robust in critical paths</li>
+                    </ul>
+                    <p style="margin-top: 10px;"><strong>Confidence:</strong> 85%</p>
+                    <p><strong>Recommendations:</strong> Address the input validation issue first, then improve documentation and error handling.</p>
+                `);
+
+                // Show metrics
+                metrics.style.display = 'grid';
+                document.getElementById('bdr').textContent = '85%';
+                document.getElementById('far').textContent = '15%';
+                document.getElementById('cis').textContent = '0.75';
+                document.getElementById('confidence').textContent = '85%';
+            }
+
+            function delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        });
+    </script>
 </body>
 </html>
