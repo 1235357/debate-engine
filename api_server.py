@@ -3,6 +3,7 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import os
 from openai import OpenAI
@@ -56,7 +57,7 @@ async def health():
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
-    """Chat endpoint using NVIDIA API."""
+    """Chat endpoint using NVIDIA API with streaming."""
     try:
         # Convert messages to OpenAI format
         openai_messages = [
@@ -69,13 +70,18 @@ async def chat(request: ChatRequest):
             messages=openai_messages,
             temperature=1,
             top_p=0.95,
-            max_tokens=8192
+            max_tokens=8192,
+            stream=True
         )
         
-        return {
-            "content": completion.choices[0].message.content,
-            "model": request.model
-        }
+        async def stream_generator():
+            for chunk in completion:
+                if not getattr(chunk, "choices", None):
+                    continue
+                if chunk.choices[0].delta.content is not None:
+                    yield chunk.choices[0].delta.content
+        
+        return StreamingResponse(stream_generator(), media_type="text/plain")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

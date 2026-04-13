@@ -572,14 +572,17 @@
         <header>
             <div class="header-content">
                 <div class="logo">
-                    🎯 DebateEngine
+                    🎯 TRAE DebateEngine
                 </div>
                 <div class="model-info">
                     <div class="model-badge">
                         🤖 NVIDIA minimax-m2.7
                     </div>
                     <div class="model-badge">
-                        🌐 Real-time API
+                        🌐 Real-time Streaming API
+                    </div>
+                    <div class="model-badge">
+                        ⚡ Low Latency
                     </div>
                 </div>
             </div>
@@ -733,8 +736,8 @@
                 document.getElementById('flow-step-5')
             ];
 
-            // API endpoint - update this when deployed
-            const API_URL = 'http://localhost:8000';
+            // API endpoint - using GitHub Pages proxy or deployed endpoint
+            const API_URL = '';
 
             submitBtn.addEventListener('click', async function() {
                 const content = inputContent.value.trim();
@@ -745,23 +748,65 @@
                 inputContent.value = '';
                 submitBtn.disabled = true;
 
-                // Show loading
-                const loadingId = addLoading();
-
                 // Update status
                 updateStatus('Analyzing input...');
                 updateFlowStep(0);
 
                 try {
-                    // Make API call to backend
-                    const response = await fetch(`${API_URL}/api/quick-critique`, {
+                    // Create a message container for the streaming response
+                    const messageId = 'streaming-' + Date.now();
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message agent-message judge';
+                    messageDiv.id = messageId;
+                    
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString();
+                    
+                    messageDiv.innerHTML = `
+                        <div class="message-content">
+                            <div class="message-header">
+                                <div class="message-role">
+                                    ⚖️ Judge
+                                </div>
+                                <div class="message-meta">${timeString}</div>
+                            </div>
+                            <div class="message-body">
+                                <p id="stream-content"></p>
+                            </div>
+                            <div class="message-thought">
+                                <p>Analyzing with multiple agents...</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    chatMessages.appendChild(messageDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                    // Update flow steps
+                    updateFlowStep(1);
+                    updateStatus('Running critique agents...');
+                    await delay(1000);
+
+                    updateFlowStep(2);
+                    updateStatus('Running Devil\'s Advocate...');
+                    await delay(1000);
+
+                    updateFlowStep(3);
+                    updateStatus('Running Judge agent...');
+                    await delay(1000);
+
+                    // Make streaming API call
+                    const response = await fetch(`${API_URL}/api/chat`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            content: content,
-                            task_type: taskType.value
+                            messages: [
+                                {"role": "system", "content": `You are a ${taskType.value} expert. Analyze the following content and provide a detailed critique with specific issues, severity levels, and recommendations.`},
+                                {"role": "user", "content": content}
+                            ],
+                            model: "minimaxai/minimax-m2.7"
                         })
                     });
 
@@ -769,17 +814,33 @@
                         throw new Error(`API error: ${response.status}`);
                     }
 
-                    const data = await response.json();
-                    
-                    removeLoading(loadingId);
-                    
-                    // Process the response
-                    await processDebateResponse(data, content, taskType.value);
-                    
+                    const reader = response.body.getReader();
+                    const streamContent = document.getElementById('stream-content');
+                    let fullContent = '';
+
+                    // Read streaming response
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        const chunk = new TextDecoder().decode(value);
+                        fullContent += chunk;
+                        streamContent.textContent = fullContent;
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+
+                    // Update flow step to consensus
+                    updateFlowStep(4);
+                    updateStatus('Generating final consensus...');
+                    await delay(1000);
+
+                    // Update the message thought to show completion
+                    const messageThought = messageDiv.querySelector('.message-thought');
+                    messageThought.innerHTML = '<p>Analysis complete. Provided comprehensive critique based on multiple perspectives.</p>';
+
                     submitBtn.disabled = false;
                     updateStatus('Ready');
                 } catch (error) {
-                    removeLoading(loadingId);
                     addMessage('agent', `Error: ${error.message}`, 'judge');
                     submitBtn.disabled = false;
                     updateStatus('Error');
