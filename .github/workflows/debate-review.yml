@@ -37,6 +37,7 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           DEBATE_ENGINE_PROVIDER_MODE: stable
+          CHANGED_FILES: ${{ steps.changed.outputs.all_changed_files }}
         run: |
           python -c "
           import asyncio, json, sys, os
@@ -77,8 +78,6 @@ jobs:
                   sys.exit(1)
           asyncio.run(review())
           "
-        env:
-          CHANGED_FILES: ${{ steps.changed.outputs.all_changed_files }}
       - name: Upload SARIF
         if: always()
         uses: github/codeql-action/upload-sarif@v3
