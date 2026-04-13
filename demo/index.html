@@ -572,7 +572,7 @@
         <header>
             <div class="header-content">
                 <div class="logo">
-                    🎯 TRAE DebateEngine
+                    🎯 DebateEngine
                 </div>
                 <div class="model-info">
                     <div class="model-badge">
@@ -845,7 +845,16 @@
                     submitBtn.disabled = false;
                     updateStatus('Ready');
                 } catch (error) {
-                    addMessage('agent', `Error: ${error.message}`, 'judge');
+                    let errorMessage = error.message;
+                    if (!API_URL) {
+                        errorMessage = 'API URL is not configured. Please check the deployment guide.';
+                    } else if (error.message.includes('Failed to fetch')) {
+                        errorMessage = 'Cannot connect to API server. Please check if the service is running and the URL is correct.';
+                    } else if (error.message.includes('503')) {
+                        errorMessage = 'API service is temporarily unavailable. Please try again in a few minutes.';
+                    }
+                    
+                    addMessage('agent', `Error: ${errorMessage}`, 'judge');
                     submitBtn.disabled = false;
                     updateStatus('Error');
                 }
@@ -1056,9 +1065,18 @@
             // Test API connection on load
             async function testApiConnection() {
                 try {
+                    if (!API_URL) {
+                        updateStatus('API URL Not Configured');
+                        return;
+                    }
+                    
                     const response = await fetch(`${API_URL}/health`);
                     if (response.ok) {
+                        const data = await response.json();
                         updateStatus('API Connected');
+                        if (data.api_keys) {
+                            console.log('API keys available:', data.api_keys.total_keys);
+                        }
                     } else {
                         updateStatus('API Connection Failed');
                     }
