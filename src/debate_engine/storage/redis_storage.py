@@ -6,7 +6,6 @@ from typing import Any, Dict, Optional
 
 import redis
 
-from debate_engine.orchestration.debate import DebateJob
 from debate_engine.schemas import DebateJobSchema
 
 logger = logging.getLogger(__name__)
@@ -36,7 +35,7 @@ class RedisStorage:
         """Get Redis key for a job."""
         return f"debate:job:{job_id}"
 
-    def save_job(self, job: DebateJob) -> bool:
+    def save_job(self, job: Any) -> bool:
         """Save a job to Redis.
 
         Parameters
@@ -74,7 +73,7 @@ class RedisStorage:
             logger.warning("Failed to save job %s to Redis: %s", job.job_id, exc)
             return False
 
-    def get_job(self, job_id: str) -> Optional[DebateJob]:
+    def get_job(self, job_id: str) -> Optional[Any]:
         """Get a job from Redis.
 
         Parameters
@@ -87,6 +86,8 @@ class RedisStorage:
         Optional[DebateJob]
             DebateJob instance if found, None otherwise.
         """
+        from debate_engine.orchestration.debate import DebateJob
+        
         if not self.redis_client:
             return None
 
