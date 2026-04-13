@@ -576,10 +576,10 @@
                 </div>
                 <div class="model-info">
                     <div class="model-badge">
-                        🤖 Gemini 2.5 Flash
+                        🤖 NVIDIA minimax-m2.7
                     </div>
                     <div class="model-badge">
-                        ⚡ Llama 3.3 70B
+                        🌐 Real-time API
                     </div>
                 </div>
             </div>
@@ -702,7 +702,7 @@
                             <div class="status-dot"></div>
                             <span>Real-time multi-agent analysis</span>
                         </div>
-                        <span>Using Gemini 2.5 Flash & Llama 3.3 70B</span>
+                        <span>Using NVIDIA minimax-m2.7 API</span>
                     </div>
                     <div class="status-right">
                         <span id="status-message">Ready</span>
@@ -733,6 +733,9 @@
                 document.getElementById('flow-step-5')
             ];
 
+            // API endpoint - update this when deployed
+            const API_URL = 'http://localhost:8000';
+
             submitBtn.addEventListener('click', async function() {
                 const content = inputContent.value.trim();
                 if (!content) return;
@@ -749,16 +752,38 @@
                 updateStatus('Analyzing input...');
                 updateFlowStep(0);
 
-                // Simulate API call with delay
-                setTimeout(async function() {
+                try {
+                    // Make API call to backend
+                    const response = await fetch(`${API_URL}/api/quick-critique`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            content: content,
+                            task_type: taskType.value
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    
                     removeLoading(loadingId);
                     
-                    // Simulate agent responses
-                    await simulateDebate(content, taskType.value);
+                    // Process the response
+                    await processDebateResponse(data, content, taskType.value);
                     
                     submitBtn.disabled = false;
                     updateStatus('Ready');
-                }, 1000);
+                } catch (error) {
+                    removeLoading(loadingId);
+                    addMessage('agent', `Error: ${error.message}`, 'judge');
+                    submitBtn.disabled = false;
+                    updateStatus('Error');
+                }
             });
 
             function addMessage(type, content, role = '', thought = '') {
@@ -875,7 +900,7 @@
                 metricAgents.textContent = agents;
             }
 
-            async function simulateDebate(content, taskType) {
+            async function processDebateResponse(data, content, taskType) {
                 // Step 1: Input Analysis
                 updateFlowStep(0);
                 updateStatus('Analyzing input...');
@@ -945,19 +970,9 @@
                 updateMetrics(480, 512, 84, 1);
                 await delay(1000);
 
-                // Simulate Judge
+                // Show the actual API response as Judge
                 await delay(2000);
-                addMessage('agent', `
-                    <strong>Final Consensus:</strong>
-                    <p>After reviewing all perspectives, I've identified the following key issues:</p>
-                    <ul>
-                        <li><strong>MAJOR:</strong> Input validation needs improvement to prevent potential security issues</li>
-                        <li><strong>MINOR:</strong> Documentation should be enhanced for complex sections</li>
-                        <li><strong>MINOR:</strong> Error handling could be more robust in critical paths</li>
-                    </ul>
-                    <p><strong>Confidence:</strong> 85%</p>
-                    <p><strong>Recommendations:</strong> Address the input validation issue first, then improve documentation and error handling.</p>
-                `, 'judge', 'Now I need to synthesize all the perspectives. The Critique Agents have some valid points, but the Devils Advocate also makes good arguments. I should balance these views and provide a clear consensus with actionable recommendations.');
+                addMessage('agent', data.critique, 'judge', 'Now I need to synthesize all the perspectives and provide a final consensus based on the analysis.');
 
                 // Step 5: Consensus
                 updateFlowStep(4);
@@ -973,15 +988,33 @@
                 return new Promise(resolve => setTimeout(resolve, ms));
             }
 
+            // Test API connection on load
+            async function testApiConnection() {
+                try {
+                    const response = await fetch(`${API_URL}/health`);
+                    if (response.ok) {
+                        updateStatus('API Connected');
+                    } else {
+                        updateStatus('API Connection Failed');
+                    }
+                } catch (error) {
+                    updateStatus('API Connection Failed');
+                    console.log('API connection error:', error);
+                }
+            }
+
             // Initialize with random metrics to simulate real-time data
             setInterval(() => {
-                if (statusMessage.textContent === 'Ready') {
+                if (statusMessage.textContent === 'Ready' || statusMessage.textContent === 'API Connected') {
                     const randomTime = Math.floor(Math.random() * 30) + 20;
                     const randomTokens = Math.floor(Math.random() * 50) + 100;
                     const randomConfidence = Math.floor(Math.random() * 10) + 80;
                     updateMetrics(randomTime, randomTokens, randomConfidence, 0);
                 }
             }, 5000);
+
+            // Test API connection
+            testApiConnection();
         });
     </script>
 </body>
