@@ -14,6 +14,10 @@ from openai import OpenAI
 from collections import defaultdict
 import threading
 
+# Import DebateEngine components
+from debate_engine.orchestration.quick_critique import QuickCritiqueEngine
+from debate_engine.schemas import CritiqueConfigSchema, TaskType
+
 app = FastAPI(
     title="DebateEngine API",
     description="Structured Multi-Agent Critique & Consensus Engine",
@@ -127,9 +131,18 @@ DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "minimaxai/minimax-m2.7")
 try:
     API_KEYS = load_api_keys()
     key_manager = APIKeyManager(API_KEYS, BASE_URL, DEFAULT_MODEL)
+    # Initialize DebateEngine with NVIDIA API keys
+    os.environ["NVIDIA_API_KEY"] = API_KEYS[0]
+    for i, key in enumerate(API_KEYS[1:], 1):
+        os.environ[f"NVIDIA_API_KEY_{i}"] = key
+    # Set provider mode to use NVIDIA
+    os.environ["DEBATE_ENGINE_PROVIDER_MODE"] = "diverse"
+    # Initialize the engine
+    engine = QuickCritiqueEngine()
 except Exception as e:
     print(f"Warning: {e}")
     key_manager = None
+    engine = None
 
 
 class CritiqueRequest(BaseModel):
@@ -171,68 +184,67 @@ async def get_stats():
     return key_manager.get_stats()
 
 
-async def make_api_call_with_retry(
-    request: ChatRequest,
-    stream: bool = False
-):
-    """Make API call with automatic retry on different keys."""
-    if not key_manager:
-        raise HTTPException(status_code=500, detail="API key manager not initialized")
-    
-    max_attempts = len(key_manager.api_keys) + 1
-    last_exception = None
-    
-    for attempt in range(max_attempts):
-        api_key = key_manager.get_next_key()
-        
-        try:
-            client = OpenAI(
-                base_url=key_manager.base_url,
-                api_key=api_key
-            )
-            
-            openai_messages = [
-                {"role": msg.role, "content": msg.content}
-                for msg in request.messages
-            ]
-            
-            completion = client.chat.completions.create(
-                model=request.model,
-                messages=openai_messages,
-                temperature=1,
-                top_p=0.95,
-                max_tokens=8192,
-                stream=stream
-            )
-            
-            key_manager.record_success(api_key)
-            return completion, api_key
-            
-        except Exception as e:
-            key_manager.record_failure(api_key)
-            last_exception = e
-            await asyncio.sleep(0.5)
-    
-    raise HTTPException(
-        status_code=500,
-        detail=f"All API keys failed. Last error: {str(last_exception)}"
-    )
-
-
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
-    """Chat endpoint using NVIDIA API with streaming and multi-key support."""
+    """Chat endpoint using DebateEngine with full multi-agent transparency."""
     try:
-        completion, api_key = await make_api_call_with_retry(request, stream=True)
+        # Extract user content from messages
+        user_content = ""
+        for msg in request.messages:
+            if msg.role == "user":
+                user_content = msg.content
+                break
         
-        async def stream_generator():
-            for chunk in completion:
-                if not getattr(chunk, "choices", None):
-                    continue
-                if chunk.choices[0].delta.content is not None:
-                    yield chunk.choices[0].delta.content
+        if not user_content:
+            raise HTTPException(status_code=400, detail="No user content provided")
         
-        return StreamingResponse(stream_generator(), media_type="text/plain")
+        # Create critique config
+        config = CritiqueConfigSchema(
+            content=user_content,
+            task_type=TaskType.CODE_REVIEW  # Default for now
+        )
+        
+        # Run the full debate engine
+        consensus = await engine.critique(config)
+        
+        # Convert to dict for JSON response
+        result = {
+            "final_conclusion": consensus.final_conclusion,
+            "consensus_confidence": consensus.consensus_confidence,
+            "critiques_summary": [
+                {
+                    "role_id": c.role_id,
+                    "severity": c.severity.value,
+                    "target_area": c.target_area,
+                    "defect_type": c.defect_type,
+                    "evidence": c.evidence,
+                    "suggested_fix": c.suggested_fix,
+                    "confidence": c.confidence,
+                    "is_devil_advocate": getattr(c, "is_devil_advocate", False)
+                }
+                for c in consensus.critiques_summary
+            ],
+            "debate_metadata": {
+                "request_id": consensus.debate_metadata.request_id,
+                "task_type": consensus.debate_metadata.task_type.value,
+                "provider_mode": consensus.debate_metadata.provider_mode.value,
+                "rounds_completed": consensus.debate_metadata.rounds_completed,
+                "total_cost_usd": consensus.debate_metadata.total_cost_usd,
+                "total_latency_ms": consensus.debate_metadata.total_latency_ms,
+                "models_used": consensus.debate_metadata.models_used,
+                "quorum_achieved": consensus.debate_metadata.quorum_achieved,
+                "termination_reason": consensus.debate_metadata.termination_reason.value,
+                "parse_attempts_total": consensus.debate_metadata.parse_attempts_total
+            },
+            "adopted_contributions": consensus.adopted_contributions,
+            "rejected_positions": consensus.rejected_positions,
+            "remaining_disagreements": consensus.remaining_disagreements,
+            "disagreement_confirmation": consensus.disagreement_confirmation,
+            "preserved_minority_opinions": consensus.preserved_minority_opinions,
+            "partial_return": consensus.partial_return
+        }
+        
+        return result
     except HTTPException:
         raise
     except Exception as e:
@@ -241,25 +253,55 @@ async def chat(request: ChatRequest):
 
 @app.post("/api/quick-critique")
 async def quick_critique(request: CritiqueRequest):
-    """Quick critique endpoint with multi-key support."""
+    """Quick critique endpoint using DebateEngine."""
     try:
-        system_prompt = f"""You are a {request.task_type} expert. Analyze the following content and provide a detailed critique with specific issues, severity levels, and recommendations."""
-        
-        chat_request = ChatRequest(
-            messages=[
-                Message(role="system", content=system_prompt),
-                Message(role="user", content=request.content)
-            ],
-            model=DEFAULT_MODEL
+        # Create critique config
+        config = CritiqueConfigSchema(
+            content=request.content,
+            task_type=TaskType(request.task_type) if request.task_type != "AUTO" else "AUTO"
         )
         
-        completion, api_key = await make_api_call_with_retry(chat_request, stream=False)
+        # Run the full debate engine
+        consensus = await engine.critique(config)
         
-        return {
-            "critique": completion.choices[0].message.content,
-            "task_type": request.task_type,
-            "api_key_used": f"key_{key_manager.api_keys.index(api_key)}" if key_manager else "unknown"
+        # Convert to dict for JSON response
+        result = {
+            "final_conclusion": consensus.final_conclusion,
+            "consensus_confidence": consensus.consensus_confidence,
+            "critiques_summary": [
+                {
+                    "role_id": c.role_id,
+                    "severity": c.severity.value,
+                    "target_area": c.target_area,
+                    "defect_type": c.defect_type,
+                    "evidence": c.evidence,
+                    "suggested_fix": c.suggested_fix,
+                    "confidence": c.confidence,
+                    "is_devil_advocate": getattr(c, "is_devil_advocate", False)
+                }
+                for c in consensus.critiques_summary
+            ],
+            "debate_metadata": {
+                "request_id": consensus.debate_metadata.request_id,
+                "task_type": consensus.debate_metadata.task_type.value,
+                "provider_mode": consensus.debate_metadata.provider_mode.value,
+                "rounds_completed": consensus.debate_metadata.rounds_completed,
+                "total_cost_usd": consensus.debate_metadata.total_cost_usd,
+                "total_latency_ms": consensus.debate_metadata.total_latency_ms,
+                "models_used": consensus.debate_metadata.models_used,
+                "quorum_achieved": consensus.debate_metadata.quorum_achieved,
+                "termination_reason": consensus.debate_metadata.termination_reason.value,
+                "parse_attempts_total": consensus.debate_metadata.parse_attempts_total
+            },
+            "adopted_contributions": consensus.adopted_contributions,
+            "rejected_positions": consensus.rejected_positions,
+            "remaining_disagreements": consensus.remaining_disagreements,
+            "disagreement_confirmation": consensus.disagreement_confirmation,
+            "preserved_minority_opinions": consensus.preserved_minority_opinions,
+            "partial_return": consensus.partial_return
         }
+        
+        return result
     except HTTPException:
         raise
     except Exception as e:

@@ -756,7 +756,7 @@
                 updateFlowStep(0);
 
                 try {
-                    // Create a message container for the streaming response
+                    // Create a message container for the response
                     const messageId = 'streaming-' + Date.now();
                     const messageDiv = document.createElement('div');
                     messageDiv.className = 'message agent-message judge';
@@ -774,10 +774,10 @@
                                 <div class="message-meta">${timeString}</div>
                             </div>
                             <div class="message-body">
-                                <p id="stream-content"></p>
+                                <p>Analyzing with multiple agents...</p>
                             </div>
                             <div class="message-thought">
-                                <p>Analyzing with multiple agents...</p>
+                                <p>Starting multi-agent analysis process...</p>
                             </div>
                         </div>
                     `;
@@ -788,17 +788,8 @@
                     // Update flow steps
                     updateFlowStep(1);
                     updateStatus('Running critique agents...');
-                    await delay(1000);
 
-                    updateFlowStep(2);
-                    updateStatus('Running Devil\'s Advocate...');
-                    await delay(1000);
-
-                    updateFlowStep(3);
-                    updateStatus('Running Judge agent...');
-                    await delay(1000);
-
-                    // Make streaming API call
+                    // Make API call to get full multi-agent response
                     const response = await fetch(`${API_URL}/api/chat`, {
                         method: 'POST',
                         headers: {
@@ -806,7 +797,6 @@
                         },
                         body: JSON.stringify({
                             messages: [
-                                {"role": "system", "content": `You are a ${taskType.value} expert. Analyze the following content and provide a detailed critique with specific issues, severity levels, and recommendations.`},
                                 {"role": "user", "content": content}
                             ],
                             model: "minimaxai/minimax-m2.7"
@@ -817,29 +807,55 @@
                         throw new Error(`API error: ${response.status}`);
                     }
 
-                    const reader = response.body.getReader();
-                    const streamContent = messageDiv.querySelector('#stream-content');
-                    let fullContent = '';
+                    const data = await response.json();
 
-                    // Read streaming response
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
+                    // Show all agent critiques with transparency
+                    data.critiques_summary.forEach((critique, index) => {
+                        const role = critique.is_devil_advocate ? 'devil-advocate' : 'critic';
+                        const roleName = critique.is_devil_advocate ? "Devil's Advocate" : critique.role_id;
                         
-                        const chunk = new TextDecoder().decode(value);
-                        fullContent += chunk;
-                        streamContent.textContent = fullContent;
-                        chatMessages.scrollTop = chatMessages.scrollHeight;
-                    }
+                        addMessage('agent', `
+                            <strong>Target Area:</strong> ${critique.target_area}<br>
+                            <strong>Severity:</strong> ${critique.severity}<br>
+                            <strong>Defect Type:</strong> ${critique.defect_type}<br>
+                            <strong>Evidence:</strong> ${critique.evidence}<br>
+                            <strong>Suggested Fix:</strong> ${critique.suggested_fix}<br>
+                            <strong>Confidence:</strong> ${(critique.confidence * 100).toFixed(0)}%
+                        `, role, `Analyzing from ${roleName} perspective...`);
+                    });
 
                     // Update flow step to consensus
                     updateFlowStep(4);
                     updateStatus('Generating final consensus...');
-                    await delay(1000);
 
-                    // Update the message thought to show completion
-                    const messageThought = messageDiv.querySelector('.message-thought');
-                    messageThought.innerHTML = '<p>Analysis complete. Provided comprehensive critique based on multiple perspectives.</p>';
+                    // Update the judge message with final conclusion
+                    messageDiv.innerHTML = `
+                        <div class="message-content">
+                            <div class="message-header">
+                                <div class="message-role">
+                                    ⚖️ Judge
+                                </div>
+                                <div class="message-meta">${timeString}</div>
+                            </div>
+                            <div class="message-body">
+                                <p>${data.final_conclusion}</p>
+                            </div>
+                            <div class="message-thought">
+                                <p>Consensus confidence: ${(data.consensus_confidence * 100).toFixed(0)}%</p>
+                                <p>Task type: ${data.debate_metadata.task_type}</p>
+                                <p>Models used: ${data.debate_metadata.models_used.join(', ')}</p>
+                                <p>Total latency: ${data.debate_metadata.total_latency_ms}ms</p>
+                            </div>
+                        </div>
+                    `;
+
+                    // Update metrics
+                    updateMetrics(
+                        data.debate_metadata.total_latency_ms,
+                        data.debate_metadata.total_cost_usd * 1000, // Estimated tokens
+                        (data.consensus_confidence * 100).toFixed(0),
+                        data.critiques_summary.length
+                    );
 
                     submitBtn.disabled = false;
                     updateStatus('Ready');
@@ -907,7 +923,7 @@
                                 <div class="message-meta">${timeString}</div>
                             </div>
                             <div class="message-body">
-                                <p>${content}</p>
+                                ${content}
                             </div>
                     `;
                     
@@ -971,90 +987,6 @@
                 metricTokens.textContent = tokens;
                 metricConfidence.innerHTML = confidence + '<span class="metric-unit">%</span>';
                 metricAgents.textContent = agents;
-            }
-
-            async function processDebateResponse(data, content, taskType) {
-                // Step 1: Input Analysis
-                updateFlowStep(0);
-                updateStatus('Analyzing input...');
-                updateMetrics(15, 45, 0, 0);
-                await delay(1000);
-
-                // Step 2: Critique Agents
-                updateFlowStep(1);
-                updateStatus('Running critique agents...');
-                updateMetrics(120, 156, 65, 2);
-                await delay(500);
-
-                // Simulate Critique Agent 1
-                await delay(1000);
-                addMessage('agent', `
-                    I've analyzed the content and found several potential issues:
-                    <ul>
-                        <li>Potential security vulnerability in input validation</li>
-                        <li>Code structure could be improved for better maintainability</li>
-                        <li>Missing error handling in critical sections</li>
-                    </ul>
-                `, 'critic', 'Let me analyze this code carefully. I see several potential issues that need to be addressed. The input validation looks weak, and there are some structural problems with the code organization. Error handling is also missing in important areas.');
-
-                // Update metrics
-                updateMetrics(245, 289, 72, 2);
-                await delay(500);
-
-                // Simulate Critique Agent 2
-                await delay(1000);
-                addMessage('agent', `
-                    From my perspective:
-                    <ul>
-                        <li>Algorithm efficiency could be optimized</li>
-                        <li>Documentation is insufficient for complex sections</li>
-                        <li>Edge cases are not properly handled</li>
-                    </ul>
-                `, 'critic', 'Looking at this code, I notice some performance issues. The algorithm could be more efficient, and the documentation is lacking for the more complex parts. Also, there are edge cases that arent being handled properly.');
-
-                // Update metrics
-                updateMetrics(310, 392, 78, 2);
-                await delay(500);
-
-                // Step 3: Devil's Advocate
-                updateFlowStep(2);
-                updateStatus('Running Devils Advocate...');
-                updateMetrics(350, 420, 80, 1);
-                await delay(1000);
-
-                // Simulate Devil's Advocate
-                await delay(1500);
-                addMessage('agent', `
-                    I challenge the previous critiques:
-                    <ul>
-                        <li>The security concerns are overstated given the context</li>
-                        <li>Current code structure is appropriate for the problem domain</li>
-                        <li>Performance optimizations would add unnecessary complexity</li>
-                    </ul>
-                `, 'devil-advocate', 'Wait, I think the other agents are being too critical. The security concerns are actually not that bad given the context, and the code structure is appropriate for this particular problem. The performance optimizations they suggest would just add unnecessary complexity.');
-
-                // Update metrics
-                updateMetrics(420, 487, 82, 1);
-                await delay(500);
-
-                // Step 4: Judge
-                updateFlowStep(3);
-                updateStatus('Running Judge agent...');
-                updateMetrics(480, 512, 84, 1);
-                await delay(1000);
-
-                // Show the actual API response as Judge
-                await delay(2000);
-                addMessage('agent', data.critique, 'judge', 'Now I need to synthesize all the perspectives and provide a final consensus based on the analysis.');
-
-                // Step 5: Consensus
-                updateFlowStep(4);
-                updateStatus('Generating final consensus...');
-                updateMetrics(520, 598, 85, 0);
-                await delay(1000);
-
-                // Final update
-                updateMetrics(520, 598, 85, 0);
             }
 
             function delay(ms) {
