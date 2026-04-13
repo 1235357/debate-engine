@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DebateEngine - Multi-Agent Debate Visualization</title>
+    <title>DebateEngine - Real-time Multi-Agent Dialogue Interface</title>
     <style>
         * {
             margin: 0;
@@ -11,205 +11,435 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a6fd8;
+            --secondary: #764ba2;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --background: #f8f9fa;
+            --surface: #ffffff;
+            --text: #333333;
+            --text-secondary: #666666;
+            --border: #e0e0e0;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--text);
+            background: var(--background);
             min-height: 100vh;
         }
 
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
 
         header {
-            text-align: center;
-            padding: 40px 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: white;
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow-lg);
+            z-index: 100;
         }
 
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
-        .subtitle {
-            font-size: 1.2rem;
-            opacity: 0.9;
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .main-content {
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        .model-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .model-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .sidebar-section {
+            background: var(--background);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .flow-diagram {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 40px;
-            border: 1px solid #e0e0e0;
-        }
-
-        .flow-steps {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 30px;
+            margin-bottom: 1rem;
         }
 
         .flow-step {
-            background: white;
-            border: 2px solid #667eea;
-            border-radius: 12px;
-            padding: 20px;
-            width: 250px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: var(--surface);
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+            transition: all 0.3s ease;
         }
 
-        .flow-step:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-        }
-
-        .flow-step h3 {
-            color: #667eea;
-            margin-bottom: 10px;
+        .flow-step.active {
+            border-left-color: var(--success);
+            background: rgba(76, 175, 80, 0.05);
+            transform: translateX(4px);
         }
 
         .flow-step-icon {
-            font-size: 2rem;
-            margin-bottom: 15px;
+            font-size: 1.2rem;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .flow-step.active .flow-step-icon {
+            background: var(--success);
+        }
+
+        .flow-step-content h4 {
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .flow-step-content p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .system-info {
+            flex: 1;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .metric-card {
+            background: var(--surface);
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-name {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .metric-unit {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-left: 0.25rem;
         }
 
         .chat-container {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            margin-bottom: 40px;
+            background: var(--surface);
         }
 
         .chat-messages {
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 20px;
-            height: 400px;
+            flex: 1;
+            padding: 2rem;
             overflow-y: auto;
-            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
         }
 
         .message {
-            margin-bottom: 15px;
-            padding: 12px 16px;
-            border-radius: 18px;
-            max-width: 80%;
+            max-width: 70%;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .user-message {
-            background: #e3f2fd;
             align-self: flex-end;
-            margin-left: auto;
-            border-bottom-right-radius: 4px;
         }
 
         .agent-message {
-            background: #f1f1f1;
             align-self: flex-start;
-            margin-right: auto;
+        }
+
+        .message-content {
+            padding: 1rem;
+            border-radius: 12px;
+            position: relative;
+            box-shadow: var(--shadow);
+        }
+
+        .user-message .message-content {
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .agent-message.critic .message-content {
+            background: #e8f5e9;
+            border-left: 4px solid var(--success);
             border-bottom-left-radius: 4px;
         }
 
-        .agent-message.critic {
-            background: #e8f5e9;
-            border-left: 4px solid #4caf50;
-        }
-
-        .agent-message.devil-advocate {
+        .agent-message.devil-advocate .message-content {
             background: #ffebee;
-            border-left: 4px solid #f44336;
+            border-left: 4px solid var(--danger);
+            border-bottom-left-radius: 4px;
         }
 
-        .agent-message.judge {
+        .agent-message.judge .message-content {
             background: #fff3e0;
-            border-left: 4px solid #ff9800;
+            border-left: 4px solid var(--warning);
+            border-bottom-left-radius: 4px;
         }
 
-        .chat-input {
+        .message-header {
             display: flex;
-            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
         }
 
-        .chat-input textarea {
+        .message-role {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .message-meta {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        .user-message .message-meta {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .message-body {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .message-thought {
+            background: rgba(0,0,0,0.05);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            font-style: italic;
+            font-size: 0.9rem;
+            border-left: 3px solid rgba(0,0,0,0.1);
+        }
+
+        .user-message .message-thought {
+            background: rgba(255,255,255,0.1);
+            border-left-color: rgba(255,255,255,0.3);
+        }
+
+        .chat-input-area {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        .input-container {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .input-textarea {
             flex: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
+        }
+
+        .input-textarea textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid var(--border);
             border-radius: 8px;
             resize: vertical;
             min-height: 100px;
             font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .chat-input button {
-            padding: 12px 24px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
+        .input-textarea textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        .chat-input button:hover {
-            background: #5a6fd8;
-        }
-
-        .chat-input button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
+        .input-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
 
         .task-selector {
-            margin-bottom: 20px;
-        }
-
-        .task-selector label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
+            margin-bottom: 0.5rem;
         }
 
         .task-selector select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-family: inherit;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background: var(--surface);
+            transition: border-color 0.2s ease;
+        }
+
+        .task-selector select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .send-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .send-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .send-btn:active {
+            transform: translateY(1px);
+        }
+
+        .send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .loading {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 10px;
-            background: #f0f0f0;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--background);
             border-radius: 8px;
-            margin: 10px 0;
+            margin: 1rem 0;
+            box-shadow: var(--shadow);
         }
 
         .loading-spinner {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             border: 2px solid #f3f3f3;
-            border-top: 2px solid #667eea;
+            border-top: 2px solid var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -219,222 +449,267 @@
             100% { transform: rotate(360deg); }
         }
 
-        .metrics {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 30px;
-        }
-
-        .metric-card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            border-left: 4px solid #667eea;
-        }
-
-        .metric-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .metric-name {
+        .loading-text {
             font-size: 0.9rem;
-            color: #666;
-            margin-top: 5px;
+            color: var(--text-secondary);
         }
 
-        .info-box {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-
-        .info-box h3 {
-            color: #1976d2;
-            margin-bottom: 10px;
-        }
-
-        footer {
-            text-align: center;
-            padding: 30px 0;
-            color: white;
-            opacity: 0.9;
-            margin-top: 40px;
-        }
-
-        .architecture {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 40px;
-            border: 1px solid #e0e0e0;
-        }
-
-        .architecture h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .architecture-diagram {
+        .status-bar {
+            background: var(--background);
+            padding: 0.5rem 2rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
-            gap: 10px;
         }
 
-        .arch-layer {
-            background: white;
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            padding: 15px 20px;
-            text-align: center;
-            width: 90%;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
 
-        .arch-layer h3 {
-            color: #667eea;
-            font-size: 1rem;
-            margin-bottom: 5px;
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
         }
 
-        .arch-layer p {
-            font-size: 0.9rem;
-            color: #666;
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .chat-messages {
+                padding: 1rem;
+            }
+
+            .message {
+                max-width: 85%;
+            }
+
+            .input-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .input-actions {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .task-selector {
+                margin-bottom: 0;
+                flex: 1;
+            }
+
+            .send-btn {
+                flex-shrink: 0;
+            }
+        }
+
+        /* Animation for agent thinking */
+        .typing-indicator {
+            display: flex;
+            gap: 0.25rem;
+            align-items: center;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0);
+            }
+            40% {
+                transform: scale(1);
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🎯 DebateEngine Demo</h1>
-            <p class="subtitle">Real-time Multi-Agent Critique & Consensus Visualization</p>
+            <div class="header-content">
+                <div class="logo">
+                    🎯 DebateEngine
+                </div>
+                <div class="model-info">
+                    <div class="model-badge">
+                        🤖 Gemini 2.5 Flash
+                    </div>
+                    <div class="model-badge">
+                        ⚡ Llama 3.3 70B
+                    </div>
+                </div>
+            </div>
         </header>
 
-        <div class="main-content">
-            <div class="info-box">
-                <h3>What is DebateEngine?</h3>
-                <p>DebateEngine is a structured multi-agent system that uses multiple AI agents to analyze content from different perspectives, challenge dominant opinions, and reach evidence-based consensus.</p>
-                <p>Try it by entering your code, proposal, or text below!</p>
-            </div>
-
-            <div class="architecture">
-                <h2>🔍 System Architecture</h2>
-                <div class="architecture-diagram">
-                    <div class="arch-layer">
-                        <h3>Entry Layer</h3>
-                        <p>Python API | FastAPI REST | MCP Server</p>
-                    </div>
-                    <div class="arch-layer">
-                        <h3>Orchestration Layer</h3>
-                        <p>QuickCritiqueEngine (sync) | DebateOrchestrator (async)</p>
-                    </div>
-                    <div class="arch-layer">
-                        <h3>Provider Layer</h3>
-                        <p>LiteLLM (100+ providers) | 3 modes: stable, balanced, diverse</p>
-                    </div>
-                    <div class="arch-layer">
-                        <h3>Schema Layer (Pydantic v2)</h3>
-                        <p>CritiqueSchema | ConsensusSchema | Config</p>
-                    </div>
-                    <div class="arch-layer">
-                        <h3>Evaluation Layer</h3>
-                        <p>DebateEval: BDR, FAR, CV, CIS, CE, RD, HD</p>
-                    </div>
-                    <div class="arch-layer">
-                        <h3>Output Layer</h3>
-                        <p>Markdown | SARIF | JSON</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flow-diagram">
-                <h2 style="text-align: center; color: #667eea; margin-bottom: 20px;">🔄 Multi-Agent Debate Flow</h2>
-                <div class="flow-steps">
-                    <div class="flow-step">
-                        <div class="flow-step-icon">📝</div>
-                        <h3>1. Input</h3>
-                        <p>User submits content for analysis</p>
-                    </div>
-                    <div class="flow-step">
-                        <div class="flow-step-icon">🧐</div>
-                        <h3>2. Critics</h3>
-                        <p>Multiple agents analyze from different perspectives</p>
-                    </div>
-                    <div class="flow-step">
-                        <div class="flow-step-icon">😈</div>
-                        <h3>3. Devil's Advocate</h3>
-                        <p>Challenges dominant opinions</p>
-                    </div>
-                    <div class="flow-step">
-                        <div class="flow-step-icon">⚖️</div>
-                        <h3>4. Judge</h3>
-                        <p>Synthesizes all perspectives and provides consensus</p>
+        <main>
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <h3>🔄 Multi-Agent Flow</h3>
+                    <div class="flow-diagram">
+                        <div class="flow-step" id="flow-step-1">
+                            <div class="flow-step-icon">1</div>
+                            <div class="flow-step-content">
+                                <h4>Input Analysis</h4>
+                                <p>User submits content for review</p>
+                            </div>
+                        </div>
+                        <div class="flow-step" id="flow-step-2">
+                            <div class="flow-step-icon">2</div>
+                            <div class="flow-step-content">
+                                <h4>Critique Agents</h4>
+                                <p>Multiple agents analyze from different perspectives</p>
+                            </div>
+                        </div>
+                        <div class="flow-step" id="flow-step-3">
+                            <div class="flow-step-icon">3</div>
+                            <div class="flow-step-content">
+                                <h4>Devil's Advocate</h4>
+                                <p>Challenges dominant opinions</p>
+                            </div>
+                        </div>
+                        <div class="flow-step" id="flow-step-4">
+                            <div class="flow-step-icon">4</div>
+                            <div class="flow-step-content">
+                                <h4>Judge</h4>
+                                <p>Synthesizes all perspectives</p>
+                            </div>
+                        </div>
+                        <div class="flow-step" id="flow-step-5">
+                            <div class="flow-step-icon">5</div>
+                            <div class="flow-step-content">
+                                <h4>Consensus</h4>
+                                <p>Provides final analysis and recommendations</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="task-selector">
-                <label for="task-type">Task Type:</label>
-                <select id="task-type">
-                    <option value="CODE_REVIEW">Code Review</option>
-                    <option value="RAG_VALIDATION">RAG Validation</option>
-                    <option value="ARCHITECTURE_DECISION">Architecture Decision</option>
-                </select>
-            </div>
+                <div class="sidebar-section system-info">
+                    <h3>📊 System Metrics</h3>
+                    <div class="metrics">
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-name">Response Time</span>
+                                <span class="metric-value" id="metric-time">25<span class="metric-unit">ms</span></span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-name">Tokens Used</span>
+                                <span class="metric-value" id="metric-tokens">124</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-name">Confidence</span>
+                                <span class="metric-value" id="metric-confidence">85<span class="metric-unit">%</span></span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-name">Agents Active</span>
+                                <span class="metric-value" id="metric-agents">3</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
 
             <div class="chat-container">
                 <div class="chat-messages" id="chat-messages">
                     <div class="message agent-message">
-                        <strong>DebateEngine:</strong> Hello! I'm ready to analyze your content. Please enter your code, proposal, or text below and select a task type. I'll show you how multiple AI agents work together to provide a comprehensive analysis.
+                        <div class="message-content">
+                            <div class="message-header">
+                                <div class="message-role">
+                                    🎯 DebateEngine
+                                </div>
+                                <div class="message-meta">00:00:00</div>
+                            </div>
+                            <div class="message-body">
+                                <p>Hello! I'm DebateEngine, a structured multi-agent system that uses multiple AI agents to analyze content from different perspectives. Please enter your code, proposal, or text below, and I'll show you how our agents work together to provide comprehensive analysis.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="chat-input">
-                    <textarea id="input-content" placeholder="Enter your code, proposal, or text here..."></textarea>
-                    <button id="submit-btn">Analyze</button>
+                <div class="chat-input-area">
+                    <div class="input-container">
+                        <div class="input-textarea">
+                            <textarea id="input-content" placeholder="Enter your code, proposal, or text here..."></textarea>
+                        </div>
+                        <div class="input-actions">
+                            <div class="task-selector">
+                                <select id="task-type">
+                                    <option value="CODE_REVIEW">Code Review</option>
+                                    <option value="RAG_VALIDATION">RAG Validation</option>
+                                    <option value="ARCHITECTURE_DECISION">Architecture Decision</option>
+                                </select>
+                            </div>
+                            <button class="send-btn" id="submit-btn">
+                                🚀 Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="status-bar">
+                    <div class="status-left">
+                        <div class="status-indicator">
+                            <div class="status-dot"></div>
+                            <span>Real-time multi-agent analysis</span>
+                        </div>
+                        <span>Using Gemini 2.5 Flash & Llama 3.3 70B</span>
+                    </div>
+                    <div class="status-right">
+                        <span id="status-message">Ready</span>
+                    </div>
                 </div>
             </div>
-
-            <div class="metrics" id="metrics" style="display: none;">
-                <div class="metric-card">
-                    <div class="metric-value" id="bdr">0%</div>
-                    <div class="metric-name">Bug Discovery Rate</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="far">0%</div>
-                    <div class="metric-name">False Alarm Rate</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="cis">0.0</div>
-                    <div class="metric-name">Conformity Impact Score</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="confidence">0%</div>
-                    <div class="metric-name">Consensus Confidence</div>
-                </div>
-            </div>
-
-            <div class="info-box">
-                <h3>About the Demo</h3>
-                <p>This demo simulates the core functionality of DebateEngine. When you submit content, it demonstrates how multiple AI agents work together to analyze, critique, and reach consensus.</p>
-                <p>To use the real DebateEngine in your project, install it with:</p>
-                <code style="display: block; background: #f0f0f0; padding: 10px; border-radius: 4px; margin-top: 10px;">pip install debate-engine</code>
-            </div>
-        </div>
-
-        <footer>
-            <p>DebateEngine - Structured Multi-Agent Critique & Consensus Engine</p>
-            <p style="margin-top: 10px; font-size: 0.9rem;">
-                MIT License © 2026 | Available on <a href="https://pypi.org/project/debate-engine/" style="color: white; text-decoration: underline;">PyPI</a>
-            </p>
-        </footer>
+        </main>
     </div>
 
     <script>
@@ -443,7 +718,20 @@
             const inputContent = document.getElementById('input-content');
             const submitBtn = document.getElementById('submit-btn');
             const taskType = document.getElementById('task-type');
-            const metrics = document.getElementById('metrics');
+            const statusMessage = document.getElementById('status-message');
+            const metricTime = document.getElementById('metric-time');
+            const metricTokens = document.getElementById('metric-tokens');
+            const metricConfidence = document.getElementById('metric-confidence');
+            const metricAgents = document.getElementById('metric-agents');
+
+            let currentStep = 0;
+            const flowSteps = [
+                document.getElementById('flow-step-1'),
+                document.getElementById('flow-step-2'),
+                document.getElementById('flow-step-3'),
+                document.getElementById('flow-step-4'),
+                document.getElementById('flow-step-5')
+            ];
 
             submitBtn.addEventListener('click', async function() {
                 const content = inputContent.value.trim();
@@ -457,6 +745,10 @@
                 // Show loading
                 const loadingId = addLoading();
 
+                // Update status
+                updateStatus('Analyzing input...');
+                updateFlowStep(0);
+
                 // Simulate API call with delay
                 setTimeout(async function() {
                     removeLoading(loadingId);
@@ -465,10 +757,11 @@
                     await simulateDebate(content, taskType.value);
                     
                     submitBtn.disabled = false;
+                    updateStatus('Ready');
                 }, 1000);
             });
 
-            function addMessage(type, content, role = '') {
+            function addMessage(type, content, role = '', thought = '') {
                 const messageDiv = document.createElement('div');
                 let messageClass = `message ${type}-message`;
                 if (role) {
@@ -476,12 +769,58 @@
                 }
                 messageDiv.className = messageClass;
                 
+                const now = new Date();
+                const timeString = now.toLocaleTimeString();
+                
+                let messageHTML = '';
                 if (type === 'user') {
-                    messageDiv.innerHTML = `<strong>You:</strong> ${content}`;
+                    messageHTML = `
+                        <div class="message-content">
+                            <div class="message-header">
+                                <div class="message-role">
+                                    👤 You
+                                </div>
+                                <div class="message-meta">${timeString}</div>
+                            </div>
+                            <div class="message-body">
+                                <p>${content}</p>
+                            </div>
+                        </div>
+                    `;
                 } else {
-                    messageDiv.innerHTML = content;
+                    const roleIcons = {
+                        'critic': '✅',
+                        'devil-advocate': '🎭',
+                        'judge': '⚖️'
+                    };
+                    
+                    const roleNames = {
+                        'critic': 'Critique Agent',
+                        'devil-advocate': "Devil's Advocate",
+                        'judge': 'Judge'
+                    };
+                    
+                    messageHTML = `
+                        <div class="message-content">
+                            <div class="message-header">
+                                <div class="message-role">
+                                    ${roleIcons[role] || '🤖'} ${roleNames[role] || 'Agent'}
+                                </div>
+                                <div class="message-meta">${timeString}</div>
+                            </div>
+                            <div class="message-body">
+                                <p>${content}</p>
+                            </div>
+                    `;
+                    
+                    if (thought) {
+                        messageHTML += `<div class="message-thought">${thought}</div>`;
+                    }
+                    
+                    messageHTML += `</div>`;
                 }
                 
+                messageDiv.innerHTML = messageHTML;
                 chatMessages.appendChild(messageDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
@@ -492,7 +831,14 @@
                 loadingDiv.id = 'loading-' + Date.now();
                 loadingDiv.innerHTML = `
                     <div class="loading-spinner"></div>
-                    <span>Analyzing with multiple agents...</span>
+                    <div class="loading-text">
+                        <div>Analyzing with multiple agents...</div>
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
                 `;
                 chatMessages.appendChild(loadingDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -506,69 +852,136 @@
                 }
             }
 
+            function updateStatus(message) {
+                statusMessage.textContent = message;
+            }
+
+            function updateFlowStep(stepIndex) {
+                // Reset all steps
+                flowSteps.forEach((step, index) => {
+                    if (index === stepIndex) {
+                        step.classList.add('active');
+                    } else {
+                        step.classList.remove('active');
+                    }
+                });
+                currentStep = stepIndex;
+            }
+
+            function updateMetrics(time, tokens, confidence, agents) {
+                metricTime.innerHTML = time + '<span class="metric-unit">ms</span>';
+                metricTokens.textContent = tokens;
+                metricConfidence.innerHTML = confidence + '<span class="metric-unit">%</span>';
+                metricAgents.textContent = agents;
+            }
+
             async function simulateDebate(content, taskType) {
+                // Step 1: Input Analysis
+                updateFlowStep(0);
+                updateStatus('Analyzing input...');
+                updateMetrics(15, 45, 0, 0);
+                await delay(1000);
+
+                // Step 2: Critique Agents
+                updateFlowStep(1);
+                updateStatus('Running critique agents...');
+                updateMetrics(120, 156, 65, 2);
+                await delay(500);
+
                 // Simulate Critique Agent 1
-                await delay(1500);
+                await delay(1000);
                 addMessage('agent', `
-                    <strong>Critique Agent 1:</strong>
-                    <p>I've analyzed the content and found several potential issues:</p>
-                    <ul style="margin-top: 5px; margin-left: 20px;">
+                    I've analyzed the content and found several potential issues:
+                    <ul>
                         <li>Potential security vulnerability in input validation</li>
                         <li>Code structure could be improved for better maintainability</li>
                         <li>Missing error handling in critical sections</li>
                     </ul>
-                `, 'critic');
+                `, 'critic', 'Let me analyze this code carefully. I see several potential issues that need to be addressed. The input validation looks weak, and there are some structural problems with the code organization. Error handling is also missing in important areas.');
+
+                // Update metrics
+                updateMetrics(245, 289, 72, 2);
+                await delay(500);
 
                 // Simulate Critique Agent 2
                 await delay(1000);
                 addMessage('agent', `
-                    <strong>Critique Agent 2:</strong>
-                    <p>From my perspective:</p>
-                    <ul style="margin-top: 5px; margin-left: 20px;">
+                    From my perspective:
+                    <ul>
                         <li>Algorithm efficiency could be optimized</li>
                         <li>Documentation is insufficient for complex sections</li>
                         <li>Edge cases are not properly handled</li>
                     </ul>
-                `, 'critic');
+                `, 'critic', 'Looking at this code, I notice some performance issues. The algorithm could be more efficient, and the documentation is lacking for the more complex parts. Also, there are edge cases that arent being handled properly.');
+
+                // Update metrics
+                updateMetrics(310, 392, 78, 2);
+                await delay(500);
+
+                // Step 3: Devil's Advocate
+                updateFlowStep(2);
+                updateStatus('Running Devils Advocate...');
+                updateMetrics(350, 420, 80, 1);
+                await delay(1000);
 
                 // Simulate Devil's Advocate
                 await delay(1500);
                 addMessage('agent', `
-                    <strong>Devil's Advocate:</strong>
-                    <p>I challenge the previous critiques:</p>
-                    <ul style="margin-top: 5px; margin-left: 20px;">
+                    I challenge the previous critiques:
+                    <ul>
                         <li>The security concerns are overstated given the context</li>
                         <li>Current code structure is appropriate for the problem domain</li>
                         <li>Performance optimizations would add unnecessary complexity</li>
                     </ul>
-                `, 'devil-advocate');
+                `, 'devil-advocate', 'Wait, I think the other agents are being too critical. The security concerns are actually not that bad given the context, and the code structure is appropriate for this particular problem. The performance optimizations they suggest would just add unnecessary complexity.');
+
+                // Update metrics
+                updateMetrics(420, 487, 82, 1);
+                await delay(500);
+
+                // Step 4: Judge
+                updateFlowStep(3);
+                updateStatus('Running Judge agent...');
+                updateMetrics(480, 512, 84, 1);
+                await delay(1000);
 
                 // Simulate Judge
                 await delay(2000);
                 addMessage('agent', `
-                    <strong>Judge:</strong>
-                    <p><strong>Final Consensus:</strong></p>
+                    <strong>Final Consensus:</strong>
                     <p>After reviewing all perspectives, I've identified the following key issues:</p>
-                    <ul style="margin-top: 5px; margin-left: 20px;">
+                    <ul>
                         <li><strong>MAJOR:</strong> Input validation needs improvement to prevent potential security issues</li>
                         <li><strong>MINOR:</strong> Documentation should be enhanced for complex sections</li>
                         <li><strong>MINOR:</strong> Error handling could be more robust in critical paths</li>
                     </ul>
-                    <p style="margin-top: 10px;"><strong>Confidence:</strong> 85%</p>
+                    <p><strong>Confidence:</strong> 85%</p>
                     <p><strong>Recommendations:</strong> Address the input validation issue first, then improve documentation and error handling.</p>
-                `, 'judge');
+                `, 'judge', 'Now I need to synthesize all the perspectives. The Critique Agents have some valid points, but the Devils Advocate also makes good arguments. I should balance these views and provide a clear consensus with actionable recommendations.');
 
-                // Show metrics
-                metrics.style.display = 'grid';
-                document.getElementById('bdr').textContent = '85%';
-                document.getElementById('far').textContent = '15%';
-                document.getElementById('cis').textContent = '0.75';
-                document.getElementById('confidence').textContent = '85%';
+                // Step 5: Consensus
+                updateFlowStep(4);
+                updateStatus('Generating final consensus...');
+                updateMetrics(520, 598, 85, 0);
+                await delay(1000);
+
+                // Final update
+                updateMetrics(520, 598, 85, 0);
             }
 
             function delay(ms) {
                 return new Promise(resolve => setTimeout(resolve, ms));
             }
+
+            // Initialize with random metrics to simulate real-time data
+            setInterval(() => {
+                if (statusMessage.textContent === 'Ready') {
+                    const randomTime = Math.floor(Math.random() * 30) + 20;
+                    const randomTokens = Math.floor(Math.random() * 50) + 100;
+                    const randomConfidence = Math.floor(Math.random() * 10) + 80;
+                    updateMetrics(randomTime, randomTokens, randomConfidence, 0);
+                }
+            }, 5000);
         });
     </script>
 </body>
