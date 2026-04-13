@@ -819,7 +819,7 @@
                     }
 
                     const reader = response.body.getReader();
-                    const streamContent = document.getElementById('stream-content');
+                    const streamContent = messageDiv.querySelector('#stream-content');
                     let fullContent = '';
 
                     // Read streaming response
