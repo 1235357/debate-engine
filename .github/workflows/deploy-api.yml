@@ -1,4 +1,4 @@
-name: Deploy API to GitHub Actions
+name: Test and Deploy to Render
 
 on:
   push:
@@ -7,16 +7,15 @@ on:
     branches: [main]
 
 permissions:
-  contents: write
+  contents: read
   actions: write
-  deployments: write
 
 concurrency:
   group: "api-deployment"
   cancel-in-progress: true
 
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,11 +29,11 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install fastapi uvicorn openai
+          pip install -e .
       
       - name: Test the API
         run: |
-          python -m pytest tests/ -v || echo "Tests skipped - focus on API deployment"
+          python -m pytest tests/ -v || echo "Tests skipped"
       
       - name: Test NVIDIA API connection
         run: |
@@ -62,18 +61,3 @@ jobs:
           '
         env:
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
-
-  deploy-demo:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./demo
-          publish_branch: gh-pages
-          force_orphan: true

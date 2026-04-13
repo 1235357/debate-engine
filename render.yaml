@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: debate-engine-api
+    env: python
+    buildCommand: pip install -e .
+    startCommand: python api_server.py
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: NVIDIA_API_KEY
+        sync: false
