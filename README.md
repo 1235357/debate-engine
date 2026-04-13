@@ -5,7 +5,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/debate-engine/0.2.0.svg)](https://pypi.org/project/debate-engine/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://img.shields.io/github/actions/workflow/status/debate-engine/debate-engine/ci.yml?branch=main)](https://github.com/debate-engine/debate-engine/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/1235357/debate-engine/ci.yml?branch=main)](https://github.com/1235357/debate-engine/actions)
 
 **DebateEngine** upgrades free-text AI polling into a **structured cross-critique loop** — using Pydantic v2 `CritiqueSchema` to constrain critique output, role rotation to preserve dissenting perspectives, and a Judge layer to synthesize multi-role opinions while explicitly preserving minority dissent.
 
