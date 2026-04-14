@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
-import json
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -44,8 +42,8 @@ async def test_quick_critique_endpoint(client: TestClient):
         mock_engine = AsyncMock()
         # Create a mock result using the actual ConsensusSchema class
         from debate_engine.schemas import ConsensusSchema, DebateMetadata
-        from debate_engine.schemas.enums import TaskType, ProviderMode, TerminationReason
-        
+        from debate_engine.schemas.enums import ProviderMode, TaskType, TerminationReason
+
         # Create a proper ConsensusSchema object
         mock_result = ConsensusSchema(
             final_conclusion="Test conclusion",
@@ -82,7 +80,7 @@ async def test_quick_critique_endpoint(client: TestClient):
                 "task_type": "CODE_REVIEW"
             }
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["final_conclusion"] == "Test conclusion"
@@ -107,7 +105,7 @@ async def test_debate_endpoint(client: TestClient):
                 "task_type": "CODE_REVIEW"
             }
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["job_id"] == "test-job-id"
@@ -123,12 +121,12 @@ async def test_chat_endpoint(client: TestClient):
         mock_engine = AsyncMock()
         # Create a mock result using SimpleNamespace to simulate object with attributes
         from types import SimpleNamespace
-        
+
         # Create mock objects with proper attributes
         mock_task_type = SimpleNamespace(value="CODE_REVIEW")
         mock_provider_mode = SimpleNamespace(value="STABLE")
         mock_termination_reason = SimpleNamespace(value="COMPLETED")
-        
+
         mock_debate_metadata = SimpleNamespace(
             request_id="test-chat-request-id",
             task_type=mock_task_type,
@@ -141,7 +139,7 @@ async def test_chat_endpoint(client: TestClient):
             termination_reason=mock_termination_reason,
             parse_attempts_total=0
         )
-        
+
         mock_result = SimpleNamespace(
             final_conclusion="Test chat conclusion",
             consensus_confidence=0.9,
@@ -168,7 +166,7 @@ async def test_chat_endpoint(client: TestClient):
                 "model": "test-model"
             }
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["final_conclusion"] == "Test chat conclusion"
@@ -184,12 +182,12 @@ async def test_quick_critique_api_endpoint(client: TestClient):
         mock_engine = AsyncMock()
         # Create a mock result using SimpleNamespace to simulate object with attributes
         from types import SimpleNamespace
-        
+
         # Create mock objects with proper attributes
         mock_task_type = SimpleNamespace(value="CODE_REVIEW")
         mock_provider_mode = SimpleNamespace(value="STABLE")
         mock_termination_reason = SimpleNamespace(value="COMPLETED")
-        
+
         mock_debate_metadata = SimpleNamespace(
             request_id="test-api-request-id",
             task_type=mock_task_type,
@@ -202,7 +200,7 @@ async def test_quick_critique_api_endpoint(client: TestClient):
             termination_reason=mock_termination_reason,
             parse_attempts_total=0
         )
-        
+
         mock_result = SimpleNamespace(
             final_conclusion="Test API conclusion",
             consensus_confidence=0.8,
@@ -227,7 +225,7 @@ async def test_quick_critique_api_endpoint(client: TestClient):
                 "task_type": "CODE_REVIEW"
             }
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["final_conclusion"] == "Test API conclusion"

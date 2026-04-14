@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import sys
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from debate_engine.cli import main
 
@@ -71,7 +70,7 @@ def test_cli_critique(mock_engine_class):
             main()
         except SystemExit:
             pass
-        
+
         # Check that print was called with the expected output
         mock_print.assert_any_call('Conclusion: Test conclusion')
         mock_print.assert_any_call('Confidence: 85%')

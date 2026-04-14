@@ -16,6 +16,7 @@ import logging
 import time
 from typing import Any
 
+from ..api.key_manager import APIKeyManager
 from ..providers.config import ProviderConfig
 from ..providers.llm_provider import CallResult, LLMProvider
 from .base import (
@@ -101,7 +102,7 @@ class QuickCritiqueEngine:
         is used to read settings from environment variables.
     """
 
-    def __init__(self, provider_config: ProviderConfig | None = None, key_manager: 'APIKeyManager' | None = None) -> None:
+    def __init__(self, provider_config: ProviderConfig | None = None, key_manager: APIKeyManager | None = None) -> None:
         self.provider = LLMProvider(provider_config or ProviderConfig.from_env(), key_manager=key_manager)
 
     async def critique(self, config: Any) -> Any:
@@ -123,9 +124,13 @@ class QuickCritiqueEngine:
             ConsensusSchema,
             CritiqueSchema,
             DebateMetadata,
-            ProviderMode as SchemaProviderMode,
-            TaskType as SchemaTaskType,
             TerminationReason,
+        )
+        from debate_engine.schemas import (
+            ProviderMode as SchemaProviderMode,
+        )
+        from debate_engine.schemas import (
+            TaskType as SchemaTaskType,
         )
 
         request_id = generate_request_id()

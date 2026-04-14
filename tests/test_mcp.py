@@ -5,12 +5,10 @@ from __future__ import annotations
 import json
 from unittest.mock import Mock, patch
 
-import pytest
-
-from debate_engine.mcp_server.server import (  
-    format_consensus_as_markdown, 
+from debate_engine.mcp_server.server import (
+    _parse_consensus_json,
+    format_consensus_as_markdown,
     format_eval_scores_as_markdown,
-    _parse_consensus_json
 )
 
 
@@ -68,7 +66,7 @@ def test_format_consensus_as_markdown():
 
     # Test the formatting function
     markdown = format_consensus_as_markdown(mock_consensus)
-    
+
     assert "# DebateEngine Consensus" in markdown
     assert "Test conclusion" in markdown
     assert "**Confidence:** 85%" in markdown
@@ -102,7 +100,7 @@ def test_format_eval_scores_as_markdown():
 
     # Test the formatting function
     markdown = format_eval_scores_as_markdown(scores)
-    
+
     assert "# DebateEval Scores" in markdown
     assert "BDR" in markdown
     assert "FAR" in markdown

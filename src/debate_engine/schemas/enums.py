@@ -1,6 +1,7 @@
 """Enumerations for the DebateEngine schema system."""
 
 from __future__ import annotations
+
 import enum
 
 

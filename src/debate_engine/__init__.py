@@ -7,7 +7,7 @@ Output Layer: Converts consensus results to standard formats (SARIF).
 
 __version__ = "0.2.0"
 
-from .output.sarif import consensus_to_sarif
 from .orchestration.quick_critique import QuickCritiqueEngine
+from .output.sarif import consensus_to_sarif
 
 __all__ = ["consensus_to_sarif", "QuickCritiqueEngine"]

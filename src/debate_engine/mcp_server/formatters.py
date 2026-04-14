@@ -68,8 +68,8 @@ def format_consensus_as_markdown(consensus: Any) -> str:
     if metadata is not None:
         lines.append("## Metadata")
         lines.append("")
-        lines.append(f"| Field | Value |")
-        lines.append(f"|---|---|")
+        lines.append("| Field | Value |")
+        lines.append("|---|---|")
         lines.append(f"| Request ID | `{getattr(metadata, 'request_id', 'N/A')}` |")
         job_id = getattr(metadata, "job_id", None)
         if job_id:

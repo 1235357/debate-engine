@@ -6,14 +6,14 @@ inheritance, and cross-field validators.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
 
 from debate_engine.schemas import (
-    ConvergenceMode,
     ConsensusSchema,
+    ConvergenceMode,
     CritiqueConfigSchema,
     CritiqueSchema,
     DebateConfigSchema,
@@ -24,8 +24,8 @@ from debate_engine.schemas import (
     FixKind,
     JobStatus,
     MinorityOpinion,
-    ProviderMode,
     ProposalSchema,
+    ProviderMode,
     RejectedPosition,
     RevisionSchema,
     RoleStatus,
@@ -33,7 +33,6 @@ from debate_engine.schemas import (
     TaskType,
     TerminationReason,
 )
-
 
 # ===================================================================
 # Enum tests
@@ -492,7 +491,7 @@ class TestDebateJobSchema:
     """Tests for the debate job tracking schema."""
 
     def test_valid_construction(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         metadata = DebateMetadata(
             task_type=TaskType.GENERAL_CRITIQUE,
             provider_mode=ProviderMode.STABLE,
@@ -531,7 +530,7 @@ class TestDebateJobSchema:
         assert error.code == "PROVIDER_ERROR"
 
     def test_job_with_error(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         error = ErrorDetail(
             message="Cost budget exceeded",
             code="COST_BUDGET_EXCEEDED",
@@ -547,7 +546,7 @@ class TestDebateJobSchema:
         assert job.error.message == "Cost budget exceeded"
 
     def test_progress_pct_range(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         with pytest.raises(ValidationError):
             DebateJobSchema(
                 job_id="test-job",

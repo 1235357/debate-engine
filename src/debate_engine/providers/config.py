@@ -1,11 +1,13 @@
 """Provider configuration with multi-mode support and multi-source failover chain."""
 
 from __future__ import annotations
-import enum, os
+
+import os
 from dataclasses import dataclass, field
+from enum import StrEnum
 
 
-class ProviderMode(str, enum.Enum):
+class ProviderMode(StrEnum):
     STABLE = "stable"
     BALANCED = "balanced"
     DIVERSE = "diverse"
@@ -46,7 +48,8 @@ class ProviderConfig:
 
     @property
     def effective_judge_model(self) -> str:
-        if self.judge_model: return self.judge_model
+        if self.judge_model:
+            return self.judge_model
         chain = self._resolved_chain
         return chain[0].model if chain else self.primary_model
 
@@ -59,7 +62,8 @@ class ProviderConfig:
 
     @property
     def _resolved_chain(self) -> list[ProviderEntry]:
-        if self.providers: return sorted(self.providers, key=lambda p: p.priority)
+        if self.providers:
+            return sorted(self.providers, key=lambda p: p.priority)
         chain = [ProviderEntry(name=self.primary_provider, model=self.primary_model, api_key=self.primary_api_key, api_base=self.primary_api_base, priority=1)]
         if self.backup_provider and self.backup_model:
             chain.append(ProviderEntry(name=self.backup_provider, model=self.backup_model, api_key=self.backup_api_key, api_base=self.backup_api_base, priority=2))
@@ -71,8 +75,10 @@ class ProviderConfig:
         mode_str = os.getenv("DEBATE_ENGINE_PROVIDER_MODE", os.getenv("DEBATE_ENGINE_MODE", "stable"))
         # 确保模式字符串为小写，与枚举值一致
         mode_str = mode_str.lower()
-        try: mode = ProviderMode(mode_str)
-        except ValueError: mode = ProviderMode.STABLE
+        try:
+            mode = ProviderMode(mode_str)
+        except ValueError:
+            mode = ProviderMode.STABLE
         primary_provider = os.getenv("DEBATE_ENGINE_PROVIDER", "nvidia")
         primary_model = os.getenv("DEBATE_ENGINE_MODEL", "minimax-m2.7")
         primary_api_key = os.getenv("NVIDIA_API_KEY") or os.getenv("OPENAI_API_KEY")
@@ -89,7 +95,10 @@ class ProviderConfig:
         groq_key = os.getenv("GROQ_API_KEY")
         nvidia_key = os.getenv("NVIDIA_API_KEY")
         providers = []
-        if nvidia_key: providers.append(ProviderEntry(name="NVIDIA NIM", model="minimax-m2.7", api_key=nvidia_key, api_base="https://integrate.api.nvidia.com/v1", priority=1))
-        if google_key: providers.append(ProviderEntry(name="Google AI Studio", model="gemini-2.5-flash", api_key=google_key, priority=2))
-        if groq_key: providers.append(ProviderEntry(name="Groq", model="llama-3.3-70b-versatile", api_key=groq_key, priority=3))
+        if nvidia_key:
+            providers.append(ProviderEntry(name="NVIDIA NIM", model="minimax-m2.7", api_key=nvidia_key, api_base="https://integrate.api.nvidia.com/v1", priority=1))
+        if google_key:
+            providers.append(ProviderEntry(name="Google AI Studio", model="gemini-2.5-flash", api_key=google_key, priority=2))
+        if groq_key:
+            providers.append(ProviderEntry(name="Groq", model="llama-3.3-70b-versatile", api_key=groq_key, priority=3))
         return cls(mode=mode, providers=providers, primary_provider=primary_provider, primary_model=primary_model, primary_api_key=primary_api_key, primary_api_base=primary_api_base, backup_provider=backup_provider, backup_model=backup_model, backup_api_key=backup_api_key, backup_api_base=backup_api_base, judge_model=judge_model, timeout_seconds=timeout, max_transport_retries=max_transport, max_parse_retries=max_parse)

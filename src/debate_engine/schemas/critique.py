@@ -1,8 +1,9 @@
 """CritiqueSchema -- the core machine-parseable critique unit."""
 
 from __future__ import annotations
-from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, Field
+
 from .enums import DefectType, FixKind, Severity
 
 
@@ -20,7 +21,7 @@ class CritiqueSchema(BaseModel):
         description="Whether this critique was produced by the devil's advocate role.")
     confidence: float = Field(..., ge=0.0, le=1.0,
         description="Reviewer confidence (0.0-1.0).")
-    role_id: Optional[str] = Field(default=None,
+    role_id: str | None = Field(default=None,
         description="Identifier of the role (system-managed).")
-    raw_response: Optional[str] = Field(default=None,
+    raw_response: str | None = Field(default=None,
         description="Original LLM response for parse-repair fallback.")

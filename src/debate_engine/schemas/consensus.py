@@ -1,12 +1,13 @@
 """ConsensusSchema -- the final output of a DebateEngine run."""
 
 from __future__ import annotations
+
 import uuid
-from datetime import datetime
-from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from .enums import ProviderMode, Severity, TaskType, TerminationReason
+
 from .critique import CritiqueSchema
+from .enums import ProviderMode, Severity, TaskType, TerminationReason
 
 
 class RejectedPosition(BaseModel):
@@ -26,7 +27,7 @@ class MinorityOpinion(BaseModel):
 class DebateMetadata(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     request_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    job_id: Optional[str] = None
+    job_id: str | None = None
     task_type: TaskType = Field(...)
     provider_mode: ProviderMode = Field(...)
     rounds_completed: int = Field(default=1, ge=1)
@@ -45,7 +46,7 @@ class ConsensusSchema(BaseModel):
     adopted_contributions: dict[str, list[str]] = Field(default_factory=dict)
     rejected_positions: list[RejectedPosition] = Field(default_factory=list)
     remaining_disagreements: list[str] = Field(default_factory=list)
-    disagreement_confirmation: Optional[str] = None
+    disagreement_confirmation: str | None = None
     preserved_minority_opinions: list[MinorityOpinion] = Field(default_factory=list)
     partial_return: bool = Field(default=False)
     critiques_summary: list[CritiqueSchema] = Field(default_factory=list)

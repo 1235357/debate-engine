@@ -301,7 +301,6 @@ def _compute_metrics(
     quorum = getattr(metadata, "quorum_achieved", False) if metadata else False
     rounds = getattr(metadata, "rounds_completed", 1) if metadata else 1
     cost = getattr(metadata, "total_cost_usd", 0.0) if metadata else 0.0
-    latency = getattr(metadata, "total_latency_ms", 0.0) if metadata else 0.0
 
     # Count severities
     severity_counts = {"CRITICAL": 0, "MAJOR": 0, "MINOR": 0}

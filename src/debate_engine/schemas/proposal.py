@@ -1,6 +1,7 @@
 """Proposal and revision schemas for multi-round debate."""
 
 from __future__ import annotations
+
 from pydantic import BaseModel, ConfigDict, Field
 
 

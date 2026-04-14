@@ -1,18 +1,14 @@
 #!/usr/bin/env python3
 """API server for DebateEngine using NVIDIA API with multi-key support."""
 
+import os
+import threading
+import time
+from collections import defaultdict
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-import os
-import random
-import time
-import asyncio
-from typing import List, Dict, Optional
-from openai import OpenAI
-from collections import defaultdict
-import threading
 
 # Import DebateEngine components
 from debate_engine.orchestration.quick_critique import QuickCritiqueEngine
@@ -35,14 +31,14 @@ app.add_middleware(
 
 class APIKeyManager:
     """Manage multiple API keys with load balancing and failover."""
-    
-    def __init__(self, api_keys: List[str], base_url: str, model: str):
+
+    def __init__(self, api_keys: list[str], base_url: str, model: str):
         self.api_keys = api_keys
         self.base_url = base_url
         self.model = model
         self.current_index = 0
         self.lock = threading.Lock()
-        self.key_stats: Dict[str, dict] = defaultdict(lambda: {
+        self.key_stats: dict[str, dict] = defaultdict(lambda: {
             'success_count': 0,
             'failure_count': 0,
             'last_used': 0,
@@ -50,29 +46,29 @@ class APIKeyManager:
             'is_active': True
         })
         self.cooldown_period = 60
-        
+
     def get_next_key(self) -> str:
         """Get next API key using round-robin with failover."""
         with self.lock:
             start_index = self.current_index
             attempt = 0
-            
+
             while attempt < len(self.api_keys):
                 key = self.api_keys[self.current_index]
                 self.current_index = (self.current_index + 1) % len(self.api_keys)
-                
+
                 stats = self.key_stats[key]
                 now = time.time()
-                
+
                 if stats['is_active']:
                     if now - stats['last_failed'] > self.cooldown_period:
                         return key
-                
+
                 attempt += 1
-            
+
             self.current_index = start_index
             return self.api_keys[start_index]
-    
+
     def record_success(self, api_key: str):
         """Record a successful API call."""
         with self.lock:
@@ -80,7 +76,7 @@ class APIKeyManager:
             stats['success_count'] += 1
             stats['last_used'] = time.time()
             stats['is_active'] = True
-    
+
     def record_failure(self, api_key: str):
         """Record a failed API call."""
         with self.lock:
@@ -88,7 +84,7 @@ class APIKeyManager:
             stats['failure_count'] += 1
             stats['last_failed'] = time.time()
             stats['is_active'] = False
-    
+
     def get_stats(self) -> dict:
         """Get statistics about API key usage."""
         with self.lock:
@@ -106,22 +102,22 @@ class APIKeyManager:
             }
 
 
-def load_api_keys() -> List[str]:
+def load_api_keys() -> list[str]:
     """Load API keys from environment variables."""
     keys = []
-    
+
     primary_key = os.getenv("NVIDIA_API_KEY")
     if primary_key:
         keys.append(primary_key)
-    
+
     for i in range(1, 11):
         key = os.getenv(f"NVIDIA_API_KEY_{i}")
         if key:
             keys.append(key)
-    
+
     if not keys:
         raise RuntimeError("At least one NVIDIA_API_KEY environment variable is required")
-    
+
     return keys
 
 
@@ -194,19 +190,19 @@ async def chat(request: ChatRequest):
             if msg.role == "user":
                 user_content = msg.content
                 break
-        
+
         if not user_content:
             raise HTTPException(status_code=400, detail="No user content provided")
-        
+
         # Create critique config
         config = CritiqueConfigSchema(
             content=user_content,
             task_type=TaskType.CODE_REVIEW  # Default for now
         )
-        
+
         # Run the full debate engine
         consensus = await engine.critique(config)
-        
+
         # Convert to dict for JSON response
         result = {
             "final_conclusion": consensus.final_conclusion,
@@ -243,7 +239,7 @@ async def chat(request: ChatRequest):
             "preserved_minority_opinions": consensus.preserved_minority_opinions,
             "partial_return": consensus.partial_return
         }
-        
+
         return result
     except HTTPException:
         raise
@@ -260,10 +256,10 @@ async def quick_critique(request: CritiqueRequest):
             content=request.content,
             task_type=TaskType(request.task_type) if request.task_type != "AUTO" else "AUTO"
         )
-        
+
         # Run the full debate engine
         consensus = await engine.critique(config)
-        
+
         # Convert to dict for JSON response
         result = {
             "final_conclusion": consensus.final_conclusion,
@@ -300,7 +296,7 @@ async def quick_critique(request: CritiqueRequest):
             "preserved_minority_opinions": consensus.preserved_minority_opinions,
             "partial_return": consensus.partial_return
         }
-        
+
         return result
     except HTTPException:
         raise

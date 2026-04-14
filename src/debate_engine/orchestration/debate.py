@@ -16,9 +16,10 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Literal
 
+from ..api.key_manager import APIKeyManager
 from ..providers.config import ProviderConfig
 from ..providers.llm_provider import CallResult, LLMProvider
 from ..storage import RedisStorage
@@ -45,8 +46,8 @@ class DebateJob:
     job_id: str
     config: Any  # DebateConfigSchema
     status: Literal["PENDING", "RUNNING", "DONE", "FAILED", "CANCELLED"] = "PENDING"
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     current_round: int = 0
     current_phase: str = "initialized"
     progress_pct: int = 0
@@ -95,7 +96,7 @@ class DebateJob:
 
     def touch(self) -> None:
         """Update the ``updated_at`` timestamp."""
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
 
 
 # ---------------------------------------------------------------------------
@@ -116,7 +117,7 @@ class DebateOrchestrator:
         is used.
     """
 
-    def __init__(self, provider_config: ProviderConfig | None = None, key_manager: 'APIKeyManager' | None = None) -> None:
+    def __init__(self, provider_config: ProviderConfig | None = None, key_manager: APIKeyManager | None = None) -> None:
         self.provider = LLMProvider(provider_config or ProviderConfig.from_env(), key_manager=key_manager)
         self._task_store: dict[str, DebateJob] = {}
         self._cleanup_task: asyncio.Task | None = None
@@ -258,12 +259,14 @@ class DebateOrchestrator:
             # Lazy imports
             from debate_engine.schemas import (
                 ConsensusSchema,
-                CritiqueSchema,
                 DebateMetadata,
-                ProviderMode as SchemaProviderMode,
-                ProposalSchema,
-                TaskType as SchemaTaskType,
                 TerminationReason,
+            )
+            from debate_engine.schemas import (
+                ProviderMode as SchemaProviderMode,
+            )
+            from debate_engine.schemas import (
+                TaskType as SchemaTaskType,
             )
 
             request_id = job_id
@@ -964,7 +967,7 @@ class DebateOrchestrator:
         while True:
             try:
                 await asyncio.sleep(300)  # check every 5 minutes
-                now = datetime.now(timezone.utc)
+                now = datetime.now(UTC)
                 expired = [
                     jid
                     for jid, job in self._task_store.items()

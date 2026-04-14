@@ -10,9 +10,9 @@ Exports:
     BenchmarkSuite: A named collection of benchmark cases.
 """
 
+from .benchmark import BenchmarkCase, BenchmarkResult, BenchmarkRunner, BenchmarkSuite
 from .evaluator import DebateEvaluator
 from .metrics import DebateEvalScores, MetricName, MetricResult
-from .benchmark import BenchmarkCase, BenchmarkResult, BenchmarkSuite, BenchmarkRunner
 
 __all__ = [
     "DebateEvaluator",

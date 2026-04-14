@@ -10,10 +10,10 @@ Plus a Judge prompt template with anti-sycophancy constraints.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class TaskType(str, Enum):
+class TaskType(StrEnum):
     """Supported task types for critique routing."""
 
     CODE_REVIEW = "CODE_REVIEW"

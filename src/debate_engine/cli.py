@@ -1,7 +1,6 @@
 """Command-line interface for DebateEngine."""
 
 import argparse
-import sys
 
 from debate_engine.orchestration.quick_critique import QuickCritiqueEngine
 
@@ -9,7 +8,7 @@ from debate_engine.orchestration.quick_critique import QuickCritiqueEngine
 def main() -> None:
     """Entry point for the debate-engine CLI command."""
     from debate_engine import __version__
-    
+
     parser = argparse.ArgumentParser(
         prog="debate-engine",
         description="DebateEngine Server - Structured Multi-Agent Critique & Consensus Engine",
@@ -120,20 +119,21 @@ def _run_mcp() -> None:
 def _run_critique(content: str, task_type: str) -> None:
     """Run a quick critique on provided content."""
     import asyncio
+
     from debate_engine.schemas import CritiqueConfigSchema, TaskType
-    
+
     # Create critique config
     config = CritiqueConfigSchema(
         content=content,
         task_type=TaskType(task_type) if task_type != "AUTO" else "AUTO"
     )
-    
+
     engine = QuickCritiqueEngine()
     result = asyncio.run(engine.critique(config))
-    
+
     print(f"Conclusion: {result.final_conclusion}")
     print(f"Confidence: {result.consensus_confidence * 100:.0f}%")
-    
+
 
 if __name__ == "__main__":
     main()

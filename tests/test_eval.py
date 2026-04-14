@@ -9,6 +9,14 @@ from __future__ import annotations
 
 import pytest
 
+from debate_engine.eval.benchmark import (
+    BENCHMARK_CASES,
+    REGRESSION_CASES,
+    BenchmarkCase,
+    BenchmarkResult,
+    BenchmarkSuite,
+)
+from debate_engine.eval.evaluator import DebateEvaluator
 from debate_engine.eval.metrics import (
     DebateEvalScores,
     MetricName,
@@ -21,15 +29,6 @@ from debate_engine.eval.metrics import (
     compute_hd,
     compute_rd,
 )
-from debate_engine.eval.benchmark import (
-    BENCHMARK_CASES,
-    REGRESSION_CASES,
-    BenchmarkCase,
-    BenchmarkResult,
-    BenchmarkSuite,
-)
-from debate_engine.eval.evaluator import DebateEvaluator
-
 
 # ===================================================================
 # Helpers

@@ -1,12 +1,20 @@
 """DebateEvaluator -- main evaluation orchestrator for DebateEngine."""
 
 from __future__ import annotations
+
 import logging
 from typing import Any
+
 from .metrics import (
-    DebateEvalScores, MetricName,
-    compute_bdr, compute_ce, compute_cis, compute_cv,
-    compute_far, compute_hd, compute_rd,
+    DebateEvalScores,
+    MetricName,
+    compute_bdr,
+    compute_ce,
+    compute_cis,
+    compute_cv,
+    compute_far,
+    compute_hd,
+    compute_rd,
 )
 
 logger = logging.getLogger(__name__)

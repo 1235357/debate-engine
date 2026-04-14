@@ -8,9 +8,6 @@ from __future__ import annotations
 
 import logging
 import os
-import threading
-import time
-from collections import defaultdict
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
@@ -18,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from debate_engine.api.key_manager import APIKeyManager
 from debate_engine.api.middleware import RequestLoggingMiddleware, setup_logging
 from debate_engine.orchestration import DebateOrchestrator, QuickCritiqueEngine
 from debate_engine.providers.config import ProviderConfig
@@ -28,80 +26,6 @@ from debate_engine.schemas import (
 )
 
 logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# API Key Manager
-# ---------------------------------------------------------------------------
-
-class APIKeyManager:
-    """Manage multiple API keys with load balancing and failover."""
-
-    def __init__(self, api_keys: list[str]):
-        self.api_keys = api_keys
-        self.current_index = 0
-        self.lock = threading.Lock()
-        self.key_stats: dict[str, dict] = defaultdict(lambda: {
-            'success_count': 0,
-            'failure_count': 0,
-            'last_used': 0,
-            'last_failed': 0,
-            'is_active': True
-        })
-        self.cooldown_period = 60
-
-    def get_next_key(self) -> str:
-        """Get next API key using round-robin with failover."""
-        with self.lock:
-            start_index = self.current_index
-            attempt = 0
-
-            while attempt < len(self.api_keys):
-                key = self.api_keys[self.current_index]
-                self.current_index = (self.current_index + 1) % len(self.api_keys)
-
-                stats = self.key_stats[key]
-                now = time.time()
-
-                if stats['is_active']:
-                    if now - stats['last_failed'] > self.cooldown_period:
-                        return key
-
-                attempt += 1
-
-            self.current_index = start_index
-            return self.api_keys[start_index]
-
-    def record_success(self, api_key: str):
-        """Record a successful API call."""
-        with self.lock:
-            stats = self.key_stats[api_key]
-            stats['success_count'] += 1
-            stats['last_used'] = time.time()
-            stats['is_active'] = True
-
-    def record_failure(self, api_key: str):
-        """Record a failed API call."""
-        with self.lock:
-            stats = self.key_stats[api_key]
-            stats['failure_count'] += 1
-            stats['last_failed'] = time.time()
-            stats['is_active'] = False
-
-    def get_stats(self) -> dict:
-        """Get statistics about API key usage."""
-        with self.lock:
-            return {
-                'total_keys': len(self.api_keys),
-                'active_keys': sum(1 for k in self.api_keys if self.key_stats[k]['is_active']),
-                'key_details': {
-                    f'key_{i}': {
-                        'success_count': self.key_stats[k]['success_count'],
-                        'failure_count': self.key_stats[k]['failure_count'],
-                        'is_active': self.key_stats[k]['is_active']
-                    }
-                    for i, k in enumerate(self.api_keys)
-                }
-            }
 
 # ---------------------------------------------------------------------------
 # App factory

@@ -1,9 +1,11 @@
 """Job tracking schema for async DebateEngine execution."""
 
 from __future__ import annotations
+
 from datetime import datetime
-from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, Field
+
 from .consensus import ConsensusSchema
 from .enums import JobStatus
 
@@ -23,6 +25,6 @@ class DebateJobSchema(BaseModel):
     current_round: int = Field(default=0, ge=0)
     current_phase: str = Field(default="")
     progress_pct: int = Field(default=0, ge=0, le=100)
-    result: Optional[ConsensusSchema] = None
-    error: Optional[ErrorDetail] = None
+    result: ConsensusSchema | None = None
+    error: ErrorDetail | None = None
     cost_so_far_usd: float = Field(default=0.0, ge=0.0)

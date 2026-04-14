@@ -6,12 +6,13 @@ import asyncio
 import json
 import logging
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Literal
 
 from pydantic import BaseModel, ValidationError
 
-from .config import ProviderConfig, ProviderEntry, ProviderMode
+from ..api.key_manager import APIKeyManager
+from .config import ProviderConfig, ProviderMode
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +69,7 @@ class LLMProvider:
       with failover and success/failure tracking.
     """
 
-    def __init__(self, config: ProviderConfig, key_manager: 'APIKeyManager' | None = None) -> None:
+    def __init__(self, config: ProviderConfig, key_manager: APIKeyManager | None = None) -> None:
         self.config = config
         self.key_manager = key_manager
         self._cost_accumulated: float = 0.0
@@ -256,7 +257,7 @@ class LLMProvider:
                     error_message = error_message or "All parse attempts exhausted"
                 break  # transport succeeded, exit transport retry loop
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 last_transport_error = TimeoutError(
                     f"Call to {model_display} timed out after "
                     f"{self.config.timeout_seconds}s"
@@ -338,10 +339,10 @@ class LLMProvider:
 
     def _map_provider_name(self, provider_name: str) -> str:
         """Map provider names to LiteLLM official routes.
-        
+
         Args:
             provider_name: The provider name to map
-            
+
         Returns:
             The mapped provider name that matches LiteLLM official routes
         """
@@ -466,7 +467,7 @@ class LLMProvider:
         if self.key_manager:
             api_key = self.key_manager.get_next_key()
             params["api_key"] = api_key
-        
+
         return params
 
     async def _acompletion(
@@ -482,7 +483,7 @@ class LLMProvider:
         import litellm  # late import to avoid hard dependency at module level
 
         api_key = params.get("api_key")
-        
+
         try:
             if response_model is not None and self._check_instructor():
                 result = await self._acompletion_with_instructor(params, response_model)
@@ -491,13 +492,13 @@ class LLMProvider:
                 response = await litellm.acompletion(**params)
                 raw_text = response.choices[0].message.content or ""
                 result = raw_text, response
-            
+
             # Record success if API key was used
             if self.key_manager and api_key:
                 self.key_manager.record_success(api_key)
-            
+
             return result
-        except Exception as e:
+        except Exception:
             # Record failure if API key was used
             if self.key_manager and api_key:
                 self.key_manager.record_failure(api_key)
@@ -525,7 +526,7 @@ class LLMProvider:
         import litellm
 
         api_key = params.get("api_key")
-        
+
         client = instructor.from_litellm(litellm.AsyncOpenAI())
         # Extract model string from params
         model = params.pop("model")
@@ -544,7 +545,7 @@ class LLMProvider:
             if self.key_manager and api_key:
                 self.key_manager.record_success(api_key)
             return response
-        except Exception as e:
+        except Exception:
             # Record failure if API key was used
             if self.key_manager and api_key:
                 self.key_manager.record_failure(api_key)

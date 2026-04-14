@@ -14,11 +14,11 @@ def consensus_to_sarif(consensus: Any) -> dict[str, Any]:
     results = []
     rules = {}
     critiques = getattr(consensus, "critiques_summary", []) or []
-    
+
     # Get metadata for context
     metadata = getattr(consensus, "debate_metadata", None)
     reviewed_file = getattr(metadata, "reviewed_file", "reviewed-content") if metadata else "reviewed-content"
-    
+
     for idx, critique in enumerate(critiques):
         defect_type = getattr(critique, "defect_type", None)
         defect_value = defect_type.value if hasattr(defect_type, "value") else str(defect_type)
@@ -29,10 +29,10 @@ def consensus_to_sarif(consensus: Any) -> dict[str, Any]:
         fix = getattr(critique, "suggested_fix", "")
         confidence = getattr(critique, "confidence", 0.0)
         is_da = getattr(critique, "is_devil_advocate", False)
-        
+
         # Map severity to SARIF level
         level = "error" if sev_value == "CRITICAL" else "warning" if sev_value == "MAJOR" else "note"
-        
+
         # Create rule ID and metadata
         rule_id = defect_value.lower().replace(" ", "_")
         if rule_id not in rules:
@@ -47,7 +47,7 @@ def consensus_to_sarif(consensus: Any) -> dict[str, Any]:
                     "precision": "high" if confidence > 0.7 else "medium" if confidence > 0.4 else "low"
                 }
             }
-        
+
         # Build physical location with region if available
         physical_location = {
             "artifactLocation": {
@@ -55,7 +55,7 @@ def consensus_to_sarif(consensus: Any) -> dict[str, Any]:
                 "uriBaseId": "%SRCROOT%"
             }
         }
-        
+
         # Add region information if available (placeholder for now)
         # In a real implementation, this would come from the critique or metadata
         region = getattr(critique, "region", None)
@@ -69,7 +69,7 @@ def consensus_to_sarif(consensus: Any) -> dict[str, Any]:
                 "endLine": 1,
                 "endColumn": 1
             }
-        
+
         # Create result
         result = {
             "ruleId": rule_id,
@@ -86,9 +86,9 @@ def consensus_to_sarif(consensus: Any) -> dict[str, Any]:
                 "severity": sev_value
             }
         }
-        
+
         results.append(result)
-    
+
     # Build SARIF output
     sarif = {
         "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json",
@@ -113,5 +113,5 @@ def consensus_to_sarif(consensus: Any) -> dict[str, Any]:
             }
         }]
     }
-    
+
     return sarif

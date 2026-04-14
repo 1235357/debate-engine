@@ -19,8 +19,6 @@ from .metrics import (
     compute_cv,
     compute_far,
     compute_hd,
-    compute_rd,
-    compute_cis,
 )
 
 logger = logging.getLogger(__name__)

@@ -7,15 +7,13 @@ JSON parsing, cost tracking, and timeout handling.
 from __future__ import annotations
 
 import asyncio
-import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from debate_engine.providers.config import ProviderConfig, ProviderEntry, ProviderMode
-from debate_engine.providers.llm_provider import CallResult, LLMProvider
-
+from debate_engine.providers.llm_provider import LLMProvider
 
 # ===================================================================
 # ProviderConfig.from_env tests
