@@ -2,11 +2,9 @@
 
 import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 import redis
-
-from debate_engine.schemas import DebateJobSchema
 
 logger = logging.getLogger(__name__)
 
@@ -54,14 +52,22 @@ class RedisStorage:
         try:
             job_data = {
                 "job_id": job.job_id,
-                "config": job.config.model_dump() if hasattr(job.config, "model_dump") else job.config,
+                "config": (
+                    job.config.model_dump()
+                    if hasattr(job.config, "model_dump")
+                    else job.config
+                ),
                 "status": job.status,
                 "created_at": job.created_at.isoformat(),
                 "updated_at": job.updated_at.isoformat(),
                 "current_round": job.current_round,
                 "current_phase": job.current_phase,
                 "progress_pct": job.progress_pct,
-                "result": job.result.model_dump() if job.result and hasattr(job.result, "model_dump") else job.result,
+                "result": (
+                    job.result.model_dump()
+                    if job.result and hasattr(job.result, "model_dump")
+                    else job.result
+                ),
                 "error": job.error,
                 "cost_so_far_usd": job.cost_so_far_usd,
                 "cancel_requested": job.cancel_requested,
@@ -73,7 +79,7 @@ class RedisStorage:
             logger.warning("Failed to save job %s to Redis: %s", job.job_id, exc)
             return False
 
-    def get_job(self, job_id: str) -> Optional[Any]:
+    def get_job(self, job_id: str) -> Any | None:
         """Get a job from Redis.
 
         Parameters
@@ -87,7 +93,7 @@ class RedisStorage:
             DebateJob instance if found, None otherwise.
         """
         from debate_engine.orchestration.debate import DebateJob
-        
+
         if not self.redis_client:
             return None
 
@@ -98,14 +104,14 @@ class RedisStorage:
                 return None
 
             data = json.loads(job_data)
-            from datetime import datetime, timezone
+            from datetime import datetime
 
             job = DebateJob(
                 job_id=data["job_id"],
                 config=data["config"],
                 status=data["status"],
-                created_at=datetime.fromisoformat(data["created_at"]).replace(tzinfo=timezone.utc),
-                updated_at=datetime.fromisoformat(data["updated_at"]).replace(tzinfo=timezone.utc),
+                created_at=datetime.fromisoformat(data["created_at"]).replace(tzinfo=datetime.UTC),
+                updated_at=datetime.fromisoformat(data["updated_at"]).replace(tzinfo=datetime.UTC),
                 current_round=data["current_round"],
                 current_phase=data["current_phase"],
                 progress_pct=data["progress_pct"],
