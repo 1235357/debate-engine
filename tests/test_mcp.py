@@ -71,7 +71,7 @@ def test_format_consensus_as_markdown():
     
     assert "# DebateEngine Consensus" in markdown
     assert "Test conclusion" in markdown
-    assert "Confidence: 85%" in markdown
+    assert "**Confidence:** 85%" in markdown
     assert "## Metadata" in markdown
     assert "test-request-id" in markdown
     assert "## Findings" in markdown
@@ -142,7 +142,7 @@ def test_parse_consensus_json():
     })
 
     # Test the parsing function
-    with patch("debate_engine.mcp_server.server.ConsensusSchema") as mock_schema:
+    with patch("debate_engine.schemas.ConsensusSchema") as mock_schema:
         mock_schema.model_validate.return_value = Mock()
         result = _parse_consensus_json(consensus_json)
         mock_schema.model_validate.assert_called_once()

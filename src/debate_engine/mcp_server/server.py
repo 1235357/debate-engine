@@ -19,13 +19,7 @@ from .formatters import format_consensus_as_markdown, format_eval_scores_as_mark
 logger = logging.getLogger(__name__)
 
 mcp = FastMCP(
-    name="debate-engine",
-    version="0.1.0",
-    description=(
-        "Structured Multi-Agent Critique & Consensus Engine. "
-        "Get machine-parseable critiques from multiple AI reviewer roles "
-        "with Devil's Advocate, anonymized cross-critique, and Judge consensus."
-    ),
+    name="debate-engine"
 )
 
 

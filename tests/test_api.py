@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -41,30 +41,37 @@ async def test_quick_critique_endpoint(client: TestClient):
     # Mock the QuickCritiqueEngine
     with patch("debate_engine.api.server.get_quick_engine") as mock_get_engine:
         # Create a mock engine
-        mock_engine = Mock()
-        mock_engine.critique.return_value = Mock(
+        mock_engine = AsyncMock()
+        # Create a mock result using the actual ConsensusSchema class
+        from debate_engine.schemas import ConsensusSchema, DebateMetadata
+        from debate_engine.schemas.enums import TaskType, ProviderMode, TerminationReason
+        
+        # Create a proper ConsensusSchema object
+        mock_result = ConsensusSchema(
             final_conclusion="Test conclusion",
             consensus_confidence=0.85,
             critiques_summary=[],
-            debate_metadata=Mock(
+            debate_metadata=DebateMetadata(
                 request_id="test-request-id",
-                task_type=Mock(value="CODE_REVIEW"),
-                provider_mode=Mock(value="STABLE"),
+                task_type=TaskType.CODE_REVIEW,
+                provider_mode=ProviderMode.STABLE,
                 rounds_completed=1,
                 total_cost_usd=0.05,
                 total_latency_ms=1000.0,
                 models_used=["test-model"],
                 quorum_achieved=True,
-                termination_reason=Mock(value="COMPLETED"),
+                termination_reason=TerminationReason.COMPLETED,
                 parse_attempts_total=0
             ),
             adopted_contributions={},
             rejected_positions=[],
             remaining_disagreements=[],
-            disagreement_confirmation="",
+            disagreement_confirmation="No disagreements found",
             preserved_minority_opinions=[],
             partial_return=False
         )
+        # Make the mock return the object
+        mock_engine.critique.return_value = mock_result
         mock_get_engine.return_value = mock_engine
 
         # Test the endpoint
@@ -88,7 +95,7 @@ async def test_debate_endpoint(client: TestClient):
     # Mock the DebateOrchestrator
     with patch("debate_engine.api.server.get_debate_orchestrator") as mock_get_orchestrator:
         # Create a mock orchestrator
-        mock_orchestrator = Mock()
+        mock_orchestrator = AsyncMock()
         mock_orchestrator.submit.return_value = "test-job-id"
         mock_get_orchestrator.return_value = mock_orchestrator
 
@@ -113,23 +120,33 @@ async def test_chat_endpoint(client: TestClient):
     # Mock the QuickCritiqueEngine
     with patch("debate_engine.api.server.get_quick_engine") as mock_get_engine:
         # Create a mock engine
-        mock_engine = Mock()
-        mock_engine.critique.return_value = Mock(
+        mock_engine = AsyncMock()
+        # Create a mock result using SimpleNamespace to simulate object with attributes
+        from types import SimpleNamespace
+        
+        # Create mock objects with proper attributes
+        mock_task_type = SimpleNamespace(value="CODE_REVIEW")
+        mock_provider_mode = SimpleNamespace(value="STABLE")
+        mock_termination_reason = SimpleNamespace(value="COMPLETED")
+        
+        mock_debate_metadata = SimpleNamespace(
+            request_id="test-chat-request-id",
+            task_type=mock_task_type,
+            provider_mode=mock_provider_mode,
+            rounds_completed=1,
+            total_cost_usd=0.08,
+            total_latency_ms=1500.0,
+            models_used=["test-model"],
+            quorum_achieved=True,
+            termination_reason=mock_termination_reason,
+            parse_attempts_total=0
+        )
+        
+        mock_result = SimpleNamespace(
             final_conclusion="Test chat conclusion",
             consensus_confidence=0.9,
             critiques_summary=[],
-            debate_metadata=Mock(
-                request_id="test-chat-request-id",
-                task_type=Mock(value="CODE_REVIEW"),
-                provider_mode=Mock(value="STABLE"),
-                rounds_completed=1,
-                total_cost_usd=0.08,
-                total_latency_ms=1500.0,
-                models_used=["test-model"],
-                quorum_achieved=True,
-                termination_reason=Mock(value="COMPLETED"),
-                parse_attempts_total=0
-            ),
+            debate_metadata=mock_debate_metadata,
             adopted_contributions={},
             rejected_positions=[],
             remaining_disagreements=[],
@@ -137,6 +154,8 @@ async def test_chat_endpoint(client: TestClient):
             preserved_minority_opinions=[],
             partial_return=False
         )
+        # Make the mock return the object
+        mock_engine.critique.return_value = mock_result
         mock_get_engine.return_value = mock_engine
 
         # Test the endpoint
@@ -162,23 +181,33 @@ async def test_quick_critique_api_endpoint(client: TestClient):
     # Mock the QuickCritiqueEngine
     with patch("debate_engine.api.server.get_quick_engine") as mock_get_engine:
         # Create a mock engine
-        mock_engine = Mock()
-        mock_engine.critique.return_value = Mock(
+        mock_engine = AsyncMock()
+        # Create a mock result using SimpleNamespace to simulate object with attributes
+        from types import SimpleNamespace
+        
+        # Create mock objects with proper attributes
+        mock_task_type = SimpleNamespace(value="CODE_REVIEW")
+        mock_provider_mode = SimpleNamespace(value="STABLE")
+        mock_termination_reason = SimpleNamespace(value="COMPLETED")
+        
+        mock_debate_metadata = SimpleNamespace(
+            request_id="test-api-request-id",
+            task_type=mock_task_type,
+            provider_mode=mock_provider_mode,
+            rounds_completed=1,
+            total_cost_usd=0.06,
+            total_latency_ms=1200.0,
+            models_used=["test-model"],
+            quorum_achieved=True,
+            termination_reason=mock_termination_reason,
+            parse_attempts_total=0
+        )
+        
+        mock_result = SimpleNamespace(
             final_conclusion="Test API conclusion",
             consensus_confidence=0.8,
             critiques_summary=[],
-            debate_metadata=Mock(
-                request_id="test-api-request-id",
-                task_type=Mock(value="CODE_REVIEW"),
-                provider_mode=Mock(value="STABLE"),
-                rounds_completed=1,
-                total_cost_usd=0.06,
-                total_latency_ms=1200.0,
-                models_used=["test-model"],
-                quorum_achieved=True,
-                termination_reason=Mock(value="COMPLETED"),
-                parse_attempts_total=0
-            ),
+            debate_metadata=mock_debate_metadata,
             adopted_contributions={},
             rejected_positions=[],
             remaining_disagreements=[],
@@ -186,6 +215,8 @@ async def test_quick_critique_api_endpoint(client: TestClient):
             preserved_minority_opinions=[],
             partial_return=False
         )
+        # Make the mock return the object
+        mock_engine.critique.return_value = mock_result
         mock_get_engine.return_value = mock_engine
 
         # Test the endpoint

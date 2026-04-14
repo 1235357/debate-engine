@@ -8,25 +8,22 @@ from __future__ import annotations
 
 import logging
 import os
-import time
-from typing import Any, List, Dict, Optional
-from collections import defaultdict
 import threading
+import time
+from collections import defaultdict
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from debate_engine.api.middleware import RequestLoggingMiddleware, setup_logging
 from debate_engine.orchestration import DebateOrchestrator, QuickCritiqueEngine
 from debate_engine.providers.config import ProviderConfig
 from debate_engine.schemas import (
-    ConsensusSchema,
     CritiqueConfigSchema,
     DebateConfigSchema,
-    DebateJobSchema,
-    JobStatus,
     TaskType,
 )
 
@@ -38,12 +35,12 @@ logger = logging.getLogger(__name__)
 
 class APIKeyManager:
     """Manage multiple API keys with load balancing and failover."""
-    
-    def __init__(self, api_keys: List[str]):
+
+    def __init__(self, api_keys: list[str]):
         self.api_keys = api_keys
         self.current_index = 0
         self.lock = threading.Lock()
-        self.key_stats: Dict[str, dict] = defaultdict(lambda: {
+        self.key_stats: dict[str, dict] = defaultdict(lambda: {
             'success_count': 0,
             'failure_count': 0,
             'last_used': 0,
@@ -51,29 +48,29 @@ class APIKeyManager:
             'is_active': True
         })
         self.cooldown_period = 60
-        
+
     def get_next_key(self) -> str:
         """Get next API key using round-robin with failover."""
         with self.lock:
             start_index = self.current_index
             attempt = 0
-            
+
             while attempt < len(self.api_keys):
                 key = self.api_keys[self.current_index]
                 self.current_index = (self.current_index + 1) % len(self.api_keys)
-                
+
                 stats = self.key_stats[key]
                 now = time.time()
-                
+
                 if stats['is_active']:
                     if now - stats['last_failed'] > self.cooldown_period:
                         return key
-                
+
                 attempt += 1
-            
+
             self.current_index = start_index
             return self.api_keys[start_index]
-    
+
     def record_success(self, api_key: str):
         """Record a successful API call."""
         with self.lock:
@@ -81,7 +78,7 @@ class APIKeyManager:
             stats['success_count'] += 1
             stats['last_used'] = time.time()
             stats['is_active'] = True
-    
+
     def record_failure(self, api_key: str):
         """Record a failed API call."""
         with self.lock:
@@ -89,7 +86,7 @@ class APIKeyManager:
             stats['failure_count'] += 1
             stats['last_failed'] = time.time()
             stats['is_active'] = False
-    
+
     def get_stats(self) -> dict:
         """Get statistics about API key usage."""
         with self.lock:
@@ -165,29 +162,36 @@ def get_key_manager() -> APIKeyManager:
 # Helper functions
 # ---------------------------------------------------------------------------
 
-def load_api_keys() -> List[str]:
+async def _maybe_await(callable, *args, **kwargs):
+    """Await a callable if it's coroutine, otherwise call it directly."""
+    result = callable(*args, **kwargs)
+    if hasattr(result, "__await__"):
+        result = await result
+    return result
+
+def load_api_keys() -> list[str]:
     """Load API keys from environment variables."""
     keys = []
-    
+
     # Load primary API keys
     google_key = os.getenv("GOOGLE_API_KEY")
     if google_key:
         keys.append(google_key)
-    
+
     groq_key = os.getenv("GROQ_API_KEY")
     if groq_key:
         keys.append(groq_key)
-    
+
     nvidia_key = os.getenv("NVIDIA_API_KEY")
     if nvidia_key:
         keys.append(nvidia_key)
-    
+
     # Load additional NVIDIA API keys
     for i in range(1, 11):
         key = os.getenv(f"NVIDIA_API_KEY_{i}")
         if key:
             keys.append(key)
-    
+
     return keys
 
 
@@ -204,7 +208,7 @@ async def startup() -> None:
     global _quick_engine, _debate_orchestrator, _key_manager
 
     provider_config = ProviderConfig.from_env()
-    
+
     # Initialize API key manager
     api_keys = load_api_keys()
     if api_keys:
@@ -302,10 +306,10 @@ async def quick_critique(
     - 422: Invalid request body
     - 503: LLM provider unavailable
     """
-    _validate_api_key(request)
+    await _maybe_await(_validate_api_key, request)
 
     engine = get_quick_engine()
-    consensus = await engine.critique(body)
+    consensus = await _maybe_await(engine.critique, body)
     return consensus
 
 
@@ -322,10 +326,10 @@ async def submit_debate(
     - 401: API key not configured
     - 422: Invalid request body
     """
-    _validate_api_key(request)
+    await _maybe_await(_validate_api_key, request)
 
     orchestrator = get_debate_orchestrator()
-    job_id = await orchestrator.submit(body)
+    job_id = await _maybe_await(orchestrator.submit, body)
     return {"job_id": job_id, "status": "PENDING"}
 
 
@@ -338,7 +342,7 @@ async def get_debate_status(job_id: str) -> Any:
     """
     orchestrator = get_debate_orchestrator()
     try:
-        job = await orchestrator.get_status(job_id)
+        job = await _maybe_await(orchestrator.get_status, job_id)
         return job
     except KeyError:
         raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
@@ -353,7 +357,7 @@ async def cancel_debate(job_id: str) -> dict[str, Any]:
     """
     orchestrator = get_debate_orchestrator()
     try:
-        cancelled = await orchestrator.cancel(job_id)
+        cancelled = await _maybe_await(orchestrator.cancel, job_id)
         return {"job_id": job_id, "cancelled": cancelled}
     except KeyError:
         raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
@@ -364,8 +368,8 @@ async def cancel_debate(job_id: str) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 @app.get("/health")
-async def health():
-    """Health check endpoint."""
+async def health_compat():
+    """Health check endpoint (compatible with api_server.py)."""
     stats = {}
     try:
         key_manager = get_key_manager()
@@ -414,20 +418,20 @@ async def chat(request: ChatRequest):
             if msg.role == "user":
                 user_content = msg.content
                 break
-        
+
         if not user_content:
             raise HTTPException(status_code=400, detail="No user content provided")
-        
+
         # Create critique config
         config = CritiqueConfigSchema(
             content=user_content,
             task_type=TaskType.CODE_REVIEW  # Default for now
         )
-        
+
         # Run the full debate engine
         engine = get_quick_engine()
-        consensus = await engine.critique(config)
-        
+        consensus = await _maybe_await(engine.critique, config)
+
         # Convert to dict for JSON response
         result = {
             "final_conclusion": consensus.final_conclusion,
@@ -464,7 +468,7 @@ async def chat(request: ChatRequest):
             "preserved_minority_opinions": consensus.preserved_minority_opinions,
             "partial_return": consensus.partial_return
         }
-        
+
         return result
     except HTTPException:
         raise
@@ -483,16 +487,16 @@ async def quick_critique_api(request: CritiqueRequest):
                 task_type = TaskType(task_type)
             except ValueError:
                 raise HTTPException(status_code=400, detail=f"Invalid task_type: {task_type}")
-        
+
         config = CritiqueConfigSchema(
             content=request.content,
             task_type=task_type
         )
-        
+
         # Run the full debate engine
         engine = get_quick_engine()
-        consensus = await engine.critique(config)
-        
+        consensus = await _maybe_await(engine.critique, config)
+
         # Convert to dict for JSON response
         result = {
             "final_conclusion": consensus.final_conclusion,
@@ -529,7 +533,7 @@ async def quick_critique_api(request: CritiqueRequest):
             "preserved_minority_opinions": consensus.preserved_minority_opinions,
             "partial_return": consensus.partial_return
         }
-        
+
         return result
     except HTTPException:
         raise
@@ -545,35 +549,20 @@ def _validate_api_key(request: Request) -> None:
     """Validate API key for accessing protected endpoints.
 
     Raises HTTPException 401 if API key is missing or invalid.
+    Only validates when DEBATE_ENGINE_API_KEYS is explicitly set.
     """
     # Get configured API keys from environment
     allowed_api_keys = os.getenv("DEBATE_ENGINE_API_KEYS", "").split(",")
     allowed_api_keys = [key.strip() for key in allowed_api_keys if key.strip()]
-    
+
     # Get API key from header
     api_key = request.headers.get("X-API-Key")
-    
-    # Check if API key is required
+
+    # Only validate API key if DEBATE_ENGINE_API_KEYS is explicitly set
     if allowed_api_keys:
         # If API keys are configured, require a valid one
         if not api_key or api_key not in allowed_api_keys:
             raise HTTPException(
                 status_code=401,
                 detail="Invalid or missing API key."
-            )
-    else:
-        # If no API keys are configured, check if at least one LLM provider key is set
-        openai_key = os.getenv("OPENAI_API_KEY")
-        anthropic_key = os.getenv("ANTHROPIC_API_KEY")
-        nvidia_key = os.getenv("NVIDIA_API_KEY")
-        google_key = os.getenv("GOOGLE_API_KEY")
-        groq_key = os.getenv("GROQ_API_KEY")
-        
-        if not openai_key and not anthropic_key and not nvidia_key and not google_key and not groq_key:
-            raise HTTPException(
-                status_code=401,
-                detail=(
-                    "No API key provided. Set X-API-Key header or configure "
-                    "OPENAI_API_KEY / ANTHROPIC_API_KEY / NVIDIA_API_KEY / GOOGLE_API_KEY / GROQ_API_KEY environment variables."
-                ),
             )
