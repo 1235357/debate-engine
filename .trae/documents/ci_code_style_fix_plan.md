@@ -1,45 +1,54 @@
 # CI 代码风格修复计划
 
-## 问题分析
+## 当前状态分析
 
-CI 工作流失败，原因是代码风格问题，具体在 `src/debate_engine/storage/redis_storage.py` 文件中：
+### ✅ 已完成的修复
+- `schemas/` 目录下的所有文件已经修复完成：
+  - `consensus.py` - Optional → | None 已修复，导入已排序
+  - `critique.py` - Optional → | None 已修复，导入已排序
+  - `job.py` - Optional → | None 已修复，导入已排序
+  - `config.py` - Optional → | None 已修复，导入已排序
+  - `enums.py` - 导入已排序
+  - `proposal.py` - 文件末尾换行已修复
 
-1. **W293** - 空白行包含空格（第 90 行）
-2. **UP017** - 使用了 `timezone.utc`，建议使用 `datetime.UTC` 别名（第 107 和 108 行）
+### 🔍 剩余问题
+通过 `ruff check .` 显示只有 **41 个错误**，主要都是 **E501 (Line too long)** 问题
 
-## 解决方案
+## 修复计划
 
-### 1. 修复 redis_storage.py 文件
+### 1. 运行自动修复
+- 使用 `ruff check . --fix` 尝试自动修复
+- 使用 `ruff format .` 格式化所有代码
 
-**文件**：[src/debate_engine/storage/redis_storage.py](file:///workspace/src/debate_engine/storage/redis_storage.py)
+### 2. 手动修复剩余的长行问题
 
-**修改**：
-- 移除第 90 行的空格
-- 将第 107 和 108 行的 `timezone.utc` 改为 `datetime.UTC`
-- 确保导入 `datetime` 模块
+#### 2.1 `src/debate_engine/eval/benchmark.py` (约 37 个长行)
+- 将所有超过 100 字符的长字符串拆分成多行
+- 主要是 BenchmarkCase 中的 description 和 reference_answer 字段
 
-## 具体步骤
+#### 2.2 `src/debate_engine/eval/metrics.py` (约 3 个长行)
+- 修复 f-string 格式化字符串
+- 主要是 MetricResult 的 description 字段
 
-1. **修改 redis_storage.py 文件**：
-   - 移除第 90 行的空格
-   - 导入 `datetime` 模块（如果尚未导入）
-   - 将 `timezone.utc` 改为 `datetime.UTC`
+#### 2.3 `tests/test_provider.py` (1 个长行)
+- 拆分长 JSON 字符串
 
-2. **验证修复**：
-   - 运行 `ruff` 命令检查代码风格
-   - 确保所有代码风格问题都已解决
+### 3. 验证修复
+- 再次运行 `ruff check .` 确认无错误
+- 运行测试确保功能正常
+- 提交并推送修复
 
-3. **提交更改**：
-   - 提交修复后的代码
-   - 触发 CI 工作流
+## 文件清单
 
-## 风险处理
+### 需要修改的文件
+1. `src/debate_engine/eval/benchmark.py`
+2. `src/debate_engine/eval/metrics.py`
+3. `tests/test_provider.py`
 
-- **低风险**：这些只是代码风格问题，不影响功能
-- **验证**：修复后运行 `ruff` 命令确保所有问题都已解决
+### 不需要修改的文件
+- 所有 `schemas/` 目录下的文件（已修复）
+- 其他大部分文件（已修复）
 
-## 预期结果
-
-- CI 工作流成功运行
-- 代码风格检查通过
-- 所有测试通过
+## 风险评估
+- 低风险：主要是代码格式化和字符串换行
+- 不影响功能逻辑

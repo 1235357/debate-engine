@@ -175,7 +175,10 @@ def compute_far(
     return MetricResult(
         name=MetricName.FAR,
         value=round(far, 4),
-        description=f"False Alarm Rate: {false_alarm_count}/{len(discovered_defects)} discovered defects are false alarms.",
+        description=(
+            f"False Alarm Rate: {false_alarm_count}/{len(discovered_defects)} "
+            f"discovered defects are false alarms."
+        ),
         details={
             "false_alarms": false_alarm_count,
             "discovered_count": len(discovered_defects),
@@ -189,7 +192,10 @@ def compute_cv(consensus_conclusion: str, reference_answer: str) -> MetricResult
     return MetricResult(
         name=MetricName.CV,
         value=round(score, 4),
-        description=f"Consensus Validity: {score:.2%} keyword overlap between consensus and reference answer.",
+        description=(
+            f"Consensus Validity: {score:.2%} keyword overlap between "
+            f"consensus and reference answer."
+        ),
         details={
             "consensus_length": len(consensus_conclusion),
             "reference_length": len(reference_answer),
@@ -244,7 +250,11 @@ def compute_cis(revision_history: list[dict], critiques: list[dict]) -> MetricRe
     return MetricResult(
         name=MetricName.CIS,
         value=round(cis, 4),
-        description=f"Conformity Impact Score: {cis:.4f} ({'low' if cis < 0.3 else 'moderate' if cis < 0.7 else 'high'} degradation from sycophantic stance changes).",
+        description=(
+            f"Conformity Impact Score: {cis:.4f} ("
+            f"{'low' if cis < 0.3 else 'moderate' if cis < 0.7 else 'high'} "
+            f"degradation from sycophantic stance changes)."
+        ),
         details={
             "adopted_high_severity_changes": adopted_high_severity_changes,
             "total_stance_changes": total_stance_changes,
@@ -274,7 +284,10 @@ def compute_ce(cv_score: float, rounds_completed: int, total_cost_usd: float) ->
     return MetricResult(
         name=MetricName.CE,
         value=round(ce, 4),
-        description=f"Convergence Efficiency: {ce:.4f} (CV={cv_score:.4f}, rounds={rounds_completed}, cost=${total_cost_usd:.4f}).",
+        description=(
+            f"Convergence Efficiency: {ce:.4f} (CV={cv_score:.4f}, "
+            f"rounds={rounds_completed}, cost=${total_cost_usd:.4f})."
+        ),
         details={"cv_score": cv_score, "rounds": rounds_completed, "cost_usd": total_cost_usd},
     )
 
@@ -293,10 +306,16 @@ def compute_rd(critiques: list[dict], adopted_count: int = 0) -> MetricResult:
     if adopted_count > 0 and concrete_count > 0:
         adoption_ratio = adopted_count / concrete_count
         rd = concrete_ratio * adoption_ratio
-        desc = f"Reasoning Depth: {rd:.4f} (concrete_fix_ratio={concrete_ratio:.2%}, adoption_ratio={adoption_ratio:.2%})."
+        desc = (
+            f"Reasoning Depth: {rd:.4f} (concrete_fix_ratio={concrete_ratio:.2%}, "
+            f"adoption_ratio={adoption_ratio:.2%})."
+        )
     else:
         rd = concrete_ratio
-        desc = f"Reasoning Depth (concrete_fix only): {rd:.4f} ({concrete_count}/{total_count} critiques have concrete fixes)."
+        desc = (
+            f"Reasoning Depth (concrete_fix only): {rd:.4f} "
+            f"({concrete_count}/{total_count} critiques have concrete fixes)."
+        )
     return MetricResult(
         name=MetricName.RD,
         value=round(rd, 4),
@@ -316,7 +335,10 @@ def compute_hd(debate_faithfulness: float, baseline_faithfulness: float) -> Metr
     return MetricResult(
         name=MetricName.HD,
         value=round(hd, 4),
-        description=f"Hallucination Delta: {hd:+.4f} (debate={debate_faithfulness:.4f}, baseline={baseline_faithfulness:.4f}, {qualifier} hallucinations than baseline).",
+        description=(
+            f"Hallucination Delta: {hd:+.4f} (debate={debate_faithfulness:.4f}, "
+            f"baseline={baseline_faithfulness:.4f}, {qualifier} hallucinations than baseline)."
+        ),
         details={
             "debate_faithfulness": debate_faithfulness,
             "baseline_faithfulness": baseline_faithfulness,

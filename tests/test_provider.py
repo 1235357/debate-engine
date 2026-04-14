@@ -167,7 +167,12 @@ class TestJSONParsing:
     """Test _parse_json_response with various input formats."""
 
     def test_valid_json(self) -> None:
-        text = '{"target_area": "test", "defect_type": "GENERAL", "severity": "MINOR", "evidence": "This is valid evidence for testing.", "suggested_fix": "This is a valid suggested fix.", "fix_kind": "CONCRETE_FIX", "confidence": 0.8}'
+        text = (
+            '{"target_area": "test", "defect_type": "GENERAL", "severity": "MINOR", '
+            '"evidence": "This is valid evidence for testing.", '
+            '"suggested_fix": "This is a valid suggested fix.", '
+            '"fix_kind": "CONCRETE_FIX", "confidence": 0.8}'
+        )
         result = LLMProvider._parse_json_response(text, None)
         assert result == text  # No response_model -> returns raw text
 

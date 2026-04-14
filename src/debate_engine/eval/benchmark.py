@@ -230,7 +230,10 @@ class Counter:
 ```""",
         gold_standard_defects=[
             {
-                "description": "Non-atomic counter increment causes race condition in threaded context",
+                "description": (
+                    "Non-atomic counter increment causes race condition "
+                    "in threaded context"
+                ),
                 "defect_type": "LOGICAL_FALLACY",
                 "target_area": "thread safety",
             },
