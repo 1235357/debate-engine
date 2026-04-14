@@ -64,15 +64,33 @@ class ProviderConfig:
     def _resolved_chain(self) -> list[ProviderEntry]:
         if self.providers:
             return sorted(self.providers, key=lambda p: p.priority)
-        chain = [ProviderEntry(name=self.primary_provider, model=self.primary_model, api_key=self.primary_api_key, api_base=self.primary_api_base, priority=1)]
+        chain = [
+            ProviderEntry(
+                name=self.primary_provider,
+                model=self.primary_model,
+                api_key=self.primary_api_key,
+                api_base=self.primary_api_base,
+                priority=1,
+            )
+        ]
         if self.backup_provider and self.backup_model:
-            chain.append(ProviderEntry(name=self.backup_provider, model=self.backup_model, api_key=self.backup_api_key, api_base=self.backup_api_base, priority=2))
+            chain.append(
+                ProviderEntry(
+                    name=self.backup_provider,
+                    model=self.backup_model,
+                    api_key=self.backup_api_key,
+                    api_base=self.backup_api_base,
+                    priority=2,
+                )
+            )
         return chain
 
     @classmethod
     def from_env(cls) -> ProviderConfig:
         # 同时支持 DEBATE_ENGINE_PROVIDER_MODE 和 DEBATE_ENGINE_MODE
-        mode_str = os.getenv("DEBATE_ENGINE_PROVIDER_MODE", os.getenv("DEBATE_ENGINE_MODE", "stable"))
+        mode_str = os.getenv(
+            "DEBATE_ENGINE_PROVIDER_MODE", os.getenv("DEBATE_ENGINE_MODE", "stable")
+        )
         # 确保模式字符串为小写，与枚举值一致
         mode_str = mode_str.lower()
         try:
@@ -82,7 +100,9 @@ class ProviderConfig:
         primary_provider = os.getenv("DEBATE_ENGINE_PROVIDER", "nvidia")
         primary_model = os.getenv("DEBATE_ENGINE_MODEL", "minimax-m2.7")
         primary_api_key = os.getenv("NVIDIA_API_KEY") or os.getenv("OPENAI_API_KEY")
-        primary_api_base = os.getenv("NVIDIA_API_BASE", "https://integrate.api.nvidia.com/v1") or os.getenv("OPENAI_API_BASE")
+        primary_api_base = os.getenv(
+            "NVIDIA_API_BASE", "https://integrate.api.nvidia.com/v1"
+        ) or os.getenv("OPENAI_API_BASE")
         backup_provider = os.getenv("DEBATE_ENGINE_BACKUP_PROVIDER")
         backup_model = os.getenv("DEBATE_ENGINE_BACKUP_MODEL")
         backup_api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -96,9 +116,43 @@ class ProviderConfig:
         nvidia_key = os.getenv("NVIDIA_API_KEY")
         providers = []
         if nvidia_key:
-            providers.append(ProviderEntry(name="NVIDIA NIM", model="minimax-m2.7", api_key=nvidia_key, api_base="https://integrate.api.nvidia.com/v1", priority=1))
+            providers.append(
+                ProviderEntry(
+                    name="NVIDIA NIM",
+                    model="minimax-m2.7",
+                    api_key=nvidia_key,
+                    api_base="https://integrate.api.nvidia.com/v1",
+                    priority=1,
+                )
+            )
         if google_key:
-            providers.append(ProviderEntry(name="Google AI Studio", model="gemini-2.5-flash", api_key=google_key, priority=2))
+            providers.append(
+                ProviderEntry(
+                    name="Google AI Studio",
+                    model="gemini-2.5-flash",
+                    api_key=google_key,
+                    priority=2,
+                )
+            )
         if groq_key:
-            providers.append(ProviderEntry(name="Groq", model="llama-3.3-70b-versatile", api_key=groq_key, priority=3))
-        return cls(mode=mode, providers=providers, primary_provider=primary_provider, primary_model=primary_model, primary_api_key=primary_api_key, primary_api_base=primary_api_base, backup_provider=backup_provider, backup_model=backup_model, backup_api_key=backup_api_key, backup_api_base=backup_api_base, judge_model=judge_model, timeout_seconds=timeout, max_transport_retries=max_transport, max_parse_retries=max_parse)
+            providers.append(
+                ProviderEntry(
+                    name="Groq", model="llama-3.3-70b-versatile", api_key=groq_key, priority=3
+                )
+            )
+        return cls(
+            mode=mode,
+            providers=providers,
+            primary_provider=primary_provider,
+            primary_model=primary_model,
+            primary_api_key=primary_api_key,
+            primary_api_base=primary_api_base,
+            backup_provider=backup_provider,
+            backup_model=backup_model,
+            backup_api_key=backup_api_key,
+            backup_api_base=backup_api_base,
+            judge_model=judge_model,
+            timeout_seconds=timeout,
+            max_transport_retries=max_transport,
+            max_parse_retries=max_parse,
+        )

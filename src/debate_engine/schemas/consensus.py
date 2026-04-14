@@ -20,7 +20,9 @@ class MinorityOpinion(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     opinion: str = Field(..., description="The dissenting opinion.")
     source_role: str = Field(..., description="Which role held this opinion.")
-    source_critique_severity: Severity = Field(..., description="Severity of the original critique.")
+    source_critique_severity: Severity = Field(
+        ..., description="Severity of the original critique."
+    )
     potential_risk_if_ignored: str = Field(..., description="Risk if this opinion is ignored.")
 
 
@@ -55,7 +57,9 @@ class ConsensusSchema(BaseModel):
     @model_validator(mode="after")
     def _validate_consistency(self) -> ConsensusSchema:
         if len(self.remaining_disagreements) == 0 and not self.disagreement_confirmation:
-            raise ValueError("disagreement_confirmation is required when remaining_disagreements is empty.")
+            raise ValueError(
+                "disagreement_confirmation is required when remaining_disagreements is empty."
+            )
         if self.partial_return and len(self.critiques_summary) == 0:
             raise ValueError("critiques_summary must be non-empty when partial_return is True.")
         if self.consensus_confidence > 0.95:

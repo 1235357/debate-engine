@@ -12,13 +12,15 @@ class APIKeyManager:
         self.api_keys = api_keys
         self.current_index = 0
         self.lock = threading.Lock()
-        self.key_stats: dict[str, dict] = defaultdict(lambda: {
-            'success_count': 0,
-            'failure_count': 0,
-            'last_used': 0,
-            'last_failed': 0,
-            'is_active': True
-        })
+        self.key_stats: dict[str, dict] = defaultdict(
+            lambda: {
+                "success_count": 0,
+                "failure_count": 0,
+                "last_used": 0,
+                "last_failed": 0,
+                "is_active": True,
+            }
+        )
         self.cooldown_period = 60
 
     def get_next_key(self) -> str:
@@ -34,9 +36,9 @@ class APIKeyManager:
                 stats = self.key_stats[key]
 
                 # Check if key is in cooldown
-                if stats['is_active']:
-                    if stats['last_failed'] > 0:
-                        time_since_failure = time.time() - stats['last_failed']
+                if stats["is_active"]:
+                    if stats["last_failed"] > 0:
+                        time_since_failure = time.time() - stats["last_failed"]
                         if time_since_failure < self.cooldown_period:
                             # Key is still in cooldown, try next
                             self.current_index = (self.current_index + 1) % len(self.api_keys)
@@ -46,7 +48,7 @@ class APIKeyManager:
                             continue
                     # Key is available
                     self.current_index = (self.current_index + 1) % len(self.api_keys)
-                    stats['last_used'] = time.time()
+                    stats["last_used"] = time.time()
                     return key
 
                 # Key is inactive, try next
@@ -57,27 +59,27 @@ class APIKeyManager:
 
             # Fallback: return the first key
             key = self.api_keys[0]
-            self.key_stats[key]['last_used'] = time.time()
+            self.key_stats[key]["last_used"] = time.time()
             return key
 
     def record_success(self, api_key: str) -> None:
         """Record a successful API call for a key."""
         with self.lock:
             if api_key in self.key_stats:
-                self.key_stats[api_key]['success_count'] += 1
-                self.key_stats[api_key]['is_active'] = True
+                self.key_stats[api_key]["success_count"] += 1
+                self.key_stats[api_key]["is_active"] = True
 
     def record_failure(self, api_key: str) -> None:
         """Record a failed API call for a key."""
         with self.lock:
             if api_key in self.key_stats:
-                self.key_stats[api_key]['failure_count'] += 1
-                self.key_stats[api_key]['last_failed'] = time.time()
+                self.key_stats[api_key]["failure_count"] += 1
+                self.key_stats[api_key]["last_failed"] = time.time()
                 # If failure rate is too high, mark as inactive
                 stats = self.key_stats[api_key]
-                total = stats['success_count'] + stats['failure_count']
-                if total > 10 and stats['failure_count'] / total > 0.5:
-                    stats['is_active'] = False
+                total = stats["success_count"] + stats["failure_count"]
+                if total > 10 and stats["failure_count"] / total > 0.5:
+                    stats["is_active"] = False
 
     def get_stats(self) -> dict[str, dict]:
         """Get statistics for all API keys."""

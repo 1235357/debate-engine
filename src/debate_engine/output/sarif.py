@@ -17,7 +17,9 @@ def consensus_to_sarif(consensus: Any) -> dict[str, Any]:
 
     # Get metadata for context
     metadata = getattr(consensus, "debate_metadata", None)
-    reviewed_file = getattr(metadata, "reviewed_file", "reviewed-content") if metadata else "reviewed-content"
+    reviewed_file = (
+        getattr(metadata, "reviewed_file", "reviewed-content") if metadata else "reviewed-content"
+    )
 
     for idx, critique in enumerate(critiques):
         defect_type = getattr(critique, "defect_type", None)
@@ -31,7 +33,9 @@ def consensus_to_sarif(consensus: Any) -> dict[str, Any]:
         is_da = getattr(critique, "is_devil_advocate", False)
 
         # Map severity to SARIF level
-        level = "error" if sev_value == "CRITICAL" else "warning" if sev_value == "MAJOR" else "note"
+        level = (
+            "error" if sev_value == "CRITICAL" else "warning" if sev_value == "MAJOR" else "note"
+        )
 
         # Create rule ID and metadata
         rule_id = defect_value.lower().replace(" ", "_")
@@ -44,17 +48,16 @@ def consensus_to_sarif(consensus: Any) -> dict[str, Any]:
                 "helpUri": "https://github.com/1235357/debate-engine#severity-levels",
                 "properties": {
                     "category": "Code Quality",
-                    "precision": "high" if confidence > 0.7 else "medium" if confidence > 0.4 else "low"
-                }
+                    "precision": "high"
+                    if confidence > 0.7
+                    else "medium"
+                    if confidence > 0.4
+                    else "low",
+                },
             }
 
         # Build physical location with region if available
-        physical_location = {
-            "artifactLocation": {
-                "uri": reviewed_file,
-                "uriBaseId": "%SRCROOT%"
-            }
-        }
+        physical_location = {"artifactLocation": {"uri": reviewed_file, "uriBaseId": "%SRCROOT%"}}
 
         # Add region information if available (placeholder for now)
         # In a real implementation, this would come from the critique or metadata
@@ -67,7 +70,7 @@ def consensus_to_sarif(consensus: Any) -> dict[str, Any]:
                 "startLine": 1,
                 "startColumn": 1,
                 "endLine": 1,
-                "endColumn": 1
+                "endColumn": 1,
             }
 
         # Create result
@@ -77,14 +80,12 @@ def consensus_to_sarif(consensus: Any) -> dict[str, Any]:
             "message": {
                 "text": f"[{sev_value}] {target}\n\nEvidence: {evidence}\n\nSuggested Fix: {fix}"
             },
-            "locations": [{
-                "physicalLocation": physical_location
-            }],
+            "locations": [{"physicalLocation": physical_location}],
             "properties": {
                 "confidence": confidence,
                 "is_devil_advocate": is_da,
-                "severity": sev_value
-            }
+                "severity": sev_value,
+            },
         }
 
         results.append(result)
@@ -93,25 +94,29 @@ def consensus_to_sarif(consensus: Any) -> dict[str, Any]:
     sarif = {
         "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json",
         "version": "2.1.0",
-        "runs": [{
-            "tool": {
-                "driver": {
-                    "name": "DebateEngine",
-                    "version": "0.2.0",
-                    "informationUri": "https://github.com/1235357/debate-engine",
-                    "rules": list(rules.values())
-                }
-            },
-            "results": results,
-            "columnKind": "utf16CodeUnits",
-            "properties": {
-                "github": {
-                    "codeScanning": {
-                        "alertSeverity": "high" if any(r["level"] == "error" for r in results) else "medium"
+        "runs": [
+            {
+                "tool": {
+                    "driver": {
+                        "name": "DebateEngine",
+                        "version": "0.2.0",
+                        "informationUri": "https://github.com/1235357/debate-engine",
+                        "rules": list(rules.values()),
                     }
-                }
+                },
+                "results": results,
+                "columnKind": "utf16CodeUnits",
+                "properties": {
+                    "github": {
+                        "codeScanning": {
+                            "alertSeverity": "high"
+                            if any(r["level"] == "error" for r in results)
+                            else "medium"
+                        }
+                    }
+                },
             }
-        }]
+        ],
     }
 
     return sarif

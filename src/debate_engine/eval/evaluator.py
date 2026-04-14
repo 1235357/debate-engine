@@ -26,10 +26,14 @@ class DebateEvaluator:
     def __init__(self) -> None:
         pass
 
-    def evaluate(self, consensus: Any, gold_standard: list[dict],
-                 reference_answer: str | None = None,
-                 baseline_faithfulness: float | None = None,
-                 revision_history: list[dict] | None = None) -> DebateEvalScores:
+    def evaluate(
+        self,
+        consensus: Any,
+        gold_standard: list[dict],
+        reference_answer: str | None = None,
+        baseline_faithfulness: float | None = None,
+        revision_history: list[dict] | None = None,
+    ) -> DebateEvalScores:
         scores = DebateEvalScores()
         discovered_defects = self._extract_defects(consensus)
         critiques = self._extract_critiques(consensus)
@@ -68,7 +72,9 @@ class DebateEvaluator:
                 logger.warning("Failed to compute RD: %s", exc)
         if baseline_faithfulness is not None and reference_answer is not None:
             try:
-                debate_faithfulness = self._compute_faithfulness(consensus.final_conclusion, reference_answer)
+                debate_faithfulness = self._compute_faithfulness(
+                    consensus.final_conclusion, reference_answer
+                )
                 scores.add(compute_hd(debate_faithfulness, baseline_faithfulness))
             except Exception as exc:
                 logger.warning("Failed to compute HD: %s", exc)
@@ -80,7 +86,15 @@ class DebateEvaluator:
         defects = []
         for critique in getattr(consensus, "critiques_summary", []):
             defect_type = getattr(critique, "defect_type", "GENERAL")
-            defects.append({"description": getattr(critique, "evidence", ""), "defect_type": defect_type.value if hasattr(defect_type, "value") else str(defect_type), "target_area": getattr(critique, "target_area", "")})
+            defects.append(
+                {
+                    "description": getattr(critique, "evidence", ""),
+                    "defect_type": defect_type.value
+                    if hasattr(defect_type, "value")
+                    else str(defect_type),
+                    "target_area": getattr(critique, "target_area", ""),
+                }
+            )
         return defects
 
     @staticmethod
@@ -90,7 +104,14 @@ class DebateEvaluator:
             severity = getattr(critique, "severity", "MINOR")
             fix_kind = getattr(critique, "fix_kind", "NEED_MORE_DATA")
             role_id = getattr(critique, "role_id", None) or ""
-            critiques.append({"severity": severity.value if hasattr(severity, "value") else str(severity), "fix_kind": fix_kind.value if hasattr(fix_kind, "value") else str(fix_kind), "target_role": role_id, "round": 1})
+            critiques.append(
+                {
+                    "severity": severity.value if hasattr(severity, "value") else str(severity),
+                    "fix_kind": fix_kind.value if hasattr(fix_kind, "value") else str(fix_kind),
+                    "target_role": role_id,
+                    "round": 1,
+                }
+            )
         return critiques
 
     @staticmethod
@@ -110,4 +131,5 @@ class DebateEvaluator:
     @staticmethod
     def _compute_faithfulness(text: str, reference: str) -> float:
         from .metrics import _keyword_overlap_score
+
         return _keyword_overlap_score(text, reference)

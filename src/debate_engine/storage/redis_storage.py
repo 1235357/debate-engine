@@ -53,9 +53,7 @@ class RedisStorage:
             job_data = {
                 "job_id": job.job_id,
                 "config": (
-                    job.config.model_dump()
-                    if hasattr(job.config, "model_dump")
-                    else job.config
+                    job.config.model_dump() if hasattr(job.config, "model_dump") else job.config
                 ),
                 "status": job.status,
                 "created_at": job.created_at.isoformat(),

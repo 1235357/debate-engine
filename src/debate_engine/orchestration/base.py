@@ -50,8 +50,7 @@ def build_role_system_prompt(
         return get_role_template(task_type, role_type)
     except KeyError:
         logger.warning(
-            "No template found for task_type=%s role_type=%s; "
-            "falling back to GENERAL_CRITIQUE",
+            "No template found for task_type=%s role_type=%s; falling back to GENERAL_CRITIQUE",
             task_type,
             role_type,
         )
@@ -130,9 +129,7 @@ def build_judge_summary(
     sorted_critiques = sorted(
         critiques,
         key=lambda c: (
-            severity_order.get(
-                getattr(c, "severity", "MINOR"), 3
-            ),
+            severity_order.get(getattr(c, "severity", "MINOR"), 3),
             -getattr(c, "confidence", 0.0),
         ),
     )
@@ -211,10 +208,6 @@ def check_quorum(results: list[CallResult]) -> tuple[bool, int]:
         at least 2 out of 3 roles returned successfully (SUCCESS or
         PARSE_FAILED with content).
     """
-    success_count = sum(
-        1
-        for r in results
-        if r.status in ("SUCCESS", "PARSE_FAILED")
-    )
+    success_count = sum(1 for r in results if r.status in ("SUCCESS", "PARSE_FAILED"))
     quorum_met = success_count >= 2
     return quorum_met, success_count

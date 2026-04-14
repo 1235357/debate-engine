@@ -117,12 +117,19 @@ class DebateOrchestrator:
         is used.
     """
 
-    def __init__(self, provider_config: ProviderConfig | None = None, key_manager: APIKeyManager | None = None) -> None:
-        self.provider = LLMProvider(provider_config or ProviderConfig.from_env(), key_manager=key_manager)
+    def __init__(
+        self,
+        provider_config: ProviderConfig | None = None,
+        key_manager: APIKeyManager | None = None,
+    ) -> None:
+        self.provider = LLMProvider(
+            provider_config or ProviderConfig.from_env(), key_manager=key_manager
+        )
         self._task_store: dict[str, DebateJob] = {}
         self._cleanup_task: asyncio.Task | None = None
         # Initialize Redis storage
         import os
+
         redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
         self._storage = RedisStorage(redis_url)
         # Load jobs from Redis on startup
@@ -305,7 +312,11 @@ class DebateOrchestrator:
             )
 
             roles = ["ROLE_A", "ROLE_B", "DA_ROLE"] if enable_da else ["ROLE_A", "ROLE_B", "ROLE_C"]
-            role_types = ["critic_a", "critic_b", "devil_advocate"] if enable_da else ["critic_a", "critic_b", "critic_c"]
+            role_types = (
+                ["critic_a", "critic_b", "devil_advocate"]
+                if enable_da
+                else ["critic_a", "critic_b", "critic_c"]
+            )
 
             models_used: set[str] = set()
             total_parse_attempts = 0
@@ -372,12 +383,14 @@ class DebateOrchestrator:
             # Quorum
             quorum_met, success_count = check_quorum(r1_results)
 
-            rounds_data.append({
-                "round": 1,
-                "critiques_count": len(r1_critiques),
-                "quorum_met": quorum_met,
-                "success_count": success_count,
-            })
+            rounds_data.append(
+                {
+                    "round": 1,
+                    "critiques_count": len(r1_critiques),
+                    "quorum_met": quorum_met,
+                    "success_count": success_count,
+                }
+            )
 
             if self._should_cancel(job):
                 return
@@ -392,13 +405,16 @@ class DebateOrchestrator:
                         1
                         for c in r1_critiques
                         if getattr(c, "severity", None) == "CRITICAL"
-                        or (hasattr(c, "severity") and hasattr(c.severity, "value") and c.severity.value == "CRITICAL")
+                        or (
+                            hasattr(c, "severity")
+                            and hasattr(c.severity, "value")
+                            and c.severity.value == "CRITICAL"
+                        )
                     )
                     if critical_count > 0:
                         need_round2 = True
                         logger.info(
-                            "Convergence not reached: %d CRITICAL critiques "
-                            "in round 1",
+                            "Convergence not reached: %d CRITICAL critiques in round 1",
                             critical_count,
                         )
                     else:
@@ -463,12 +479,14 @@ class DebateOrchestrator:
                 r2_anonymized = anonymize_critiques(r2_critiques)
                 r2_quorum, r2_success = check_quorum(r2_results)
 
-                rounds_data.append({
-                    "round": 2,
-                    "critiques_count": len(r2_critiques),
-                    "quorum_met": r2_quorum,
-                    "success_count": r2_success,
-                })
+                rounds_data.append(
+                    {
+                        "round": 2,
+                        "critiques_count": len(r2_critiques),
+                        "quorum_met": r2_quorum,
+                        "success_count": r2_success,
+                    }
+                )
 
                 # Use round 2 results for judge
                 final_anonymized = r2_anonymized
@@ -531,9 +549,7 @@ class DebateOrchestrator:
                 self._storage.save_job(job)
                 return
 
-            judge_summary = build_judge_summary(
-                final_anonymized, (final_quorum, final_success)
-            )
+            judge_summary = build_judge_summary(final_anonymized, (final_quorum, final_success))
 
             # Include round history in judge context if multi-round
             if len(rounds_data) > 1:
@@ -687,14 +703,16 @@ class DebateOrchestrator:
         proposals: list[tuple[Any, CallResult]] = []
         for idx, res in enumerate(results):
             if isinstance(res, Exception):
-                proposals.append((
-                    None,
-                    CallResult(
-                        status="ROLE_FAILED",
-                        error_message=str(res),
-                        model_used="unknown",
-                    ),
-                ))
+                proposals.append(
+                    (
+                        None,
+                        CallResult(
+                            status="ROLE_FAILED",
+                            error_message=str(res),
+                            model_used="unknown",
+                        ),
+                    )
+                )
             else:
                 proposals.append(res)
         return proposals
@@ -721,9 +739,7 @@ class DebateOrchestrator:
             for c in anonymized_critiques
         )
 
-        async def _revise(
-            idx: int, role: str, role_type: str
-        ) -> tuple[Any, CallResult]:
+        async def _revise(idx: int, role: str, role_type: str) -> tuple[Any, CallResult]:
             original_proposal = proposals[idx][0] if proposals[idx][0] else "(unavailable)"
             system_prompt = build_role_system_prompt(
                 role_type=role,
@@ -742,8 +758,7 @@ class DebateOrchestrator:
                     f"--- Cross-Critiques (anonymized) ---\n{critique_text}\n"
                     f"--- End ---"
                     + (
-                        f"\n\n--- Revision Instructions ---\n"
-                        f"{revision_instructions}\n--- End ---"
+                        f"\n\n--- Revision Instructions ---\n{revision_instructions}\n--- End ---"
                         if revision_instructions
                         else ""
                     )
@@ -768,14 +783,16 @@ class DebateOrchestrator:
         revisions: list[tuple[Any, CallResult]] = []
         for idx, res in enumerate(results):
             if isinstance(res, Exception):
-                revisions.append((
-                    None,
-                    CallResult(
-                        status="ROLE_FAILED",
-                        error_message=str(res),
-                        model_used="unknown",
-                    ),
-                ))
+                revisions.append(
+                    (
+                        None,
+                        CallResult(
+                            status="ROLE_FAILED",
+                            error_message=str(res),
+                            model_used="unknown",
+                        ),
+                    )
+                )
             else:
                 revisions.append(res)
         return revisions
@@ -796,16 +813,12 @@ class DebateOrchestrator:
         """Each role critiques the other roles' proposals."""
         from debate_engine.schemas import CritiqueSchema
 
-        async def _critique(
-            idx: int, role: str, role_type: str
-        ) -> tuple[Any, CallResult]:
+        async def _critique(idx: int, role: str, role_type: str) -> tuple[Any, CallResult]:
             others_text = ""
             for j, (prop, cr) in enumerate(proposals):
                 if j == idx or prop is None:
                     continue
-                others_text += (
-                    f"\n### Proposal from another reviewer:\n{prop}\n"
-                )
+                others_text += f"\n### Proposal from another reviewer:\n{prop}\n"
 
             if not others_text:
                 others_text = "(No other proposals available for cross-critique)"

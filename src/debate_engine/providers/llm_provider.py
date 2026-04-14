@@ -190,9 +190,7 @@ class LLMProvider:
                 for parse_attempt in range(1, self.config.max_parse_retries + 2):
                     parse_attempts = parse_attempt
                     try:
-                        parsed = self._parse_json_response(
-                            raw_response, response_model
-                        )
+                        parsed = self._parse_json_response(raw_response, response_model)
                         status = "SUCCESS"
                         break
                     except (ValidationError, json.JSONDecodeError, ValueError) as exc:
@@ -218,18 +216,18 @@ class LLMProvider:
                                 }
                             )
                             litellm_params["messages"] = (
-                                ([{"role": "system", "content": system_prompt}]
-                                if system_prompt
-                                else []
-                            )
-                            + repair_messages
-                            if system_prompt
-                            else repair_messages
-                            if not system_prompt
-                            else (
-                                [{"role": "system", "content": system_prompt}]
+                                (
+                                    [{"role": "system", "content": system_prompt}]
+                                    if system_prompt
+                                    else []
+                                )
                                 + repair_messages
-                            )
+                                if system_prompt
+                                else repair_messages
+                                if not system_prompt
+                                else (
+                                    [{"role": "system", "content": system_prompt}] + repair_messages
+                                )
                             )
                             try:
                                 repair_resp = await asyncio.wait_for(
@@ -243,9 +241,7 @@ class LLMProvider:
                                 else:
                                     raw_response = str(repair_resp)
                             except Exception as repair_exc:
-                                logger.error(
-                                    "Parse repair LLM call failed: %s", repair_exc
-                                )
+                                logger.error("Parse repair LLM call failed: %s", repair_exc)
                                 break
                         else:
                             error_message = str(exc)
@@ -259,13 +255,10 @@ class LLMProvider:
 
             except TimeoutError:
                 last_transport_error = TimeoutError(
-                    f"Call to {model_display} timed out after "
-                    f"{self.config.timeout_seconds}s"
+                    f"Call to {model_display} timed out after {self.config.timeout_seconds}s"
                 )
                 error_message = str(last_transport_error)
-                logger.warning(
-                    "Timeout for %s (attempt %d)", model_display, transport_attempt
-                )
+                logger.warning("Timeout for %s (attempt %d)", model_display, transport_attempt)
             except Exception as exc:
                 last_transport_error = exc
                 error_message = str(exc)
@@ -280,7 +273,9 @@ class LLMProvider:
                     # Attempt failover to next provider in chain
                     chain_index += 1
                     if chain_index < len(failover_chain):
-                        next_provider, next_model, next_api_key, next_api_base = failover_chain[chain_index]
+                        next_provider, next_model, next_api_key, next_api_base = failover_chain[
+                            chain_index
+                        ]
                         provider = next_provider
                         model = next_model
                         model_display = f"{provider}/{model}"
@@ -302,9 +297,7 @@ class LLMProvider:
                             chain_index,
                         )
                 else:
-                    logger.error(
-                        "Non-retryable error for %s: %s", model_display, exc
-                    )
+                    logger.error("Non-retryable error for %s: %s", model_display, exc)
                     break  # don't retry non-retryable errors
         # end transport retry loop
 
@@ -324,8 +317,7 @@ class LLMProvider:
         )
 
         logger.info(
-            "LLM call complete: status=%s model=%s cost=%.6f latency=%.0fms "
-            "parse_attempts=%d",
+            "LLM call complete: status=%s model=%s cost=%.6f latency=%.0fms parse_attempts=%d",
             status,
             model_display,
             cost_usd,
@@ -413,33 +405,51 @@ class LLMProvider:
             chain = cfg._resolved_chain
             if chain:
                 return [
-                    (self._map_provider_name(e.name), e.model, e.api_key, e.api_base)
-                    for e in chain
+                    (self._map_provider_name(e.name), e.model, e.api_key, e.api_base) for e in chain
                 ]
-            return [(self._map_provider_name(cfg.effective_judge_provider), cfg.effective_judge_model,
-                     cfg.primary_api_key, cfg.primary_api_base)]
+            return [
+                (
+                    self._map_provider_name(cfg.effective_judge_provider),
+                    cfg.effective_judge_model,
+                    cfg.primary_api_key,
+                    cfg.primary_api_base,
+                )
+            ]
 
         # BALANCED mode: DA role uses backup first, then primary
         if cfg.mode == ProviderMode.BALANCED and role_type == "devil_advocate":
             if cfg.backup_provider and cfg.backup_model:
                 return [
-                    (cfg.backup_provider, cfg.backup_model,
-                     cfg.backup_api_key, cfg.backup_api_base),
-                    (cfg.primary_provider, cfg.primary_model,
-                     cfg.primary_api_key, cfg.primary_api_base),
+                    (
+                        cfg.backup_provider,
+                        cfg.backup_model,
+                        cfg.backup_api_key,
+                        cfg.backup_api_base,
+                    ),
+                    (
+                        cfg.primary_provider,
+                        cfg.primary_model,
+                        cfg.primary_api_key,
+                        cfg.primary_api_base,
+                    ),
                 ]
 
         # Use full failover chain
         chain = cfg._resolved_chain
         if chain:
             return [
-                (self._map_provider_name(e.name), e.model, e.api_key, e.api_base)
-                for e in chain
+                (self._map_provider_name(e.name), e.model, e.api_key, e.api_base) for e in chain
             ]
 
         # Backward compat: primary only
-        return [(self._map_provider_name(cfg.primary_provider), cfg.primary_model,
-                 cfg.primary_api_key, cfg.primary_api_base)]
+        return [
+            (
+                self._map_provider_name(cfg.primary_provider),
+                cfg.primary_model,
+                cfg.primary_api_key,
+                cfg.primary_api_base,
+            )
+        ]
 
     # -- LiteLLM completion ---------------------------------------------------
 
@@ -554,9 +564,7 @@ class LLMProvider:
     # -- Parsing helpers ------------------------------------------------------
 
     @staticmethod
-    def _parse_json_response(
-        raw: str | None, response_model: type[BaseModel] | None
-    ) -> Any:
+    def _parse_json_response(raw: str | None, response_model: type[BaseModel] | None) -> Any:
         """Parse raw LLM text into a Pydantic model.
 
         Attempts to extract JSON from the raw text (handles markdown code
@@ -575,7 +583,7 @@ class LLMProvider:
             text = text[first_newline + 1 :]
             # Remove closing fence
             if text.endswith("```"):
-                text = text[: -3]
+                text = text[:-3]
             text = text.strip()
 
         data = json.loads(text)

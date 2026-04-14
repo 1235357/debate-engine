@@ -18,14 +18,13 @@ from .formatters import format_consensus_as_markdown, format_eval_scores_as_mark
 
 logger = logging.getLogger(__name__)
 
-mcp = FastMCP(
-    name="debate-engine"
-)
+mcp = FastMCP(name="debate-engine")
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _resolve_task_type(task_type: str) -> Any:
     """Resolve a task_type string to the TaskType enum."""
@@ -50,9 +49,7 @@ def _parse_consensus_json(consensus_json: str) -> Any:
     if isinstance(data, dict):
         return ConsensusSchema.model_validate(data)
 
-    raise ValueError(
-        "consensus_json must be a JSON object matching ConsensusSchema fields."
-    )
+    raise ValueError("consensus_json must be a JSON object matching ConsensusSchema fields.")
 
 
 # ---------------------------------------------------------------------------
@@ -159,7 +156,9 @@ async def debate_full(
 
         while elapsed < max_wait_seconds:
             status = await orchestrator.get_status(job_id)
-            status_str = status.status.value if hasattr(status.status, "value") else str(status.status)
+            status_str = (
+                status.status.value if hasattr(status.status, "value") else str(status.status)
+            )
 
             if status_str == "DONE":
                 result = await orchestrator.get_result(job_id)
@@ -431,7 +430,7 @@ def _compute_metrics(
             # Normalize: good evidence > 100 chars, good fix > 80 chars
             evidence_score = min(1.0, avg_evidence / 200.0)
             fix_score = min(1.0, avg_fix / 150.0)
-            rd = (evidence_score * 0.5 + fix_score * 0.5)
+            rd = evidence_score * 0.5 + fix_score * 0.5
         else:
             rd = 0.0
 
@@ -448,7 +447,8 @@ def _compute_metrics(
     if "HD" in requested_metrics:
         # Heuristic: check for factual error flags and evidence grounding
         factual_errors = sum(
-            1 for c in critiques
+            1
+            for c in critiques
             if hasattr(c, "defect_type")
             and (
                 (hasattr(c.defect_type, "value") and c.defect_type.value == "FACTUAL_ERROR")

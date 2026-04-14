@@ -29,7 +29,7 @@ def test_format_consensus_as_markdown():
             total_cost_usd=0.1,
             total_latency_ms=2000.0,
             models_used=["test-model-1", "test-model-2"],
-            termination_reason=Mock(value="COMPLETED")
+            termination_reason=Mock(value="COMPLETED"),
         ),
         critiques_summary=[
             Mock(
@@ -41,16 +41,13 @@ def test_format_consensus_as_markdown():
                 suggested_fix="Use list comprehension",
                 fix_kind=Mock(value="REFACTOR"),
                 is_devil_advocate=False,
-                confidence=0.9
+                confidence=0.9,
             )
         ],
-        adopted_contributions={
-            "ROLE_A": ["Suggested optimization"]
-        },
+        adopted_contributions={"ROLE_A": ["Suggested optimization"]},
         rejected_positions=[
             Mock(
-                claim="No issues found",
-                rejection_reason="Evidence provided for performance issue"
+                claim="No issues found", rejection_reason="Evidence provided for performance issue"
             )
         ],
         remaining_disagreements=["Minor implementation details"],
@@ -59,9 +56,9 @@ def test_format_consensus_as_markdown():
                 opinion="Alternative approach suggested",
                 source_role="ROLE_B",
                 source_critique_severity=Mock(value="MINOR"),
-                potential_risk_if_ignored="May not scale well"
+                potential_risk_if_ignored="May not scale well",
             )
-        ]
+        ],
     )
 
     # Test the formatting function
@@ -88,15 +85,7 @@ def test_format_consensus_as_markdown():
 def test_format_eval_scores_as_markdown():
     """Test formatting evaluation scores as markdown."""
     # Test data
-    scores = {
-        "BDR": 0.8,
-        "FAR": 0.1,
-        "CV": 0.9,
-        "CIS": 0.7,
-        "CE": 0.85,
-        "RD": 0.9,
-        "HD": 0.15
-    }
+    scores = {"BDR": 0.8, "FAR": 0.1, "CV": 0.9, "CIS": 0.7, "CE": 0.85, "RD": 0.9, "HD": 0.15}
 
     # Test the formatting function
     markdown = format_eval_scores_as_markdown(scores)
@@ -115,29 +104,31 @@ def test_format_eval_scores_as_markdown():
 def test_parse_consensus_json():
     """Test parsing consensus JSON."""
     # Test JSON data
-    consensus_json = json.dumps({
-        "final_conclusion": "Test conclusion",
-        "consensus_confidence": 0.85,
-        "critiques_summary": [],
-        "debate_metadata": {
-            "request_id": "test-request-id",
-            "task_type": "CODE_REVIEW",
-            "provider_mode": "STABLE",
-            "rounds_completed": 1,
-            "total_cost_usd": 0.05,
-            "total_latency_ms": 1000.0,
-            "models_used": ["test-model"],
-            "quorum_achieved": True,
-            "termination_reason": "COMPLETED",
-            "parse_attempts_total": 0
-        },
-        "adopted_contributions": {},
-        "rejected_positions": [],
-        "remaining_disagreements": [],
-        "disagreement_confirmation": "",
-        "preserved_minority_opinions": [],
-        "partial_return": False
-    })
+    consensus_json = json.dumps(
+        {
+            "final_conclusion": "Test conclusion",
+            "consensus_confidence": 0.85,
+            "critiques_summary": [],
+            "debate_metadata": {
+                "request_id": "test-request-id",
+                "task_type": "CODE_REVIEW",
+                "provider_mode": "STABLE",
+                "rounds_completed": 1,
+                "total_cost_usd": 0.05,
+                "total_latency_ms": 1000.0,
+                "models_used": ["test-model"],
+                "quorum_achieved": True,
+                "termination_reason": "COMPLETED",
+                "parse_attempts_total": 0,
+            },
+            "adopted_contributions": {},
+            "rejected_positions": [],
+            "remaining_disagreements": [],
+            "disagreement_confirmation": "",
+            "preserved_minority_opinions": [],
+            "partial_return": False,
+        }
+    )
 
     # Test the parsing function
     with patch("debate_engine.schemas.ConsensusSchema") as mock_schema:

@@ -33,11 +33,28 @@ class JSONFormatter(logging.Formatter):
 
         # Include any extra fields attached to the record
         standard_attrs = {
-            "name", "msg", "args", "created", "relativeCreated",
-            "exc_info", "exc_text", "stack_info", "lineno", "funcName",
-            "pathname", "filename", "module", "thread", "threadName",
-            "process", "processName", "levelname", "levelno", "message",
-            "msecs", "taskName",
+            "name",
+            "msg",
+            "args",
+            "created",
+            "relativeCreated",
+            "exc_info",
+            "exc_text",
+            "stack_info",
+            "lineno",
+            "funcName",
+            "pathname",
+            "filename",
+            "module",
+            "thread",
+            "threadName",
+            "process",
+            "processName",
+            "levelname",
+            "levelno",
+            "message",
+            "msecs",
+            "taskName",
         }
         for key, value in record.__dict__.items():
             if key not in standard_attrs and not key.startswith("_"):
@@ -133,4 +150,6 @@ def setup_logging(level: str = "INFO") -> None:
 
     # Set debate_engine loggers to the same level
     logging.getLogger("debate_engine").setLevel(getattr(logging, level.upper(), logging.INFO))
-    logging.getLogger("debate_engine.access").setLevel(getattr(logging, level.upper(), logging.INFO))
+    logging.getLogger("debate_engine.access").setLevel(
+        getattr(logging, level.upper(), logging.INFO)
+    )

@@ -36,19 +36,54 @@ logger = logging.getLogger(__name__)
 
 _TASK_TYPE_KEYWORDS: dict[str, list[str]] = {
     "CODE_REVIEW": [
-        "function", "class ", "def ", "import ", "code", "bug",
-        "sql", "query", "api", "endpoint", "repository", "module",
-        "refactor", "test", "pytest", "unittest", "async def",
+        "function",
+        "class ",
+        "def ",
+        "import ",
+        "code",
+        "bug",
+        "sql",
+        "query",
+        "api",
+        "endpoint",
+        "repository",
+        "module",
+        "refactor",
+        "test",
+        "pytest",
+        "unittest",
+        "async def",
     ],
     "RAG_VALIDATION": [
-        "context", "retrieval", "document", "source", "reference",
-        "hallucin", "grounding", "rag", "embedding", "vector",
-        "chunk", "passage", "citation",
+        "context",
+        "retrieval",
+        "document",
+        "source",
+        "reference",
+        "hallucin",
+        "grounding",
+        "rag",
+        "embedding",
+        "vector",
+        "chunk",
+        "passage",
+        "citation",
     ],
     "ARCHITECTURE_DECISION": [
-        "architect", "microservice", "monolith", "scalab", "design pattern",
-        "infrastructure", "deploy", "kubernetes", "docker", "event-driven",
-        "cqrs", "event sourcing", "service mesh", "load balanc",
+        "architect",
+        "microservice",
+        "monolith",
+        "scalab",
+        "design pattern",
+        "infrastructure",
+        "deploy",
+        "kubernetes",
+        "docker",
+        "event-driven",
+        "cqrs",
+        "event sourcing",
+        "service mesh",
+        "load balanc",
     ],
 }
 
@@ -102,8 +137,14 @@ class QuickCritiqueEngine:
         is used to read settings from environment variables.
     """
 
-    def __init__(self, provider_config: ProviderConfig | None = None, key_manager: APIKeyManager | None = None) -> None:
-        self.provider = LLMProvider(provider_config or ProviderConfig.from_env(), key_manager=key_manager)
+    def __init__(
+        self,
+        provider_config: ProviderConfig | None = None,
+        key_manager: APIKeyManager | None = None,
+    ) -> None:
+        self.provider = LLMProvider(
+            provider_config or ProviderConfig.from_env(), key_manager=key_manager
+        )
 
     async def critique(self, config: Any) -> Any:
         """Run the full quick_critique pipeline.
@@ -164,7 +205,11 @@ class QuickCritiqueEngine:
         custom_prompts = getattr(config, "custom_role_prompts", None) or {}
 
         roles = ["ROLE_A", "ROLE_B", "DA_ROLE"] if enable_da else ["ROLE_A", "ROLE_B", "ROLE_C"]
-        role_types = ["critic_a", "critic_b", "devil_advocate"] if enable_da else ["critic_a", "critic_b", "critic_c"]
+        role_types = (
+            ["critic_a", "critic_b", "devil_advocate"]
+            if enable_da
+            else ["critic_a", "critic_b", "critic_c"]
+        )
 
         # ------------------------------------------------------------------
         # Phase 1: Concurrent critique generation
@@ -195,8 +240,7 @@ class QuickCritiqueEngine:
         # Check cost budget before launching roles
         if self.provider.cost_accumulated >= cost_budget:
             logger.warning(
-                "Cost budget exceeded before critique start: "
-                "%.4f >= %.4f",
+                "Cost budget exceeded before critique start: %.4f >= %.4f",
                 self.provider.cost_accumulated,
                 cost_budget,
             )
@@ -284,9 +328,7 @@ class QuickCritiqueEngine:
         # Phase 3: Quorum check
         # ------------------------------------------------------------------
         quorum_met, success_count = check_quorum(call_results)
-        logger.info(
-            "Quorum check: met=%s success_count=%d", quorum_met, success_count
-        )
+        logger.info("Quorum check: met=%s success_count=%d", quorum_met, success_count)
 
         if not quorum_met:
             logger.warning("Quorum not met; returning partial result")
@@ -426,7 +468,11 @@ class QuickCritiqueEngine:
             parse_attempts_total=total_parse_attempts,
         )
 
-        reason_str = str(termination_reason.value) if hasattr(termination_reason, "value") else str(termination_reason)
+        reason_str = (
+            str(termination_reason.value)
+            if hasattr(termination_reason, "value")
+            else str(termination_reason)
+        )
 
         if "QUORUM" in reason_str:
             conclusion = (

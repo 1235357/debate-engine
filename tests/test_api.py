@@ -59,14 +59,14 @@ async def test_quick_critique_endpoint(client: TestClient):
                 models_used=["test-model"],
                 quorum_achieved=True,
                 termination_reason=TerminationReason.COMPLETED,
-                parse_attempts_total=0
+                parse_attempts_total=0,
             ),
             adopted_contributions={},
             rejected_positions=[],
             remaining_disagreements=[],
             disagreement_confirmation="No disagreements found",
             preserved_minority_opinions=[],
-            partial_return=False
+            partial_return=False,
         )
         # Make the mock return the object
         mock_engine.critique.return_value = mock_result
@@ -75,10 +75,7 @@ async def test_quick_critique_endpoint(client: TestClient):
         # Test the endpoint
         response = client.post(
             "/v1/quick-critique",
-            json={
-                "content": "def hello(): print('hello')",
-                "task_type": "CODE_REVIEW"
-            }
+            json={"content": "def hello(): print('hello')", "task_type": "CODE_REVIEW"},
         )
 
         assert response.status_code == 200
@@ -100,10 +97,7 @@ async def test_debate_endpoint(client: TestClient):
         # Test the endpoint
         response = client.post(
             "/v1/debate",
-            json={
-                "content": "def hello(): print('hello')",
-                "task_type": "CODE_REVIEW"
-            }
+            json={"content": "def hello(): print('hello')", "task_type": "CODE_REVIEW"},
         )
 
         assert response.status_code == 200
@@ -137,7 +131,7 @@ async def test_chat_endpoint(client: TestClient):
             models_used=["test-model"],
             quorum_achieved=True,
             termination_reason=mock_termination_reason,
-            parse_attempts_total=0
+            parse_attempts_total=0,
         )
 
         mock_result = SimpleNamespace(
@@ -150,7 +144,7 @@ async def test_chat_endpoint(client: TestClient):
             remaining_disagreements=[],
             disagreement_confirmation="",
             preserved_minority_opinions=[],
-            partial_return=False
+            partial_return=False,
         )
         # Make the mock return the object
         mock_engine.critique.return_value = mock_result
@@ -160,11 +154,9 @@ async def test_chat_endpoint(client: TestClient):
         response = client.post(
             "/api/chat",
             json={
-                "messages": [
-                    {"role": "user", "content": "def hello(): print('hello')"}
-                ],
-                "model": "test-model"
-            }
+                "messages": [{"role": "user", "content": "def hello(): print('hello')"}],
+                "model": "test-model",
+            },
         )
 
         assert response.status_code == 200
@@ -198,7 +190,7 @@ async def test_quick_critique_api_endpoint(client: TestClient):
             models_used=["test-model"],
             quorum_achieved=True,
             termination_reason=mock_termination_reason,
-            parse_attempts_total=0
+            parse_attempts_total=0,
         )
 
         mock_result = SimpleNamespace(
@@ -211,7 +203,7 @@ async def test_quick_critique_api_endpoint(client: TestClient):
             remaining_disagreements=[],
             disagreement_confirmation="",
             preserved_minority_opinions=[],
-            partial_return=False
+            partial_return=False,
         )
         # Make the mock return the object
         mock_engine.critique.return_value = mock_result
@@ -220,10 +212,7 @@ async def test_quick_critique_api_endpoint(client: TestClient):
         # Test the endpoint
         response = client.post(
             "/api/quick-critique",
-            json={
-                "content": "def hello(): print('hello')",
-                "task_type": "CODE_REVIEW"
-            }
+            json={"content": "def hello(): print('hello')", "task_type": "CODE_REVIEW"},
         )
 
         assert response.status_code == 200

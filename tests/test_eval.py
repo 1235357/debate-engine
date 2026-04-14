@@ -34,7 +34,10 @@ from debate_engine.eval.metrics import (
 # Helpers
 # ===================================================================
 
-def _make_defect(description: str, defect_type: str = "SECURITY_RISK", target_area: str = "code") -> dict:
+
+def _make_defect(
+    description: str, defect_type: str = "SECURITY_RISK", target_area: str = "code"
+) -> dict:
     return {"description": description, "defect_type": defect_type, "target_area": target_area}
 
 
@@ -42,11 +45,18 @@ def _make_defect(description: str, defect_type: str = "SECURITY_RISK", target_ar
 # MetricName enum
 # ===================================================================
 
+
 class TestMetricName:
     def test_all_values_exist(self):
-        expected = {"bug_discovery_rate", "false_alarm_rate", "consensus_validity",
-                     "conformity_impact_score", "convergence_efficiency", "reasoning_depth",
-                     "hallucination_delta"}
+        expected = {
+            "bug_discovery_rate",
+            "false_alarm_rate",
+            "consensus_validity",
+            "conformity_impact_score",
+            "convergence_efficiency",
+            "reasoning_depth",
+            "hallucination_delta",
+        }
         actual = {m.value for m in MetricName}
         assert actual == expected
 
@@ -54,6 +64,7 @@ class TestMetricName:
 # ===================================================================
 # MetricResult dataclass
 # ===================================================================
+
 
 class TestMetricResult:
     def test_creation(self):
@@ -76,6 +87,7 @@ class TestMetricResult:
 # ===================================================================
 # DebateEvalScores container
 # ===================================================================
+
 
 class TestDebateEvalScores:
     def test_add_and_get(self):
@@ -116,6 +128,7 @@ class TestDebateEvalScores:
 # ===================================================================
 # BDR (Bug Discovery Rate)
 # ===================================================================
+
 
 class TestBDR:
     def test_perfect_recall(self):
@@ -167,6 +180,7 @@ class TestBDR:
 # FAR (False Alarm Rate)
 # ===================================================================
 
+
 class TestFAR:
     def test_no_false_alarms(self):
         """All discovered defects match gold."""
@@ -209,6 +223,7 @@ class TestFAR:
 # CV (Consensus Validity)
 # ===================================================================
 
+
 class TestCV:
     def test_exact_match(self):
         """Identical text should yield high similarity."""
@@ -238,6 +253,7 @@ class TestCV:
 # ===================================================================
 # CIS (Conformity Impact Score)
 # ===================================================================
+
 
 class TestCIS:
     def test_no_stance_changes(self):
@@ -342,6 +358,7 @@ class TestCIS:
 # CE (Convergence Efficiency)
 # ===================================================================
 
+
 class TestCE:
     def test_normal_computation(self):
         result = compute_ce(cv_score=0.8, rounds_completed=2, total_cost_usd=0.05)
@@ -364,6 +381,7 @@ class TestCE:
 # ===================================================================
 # RD (Reasoning Depth)
 # ===================================================================
+
 
 class TestRD:
     def test_all_concrete(self):
@@ -413,6 +431,7 @@ class TestRD:
 # HD (Hallucination Delta)
 # ===================================================================
 
+
 class TestHD:
     def test_positive_delta(self):
         """DebateEngine has fewer hallucinations than baseline."""
@@ -442,6 +461,7 @@ class TestHD:
 # ===================================================================
 # BenchmarkCase data structure
 # ===================================================================
+
 
 class TestBenchmarkCase:
     def test_creation(self):
@@ -474,6 +494,7 @@ class TestBenchmarkCase:
 # ===================================================================
 # Benchmark suites
 # ===================================================================
+
 
 class TestBenchmarkSuites:
     def test_regression_suite_count(self):
@@ -519,6 +540,7 @@ class TestBenchmarkSuites:
 # DebateEvaluator
 # ===================================================================
 
+
 class TestDebateEvaluator:
     def _make_mock_consensus(
         self,
@@ -537,6 +559,7 @@ class TestDebateEvaluator:
 
         if critiques_summary is None:
             from debate_engine.schemas.enums import FixKind, Severity
+
             critiques_summary = [
                 SimpleNamespace(
                     evidence="SQL injection vulnerability found in user query",
@@ -639,6 +662,7 @@ class TestDebateEvaluator:
 # Integration: full pipeline with keyword matching
 # ===================================================================
 
+
 class TestIntegration:
     def test_bdr_far_consistency(self):
         """BDR and FAR should be computed consistently on the same data."""
@@ -668,19 +692,26 @@ class TestIntegration:
         scores.add(compute_cv(consensus_text, reference))
         scores.add(compute_ce(0.9, 2, 0.04))
         scores.add(compute_hd(0.85, 0.6))
-        scores.add(compute_rd(
-            [{"fix_kind": "CONCRETE_FIX"}, {"fix_kind": "VALIDATION_STEP"}],
-            adopted_count=1,
-        ))
-        scores.add(compute_cis(
-            revision_history=[{
-                "round": 1, "role": "ROLE_A",
-                "old_claim": "Code is secure",
-                "new_claim": "Code has SQL injection vulnerability",
-                "adopted": True,
-            }],
-            critiques=[{"severity": "CRITICAL", "target_role": "ROLE_A", "round": 1}],
-        ))
+        scores.add(
+            compute_rd(
+                [{"fix_kind": "CONCRETE_FIX"}, {"fix_kind": "VALIDATION_STEP"}],
+                adopted_count=1,
+            )
+        )
+        scores.add(
+            compute_cis(
+                revision_history=[
+                    {
+                        "round": 1,
+                        "role": "ROLE_A",
+                        "old_claim": "Code is secure",
+                        "new_claim": "Code has SQL injection vulnerability",
+                        "adopted": True,
+                    }
+                ],
+                critiques=[{"severity": "CRITICAL", "target_role": "ROLE_A", "round": 1}],
+            )
+        )
 
         assert len(scores.metrics) == 7
         assert scores.get(MetricName.BDR).value == 1.0

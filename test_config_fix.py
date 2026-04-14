@@ -35,6 +35,7 @@ def test_env_variables():
 
     print("✓ All environment variable tests passed")
 
+
 # 测试 ProviderMode 枚举
 def test_provider_mode_enum():
     print("\nTesting ProviderMode enum...")
@@ -65,6 +66,7 @@ def test_provider_mode_enum():
         raise
 
     print("✓ All ProviderMode enum tests passed")
+
 
 if __name__ == "__main__":
     test_env_variables()

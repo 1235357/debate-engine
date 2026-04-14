@@ -397,7 +397,7 @@ class TestFailoverChain:
         chain = config._resolved_chain
         assert len(chain) == 2
         assert chain[0].name == "google"  # priority 1 first
-        assert chain[1].name == "groq"    # priority 2 second
+        assert chain[1].name == "groq"  # priority 2 second
 
     def test_resolved_chain_backward_compat(self) -> None:
         """When providers is empty, chain is synthesised from primary/backup."""

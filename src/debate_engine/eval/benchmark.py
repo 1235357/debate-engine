@@ -14,6 +14,7 @@ from typing import Any
 from .metrics import (
     DebateEvalScores,
     MetricName,
+    MetricResult,
     compute_bdr,
     compute_ce,
     compute_cv,
@@ -793,14 +794,16 @@ class BenchmarkRunner:
                 logger.info("  %s: %s", case.id, status)
             except Exception as exc:
                 logger.error("  %s: ERROR - %s", case.id, exc)
-                results.append({
-                    "case_id": case.id,
-                    "case_name": case.name,
-                    "consensus": None,
-                    "eval_scores": None,
-                    "passed": False,
-                    "error": str(exc),
-                })
+                results.append(
+                    {
+                        "case_id": case.id,
+                        "case_name": case.name,
+                        "consensus": None,
+                        "eval_scores": None,
+                        "passed": False,
+                        "error": str(exc),
+                    }
+                )
         return results
 
     async def run_benchmark(self) -> BenchmarkResult:

@@ -17,7 +17,7 @@ from debate_engine.schemas import CritiqueConfigSchema, TaskType
 app = FastAPI(
     title="DebateEngine API",
     description="Structured Multi-Agent Critique & Consensus Engine",
-    version="0.2.0"
+    version="0.2.0",
 )
 
 app.add_middleware(
@@ -38,13 +38,15 @@ class APIKeyManager:
         self.model = model
         self.current_index = 0
         self.lock = threading.Lock()
-        self.key_stats: dict[str, dict] = defaultdict(lambda: {
-            'success_count': 0,
-            'failure_count': 0,
-            'last_used': 0,
-            'last_failed': 0,
-            'is_active': True
-        })
+        self.key_stats: dict[str, dict] = defaultdict(
+            lambda: {
+                "success_count": 0,
+                "failure_count": 0,
+                "last_used": 0,
+                "last_failed": 0,
+                "is_active": True,
+            }
+        )
         self.cooldown_period = 60
 
     def get_next_key(self) -> str:
@@ -60,8 +62,8 @@ class APIKeyManager:
                 stats = self.key_stats[key]
                 now = time.time()
 
-                if stats['is_active']:
-                    if now - stats['last_failed'] > self.cooldown_period:
+                if stats["is_active"]:
+                    if now - stats["last_failed"] > self.cooldown_period:
                         return key
 
                 attempt += 1
@@ -73,32 +75,32 @@ class APIKeyManager:
         """Record a successful API call."""
         with self.lock:
             stats = self.key_stats[api_key]
-            stats['success_count'] += 1
-            stats['last_used'] = time.time()
-            stats['is_active'] = True
+            stats["success_count"] += 1
+            stats["last_used"] = time.time()
+            stats["is_active"] = True
 
     def record_failure(self, api_key: str):
         """Record a failed API call."""
         with self.lock:
             stats = self.key_stats[api_key]
-            stats['failure_count'] += 1
-            stats['last_failed'] = time.time()
-            stats['is_active'] = False
+            stats["failure_count"] += 1
+            stats["last_failed"] = time.time()
+            stats["is_active"] = False
 
     def get_stats(self) -> dict:
         """Get statistics about API key usage."""
         with self.lock:
             return {
-                'total_keys': len(self.api_keys),
-                'active_keys': sum(1 for k in self.api_keys if self.key_stats[k]['is_active']),
-                'key_details': {
-                    f'key_{i}': {
-                        'success_count': self.key_stats[k]['success_count'],
-                        'failure_count': self.key_stats[k]['failure_count'],
-                        'is_active': self.key_stats[k]['is_active']
+                "total_keys": len(self.api_keys),
+                "active_keys": sum(1 for k in self.api_keys if self.key_stats[k]["is_active"]),
+                "key_details": {
+                    f"key_{i}": {
+                        "success_count": self.key_stats[k]["success_count"],
+                        "failure_count": self.key_stats[k]["failure_count"],
+                        "is_active": self.key_stats[k]["is_active"],
                     }
                     for i, k in enumerate(self.api_keys)
-                }
+                },
             }
 
 
@@ -165,11 +167,7 @@ class StreamResponse(BaseModel):
 async def health():
     """Health check endpoint."""
     stats = key_manager.get_stats() if key_manager else {}
-    return {
-        "status": "healthy",
-        "model": DEFAULT_MODEL,
-        "api_keys": stats
-    }
+    return {"status": "healthy", "model": DEFAULT_MODEL, "api_keys": stats}
 
 
 @app.get("/api/stats")
@@ -197,7 +195,7 @@ async def chat(request: ChatRequest):
         # Create critique config
         config = CritiqueConfigSchema(
             content=user_content,
-            task_type=TaskType.CODE_REVIEW  # Default for now
+            task_type=TaskType.CODE_REVIEW,  # Default for now
         )
 
         # Run the full debate engine
@@ -216,7 +214,7 @@ async def chat(request: ChatRequest):
                     "evidence": c.evidence,
                     "suggested_fix": c.suggested_fix,
                     "confidence": c.confidence,
-                    "is_devil_advocate": getattr(c, "is_devil_advocate", False)
+                    "is_devil_advocate": getattr(c, "is_devil_advocate", False),
                 }
                 for c in consensus.critiques_summary
             ],
@@ -230,14 +228,14 @@ async def chat(request: ChatRequest):
                 "models_used": consensus.debate_metadata.models_used,
                 "quorum_achieved": consensus.debate_metadata.quorum_achieved,
                 "termination_reason": consensus.debate_metadata.termination_reason.value,
-                "parse_attempts_total": consensus.debate_metadata.parse_attempts_total
+                "parse_attempts_total": consensus.debate_metadata.parse_attempts_total,
             },
             "adopted_contributions": consensus.adopted_contributions,
             "rejected_positions": consensus.rejected_positions,
             "remaining_disagreements": consensus.remaining_disagreements,
             "disagreement_confirmation": consensus.disagreement_confirmation,
             "preserved_minority_opinions": consensus.preserved_minority_opinions,
-            "partial_return": consensus.partial_return
+            "partial_return": consensus.partial_return,
         }
 
         return result
@@ -254,7 +252,7 @@ async def quick_critique(request: CritiqueRequest):
         # Create critique config
         config = CritiqueConfigSchema(
             content=request.content,
-            task_type=TaskType(request.task_type) if request.task_type != "AUTO" else "AUTO"
+            task_type=TaskType(request.task_type) if request.task_type != "AUTO" else "AUTO",
         )
 
         # Run the full debate engine
@@ -273,7 +271,7 @@ async def quick_critique(request: CritiqueRequest):
                     "evidence": c.evidence,
                     "suggested_fix": c.suggested_fix,
                     "confidence": c.confidence,
-                    "is_devil_advocate": getattr(c, "is_devil_advocate", False)
+                    "is_devil_advocate": getattr(c, "is_devil_advocate", False),
                 }
                 for c in consensus.critiques_summary
             ],
@@ -287,14 +285,14 @@ async def quick_critique(request: CritiqueRequest):
                 "models_used": consensus.debate_metadata.models_used,
                 "quorum_achieved": consensus.debate_metadata.quorum_achieved,
                 "termination_reason": consensus.debate_metadata.termination_reason.value,
-                "parse_attempts_total": consensus.debate_metadata.parse_attempts_total
+                "parse_attempts_total": consensus.debate_metadata.parse_attempts_total,
             },
             "adopted_contributions": consensus.adopted_contributions,
             "rejected_positions": consensus.rejected_positions,
             "remaining_disagreements": consensus.remaining_disagreements,
             "disagreement_confirmation": consensus.disagreement_confirmation,
             "preserved_minority_opinions": consensus.preserved_minority_opinions,
-            "partial_return": consensus.partial_return
+            "partial_return": consensus.partial_return,
         }
 
         return result
@@ -306,5 +304,6 @@ async def quick_critique(request: CritiqueRequest):
 
 if __name__ == "__main__":
     import uvicorn
+
     port = int(os.getenv("PORT", "8000"))
     uvicorn.run(app, host="0.0.0.0", port=port)

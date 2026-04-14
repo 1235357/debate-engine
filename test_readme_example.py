@@ -11,9 +11,9 @@ async def main():
         print("✓ QuickCritiqueEngine initialized successfully")
 
         config = CritiqueConfigSchema(
-            content='''def login(username, password):
+            content="""def login(username, password):
     query = f"SELECT * FROM users WHERE name='{username}' AND pass='{password}'"
-    return db.execute(query)''',
+    return db.execute(query)""",
             task_type=TaskType.CODE_REVIEW,
         )
         print("✓ CritiqueConfigSchema created successfully")
@@ -29,6 +29,7 @@ async def main():
     except Exception as e:
         print(f"✗ Test failed: {e}")
         raise
+
 
 if __name__ == "__main__":
     asyncio.run(main())

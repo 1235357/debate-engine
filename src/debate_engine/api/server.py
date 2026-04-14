@@ -75,6 +75,7 @@ def get_debate_orchestrator() -> DebateOrchestrator:
         raise RuntimeError("DebateOrchestrator not initialized. Is the server running?")
     return _debate_orchestrator
 
+
 def get_key_manager() -> APIKeyManager:
     """Return the global APIKeyManager instance."""
     if _key_manager is None:
@@ -86,12 +87,14 @@ def get_key_manager() -> APIKeyManager:
 # Helper functions
 # ---------------------------------------------------------------------------
 
+
 async def _maybe_await(callable, *args, **kwargs):
     """Await a callable if it's coroutine, otherwise call it directly."""
     result = callable(*args, **kwargs)
     if hasattr(result, "__await__"):
         result = await result
     return result
+
 
 def load_api_keys() -> list[str]:
     """Load API keys from environment variables."""
@@ -122,6 +125,7 @@ def load_api_keys() -> list[str]:
 # ---------------------------------------------------------------------------
 # Startup
 # ---------------------------------------------------------------------------
+
 
 @app.on_event("startup")
 async def startup() -> None:
@@ -155,6 +159,7 @@ async def startup() -> None:
 # ---------------------------------------------------------------------------
 # Exception handlers
 # ---------------------------------------------------------------------------
+
 
 @app.exception_handler(Exception)
 async def generic_error_handler(
@@ -203,6 +208,7 @@ async def job_not_found_handler(
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
 
 @app.get("/v1/health")
 async def health() -> dict[str, str]:
@@ -291,6 +297,7 @@ async def cancel_debate(job_id: str) -> dict[str, Any]:
 # Additional endpoints (compatible with api_server.py)
 # ---------------------------------------------------------------------------
 
+
 @app.get("/health")
 async def health_compat():
     """Health check endpoint (compatible with api_server.py)."""
@@ -300,11 +307,7 @@ async def health_compat():
         stats = key_manager.get_stats()
     except RuntimeError:
         pass
-    return {
-        "status": "healthy",
-        "version": "0.2.0",
-        "api_keys": stats
-    }
+    return {"status": "healthy", "version": "0.2.0", "api_keys": stats}
 
 
 @app.get("/api/stats")
@@ -349,7 +352,7 @@ async def chat(request: ChatRequest):
         # Create critique config
         config = CritiqueConfigSchema(
             content=user_content,
-            task_type=TaskType.CODE_REVIEW  # Default for now
+            task_type=TaskType.CODE_REVIEW,  # Default for now
         )
 
         # Run the full debate engine
@@ -369,7 +372,7 @@ async def chat(request: ChatRequest):
                     "evidence": c.evidence,
                     "suggested_fix": c.suggested_fix,
                     "confidence": c.confidence,
-                    "is_devil_advocate": getattr(c, "is_devil_advocate", False)
+                    "is_devil_advocate": getattr(c, "is_devil_advocate", False),
                 }
                 for c in consensus.critiques_summary
             ],
@@ -383,14 +386,14 @@ async def chat(request: ChatRequest):
                 "models_used": consensus.debate_metadata.models_used,
                 "quorum_achieved": consensus.debate_metadata.quorum_achieved,
                 "termination_reason": consensus.debate_metadata.termination_reason.value,
-                "parse_attempts_total": consensus.debate_metadata.parse_attempts_total
+                "parse_attempts_total": consensus.debate_metadata.parse_attempts_total,
             },
             "adopted_contributions": consensus.adopted_contributions,
             "rejected_positions": consensus.rejected_positions,
             "remaining_disagreements": consensus.remaining_disagreements,
             "disagreement_confirmation": consensus.disagreement_confirmation,
             "preserved_minority_opinions": consensus.preserved_minority_opinions,
-            "partial_return": consensus.partial_return
+            "partial_return": consensus.partial_return,
         }
 
         return result
@@ -412,10 +415,7 @@ async def quick_critique_api(request: CritiqueRequest):
             except ValueError:
                 raise HTTPException(status_code=400, detail=f"Invalid task_type: {task_type}")
 
-        config = CritiqueConfigSchema(
-            content=request.content,
-            task_type=task_type
-        )
+        config = CritiqueConfigSchema(content=request.content, task_type=task_type)
 
         # Run the full debate engine
         engine = get_quick_engine()
@@ -434,7 +434,7 @@ async def quick_critique_api(request: CritiqueRequest):
                     "evidence": c.evidence,
                     "suggested_fix": c.suggested_fix,
                     "confidence": c.confidence,
-                    "is_devil_advocate": getattr(c, "is_devil_advocate", False)
+                    "is_devil_advocate": getattr(c, "is_devil_advocate", False),
                 }
                 for c in consensus.critiques_summary
             ],
@@ -448,14 +448,14 @@ async def quick_critique_api(request: CritiqueRequest):
                 "models_used": consensus.debate_metadata.models_used,
                 "quorum_achieved": consensus.debate_metadata.quorum_achieved,
                 "termination_reason": consensus.debate_metadata.termination_reason.value,
-                "parse_attempts_total": consensus.debate_metadata.parse_attempts_total
+                "parse_attempts_total": consensus.debate_metadata.parse_attempts_total,
             },
             "adopted_contributions": consensus.adopted_contributions,
             "rejected_positions": consensus.rejected_positions,
             "remaining_disagreements": consensus.remaining_disagreements,
             "disagreement_confirmation": consensus.disagreement_confirmation,
             "preserved_minority_opinions": consensus.preserved_minority_opinions,
-            "partial_return": consensus.partial_return
+            "partial_return": consensus.partial_return,
         }
 
         return result
@@ -468,6 +468,7 @@ async def quick_critique_api(request: CritiqueRequest):
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _validate_api_key(request: Request) -> None:
     """Validate API key for accessing protected endpoints.
@@ -486,7 +487,4 @@ def _validate_api_key(request: Request) -> None:
     if allowed_api_keys:
         # If API keys are configured, require a valid one
         if not api_key or api_key not in allowed_api_keys:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid or missing API key."
-            )
+            raise HTTPException(status_code=401, detail="Invalid or missing API key.")

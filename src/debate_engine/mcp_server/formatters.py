@@ -49,8 +49,10 @@ def format_consensus_as_markdown(consensus: Any) -> str:
     # Partial return warning
     partial = getattr(consensus, "partial_return", False)
     if partial:
-        lines.append("> **WARNING: Partial Result** -- The debate did not complete fully. "
-                      "Findings below should be treated with reduced confidence.")
+        lines.append(
+            "> **WARNING: Partial Result** -- The debate did not complete fully. "
+            "Findings below should be treated with reduced confidence."
+        )
         lines.append("")
 
     # Final conclusion
@@ -129,8 +131,9 @@ def format_consensus_as_markdown(consensus: Any) -> str:
 
                 lines.append(f"#### {i}. {target}")
                 if is_da:
-                    lines.append(f"> *Devil's Advocate* | Role: `{role_id}` | "
-                                 f"Confidence: {conf:.0%}")
+                    lines.append(
+                        f"> *Devil's Advocate* | Role: `{role_id}` | Confidence: {conf:.0%}"
+                    )
                 else:
                     lines.append(f"> Role: `{role_id}` | Confidence: {conf:.0%}")
                 lines.append("")
@@ -220,7 +223,10 @@ def format_eval_scores_as_markdown(scores: dict[str, Any]) -> str:
         "BDR": "Bug Discovery Rate -- fraction of real bugs found (code review)",
         "FAR": "False Alarm Rate -- fraction of flagged issues that are false positives",
         "CV": "Consensus Validity -- accuracy of the consensus answer",
-        "CIS": "Conformity Impact Score -- whether stance changes are evidence-driven (anti-sycophancy)",
+        "CIS": (
+            "Conformity Impact Score -- whether stance changes are evidence-driven "
+            "(anti-sycophancy)"
+        ),
         "CE": "Convergence Efficiency -- cost-effectiveness of reaching consensus",
         "RD": "Reasoning Depth -- quality and specificity of suggested fixes",
         "HD": "Hallucination Delta -- faithfulness of RAG outputs (RAG tasks)",
@@ -260,7 +266,8 @@ def format_eval_scores_as_markdown(scores: dict[str, Any]) -> str:
     numeric_scores = [
         v["score"] if isinstance(v, dict) else v
         for v in scores.values()
-        if isinstance(v, (int, float)) or (isinstance(v, dict) and isinstance(v.get("score"), (int, float)))
+        if isinstance(v, (int, float))
+        or (isinstance(v, dict) and isinstance(v.get("score"), (int, float)))
     ]
     if numeric_scores:
         avg = sum(numeric_scores) / len(numeric_scores)
