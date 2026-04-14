@@ -137,8 +137,8 @@ try:
         os.environ[f"NVIDIA_API_KEY_{i}"] = key
     # Set provider mode to use NVIDIA
     os.environ["DEBATE_ENGINE_PROVIDER_MODE"] = "diverse"
-    # Initialize the engine
-    engine = QuickCritiqueEngine()
+    # Initialize the engine with key manager
+    engine = QuickCritiqueEngine(key_manager=key_manager)
 except Exception as e:
     print(f"Warning: {e}")
     key_manager = None

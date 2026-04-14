@@ -3,7 +3,7 @@ services:
     name: debate-engine-api
     env: python
     buildCommand: pip install -e .
-    startCommand: python api_server.py
+    startCommand: python -m debate_engine serve
     plan: free
     autoDeploy: true
     envVars:
