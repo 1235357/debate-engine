@@ -119,8 +119,16 @@ def _run_mcp() -> None:
 
 def _run_critique(content: str, task_type: str) -> None:
     """Run a quick critique on provided content."""
+    from debate_engine.schemas import CritiqueConfigSchema, TaskType
+    
+    # Create critique config
+    config = CritiqueConfigSchema(
+        content=content,
+        task_type=TaskType(task_type) if task_type != "AUTO" else "AUTO"
+    )
+    
     engine = QuickCritiqueEngine()
-    result = engine.critique(content=content, task_type=task_type)
+    result = engine.critique(config)
     
     print(f"Conclusion: {result.final_conclusion}")
     print(f"Confidence: {result.consensus_confidence * 100:.0f}%")
