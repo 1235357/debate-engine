@@ -10,9 +10,33 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Any
+from collections.abc import Callable
+from typing import Any, ParamSpec, TypeVar
 
-from mcp.server.fastmcp import FastMCP
+try:
+    from mcp.server.fastmcp import FastMCP
+except ImportError:
+
+    _P = ParamSpec("_P")
+    _R = TypeVar("_R")
+
+    class FastMCP:  # type: ignore[no-redef]
+        """Minimal fallback stub when mcp[cli] is not installed."""
+
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            pass
+
+        def tool(self) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
+            def _decorator(func: Callable[_P, _R]) -> Callable[_P, _R]:
+                return func
+
+            return _decorator
+
+        def run(self, *args: Any, **kwargs: Any) -> None:
+            raise RuntimeError(
+                "The 'mcp[cli]' package is required to run the MCP server. "
+                'Install it with: pip install "mcp[cli]>=1.0.0"'
+            )
 
 from .formatters import format_consensus_as_markdown, format_eval_scores_as_markdown
 
