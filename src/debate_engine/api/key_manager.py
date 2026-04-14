@@ -8,7 +8,7 @@ from collections import defaultdict
 class APIKeyManager:
     """Manage multiple API keys with load balancing and failover."""
 
-    def __init__(self, api_keys: list):
+    def __init__(self, api_keys: list[str]) -> None:
         self.api_keys = api_keys
         self.current_index = 0
         self.lock = threading.Lock()
@@ -27,7 +27,7 @@ class APIKeyManager:
         """Get the next available API key for load balancing."""
         with self.lock:
             if not self.api_keys:
-                return None
+                return ""
 
             # Find the next active key
             start_index = self.current_index

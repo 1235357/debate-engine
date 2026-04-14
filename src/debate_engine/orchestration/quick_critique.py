@@ -268,7 +268,7 @@ class QuickCritiqueEngine:
         total_parse_attempts = 0
 
         for idx, result in enumerate(role_results):
-            if isinstance(result, Exception):
+            if isinstance(result, BaseException):
                 logger.error("Role %s raised exception: %s", roles[idx], result)
                 call_results.append(
                     CallResult(

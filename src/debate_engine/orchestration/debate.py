@@ -702,7 +702,7 @@ class DebateOrchestrator:
 
         proposals: list[tuple[Any, CallResult]] = []
         for idx, res in enumerate(results):
-            if isinstance(res, Exception):
+            if isinstance(res, BaseException):
                 proposals.append(
                     (
                         None,
@@ -782,7 +782,7 @@ class DebateOrchestrator:
 
         revisions: list[tuple[Any, CallResult]] = []
         for idx, res in enumerate(results):
-            if isinstance(res, Exception):
+            if isinstance(res, BaseException):
                 revisions.append(
                     (
                         None,
@@ -855,7 +855,7 @@ class DebateOrchestrator:
         critiques: list[Any] = []
         call_results: list[CallResult] = []
         for idx, res in enumerate(results):
-            if isinstance(res, Exception):
+            if isinstance(res, BaseException):
                 call_results.append(
                     CallResult(
                         status="ROLE_FAILED",

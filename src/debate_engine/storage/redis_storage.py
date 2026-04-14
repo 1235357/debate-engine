@@ -2,7 +2,8 @@
 
 import json
 import logging
-from typing import Any
+from datetime import UTC
+from typing import Any, cast
 
 import redis
 
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 class RedisStorage:
     """Redis-based storage for DebateEngine jobs."""
 
-    def __init__(self, redis_url: str = "redis://localhost:6379/0"):
+    def __init__(self, redis_url: str = "redis://localhost:6379/0") -> None:
         """Initialize Redis storage.
 
         Parameters
@@ -20,6 +21,7 @@ class RedisStorage:
         redis_url:
             Redis connection URL.
         """
+        self.redis_client: redis.Redis[str] | None = None
         try:
             self.redis_client = redis.from_url(redis_url, decode_responses=True)
             # Test connection
@@ -97,7 +99,7 @@ class RedisStorage:
 
         try:
             key = self._get_key(job_id)
-            job_data = self.redis_client.get(key)
+            job_data = cast(str | None, self.redis_client.get(key))
             if not job_data:
                 return None
 
@@ -108,8 +110,8 @@ class RedisStorage:
                 job_id=data["job_id"],
                 config=data["config"],
                 status=data["status"],
-                created_at=datetime.fromisoformat(data["created_at"]).replace(tzinfo=datetime.UTC),
-                updated_at=datetime.fromisoformat(data["updated_at"]).replace(tzinfo=datetime.UTC),
+                created_at=datetime.fromisoformat(data["created_at"]).replace(tzinfo=UTC),
+                updated_at=datetime.fromisoformat(data["updated_at"]).replace(tzinfo=UTC),
                 current_round=data["current_round"],
                 current_phase=data["current_phase"],
                 progress_pct=data["progress_pct"],
@@ -159,13 +161,13 @@ class RedisStorage:
             return []
 
         try:
-            keys = self.redis_client.keys("debate:job:*")
+            keys = cast(list[str], self.redis_client.keys("debate:job:*"))
             return [key.split(":")[-1] for key in keys]
         except Exception as exc:
             logger.warning("Failed to list jobs from Redis: %s", exc)
             return []
 
-    def close(self):
+    def close(self) -> None:
         """Close Redis connection."""
         if self.redis_client:
             try:

@@ -596,7 +596,7 @@ class LLMProvider:
         try:
             import litellm
 
-            cost = litellm.completion_cost(completion_response=response_obj)
+            cost = float(litellm.completion_cost(completion_response=response_obj) or 0.0)
         except Exception:
             cost = 0.0
         self._cost_accumulated += cost

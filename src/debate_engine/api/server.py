@@ -408,14 +408,16 @@ async def quick_critique_api(request: CritiqueRequest):
     """Quick critique endpoint using DebateEngine."""
     try:
         # Create critique config
-        task_type = request.task_type
-        if task_type != "AUTO":
+        task_type_str = request.task_type
+        if task_type_str != "AUTO":
             try:
-                task_type = TaskType(task_type)
+                task_type_val: TaskType = TaskType(task_type_str)
             except ValueError:
-                raise HTTPException(status_code=400, detail=f"Invalid task_type: {task_type}")
+                raise HTTPException(status_code=400, detail=f"Invalid task_type: {task_type_str}")
+        else:
+            task_type_val = TaskType.AUTO
 
-        config = CritiqueConfigSchema(content=request.content, task_type=task_type)
+        config = CritiqueConfigSchema(content=request.content, task_type=task_type_val)
 
         # Run the full debate engine
         engine = get_quick_engine()
