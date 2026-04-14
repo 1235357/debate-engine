@@ -21,7 +21,7 @@ class RedisStorage:
         redis_url:
             Redis connection URL.
         """
-        self.redis_client: redis.Redis[str] | None = None
+        self.redis_client: redis.Redis | None = None
         try:
             self.redis_client = redis.from_url(redis_url, decode_responses=True)
             # Test connection

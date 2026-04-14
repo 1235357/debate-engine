@@ -732,10 +732,11 @@ class BenchmarkRunner:
         ``eval_scores``, and ``passed`` (for regression cases).
         """
         from ..schemas.config import CritiqueConfigSchema
+        from ..schemas.enums import TaskType
 
         config = CritiqueConfigSchema(
             content=case.content,
-            task_type=case.task_type,
+            task_type=TaskType(case.task_type),
         )
 
         consensus = await self.engine.critique(config)
