@@ -77,10 +77,10 @@ def format_consensus_as_markdown(consensus: Any) -> str:
         if job_id:
             lines.append(f"| Job ID | `{job_id}` |")
         task_type = getattr(metadata, "task_type", None)
-        task_str = task_type.value if hasattr(task_type, "value") else str(task_type)
+        task_str = task_type.value if hasattr(task_type, "value") else str(task_type)  # type: ignore[union-attr]
         lines.append(f"| Task Type | {task_str} |")
         provider_mode = getattr(metadata, "provider_mode", None)
-        pm_str = provider_mode.value if hasattr(provider_mode, "value") else str(provider_mode)
+        pm_str = provider_mode.value if hasattr(provider_mode, "value") else str(provider_mode)  # type: ignore[union-attr]
         lines.append(f"| Provider Mode | {pm_str} |")
         lines.append(f"| Rounds Completed | {getattr(metadata, 'rounds_completed', 'N/A')} |")
         lines.append(f"| Quorum Achieved | {getattr(metadata, 'quorum_achieved', 'N/A')} |")
@@ -92,7 +92,7 @@ def format_consensus_as_markdown(consensus: Any) -> str:
         if models:
             lines.append(f"| Models Used | {', '.join(models)} |")
         termination = getattr(metadata, "termination_reason", None)
-        term_str = termination.value if hasattr(termination, "value") else str(termination)
+        term_str = termination.value if hasattr(termination, "value") else str(termination)  # type: ignore[union-attr]
         lines.append(f"| Termination | {term_str} |")
         lines.append("")
 
@@ -121,11 +121,11 @@ def format_consensus_as_markdown(consensus: Any) -> str:
                 role_id = getattr(c, "role_id", None) or "?"
                 target = getattr(c, "target_area", "Unknown")
                 defect = getattr(c, "defect_type", None)
-                defect_str = defect.value if hasattr(defect, "value") else str(defect)
+                defect_str = defect.value if hasattr(defect, "value") else str(defect)  # type: ignore[union-attr]
                 evidence = getattr(c, "evidence", "")
                 fix = getattr(c, "suggested_fix", "")
                 fix_kind = getattr(c, "fix_kind", None)
-                fix_kind_str = fix_kind.value if hasattr(fix_kind, "value") else str(fix_kind)
+                fix_kind_str = fix_kind.value if hasattr(fix_kind, "value") else str(fix_kind)  # type: ignore[union-attr]
                 is_da = getattr(c, "is_devil_advocate", False)
                 conf = getattr(c, "confidence", 0.0)
 
@@ -186,7 +186,7 @@ def format_consensus_as_markdown(consensus: Any) -> str:
             opinion = getattr(m, "opinion", "")
             source = getattr(m, "source_role", "?")
             sev = getattr(m, "source_critique_severity", None)
-            sev_str = sev.value if hasattr(sev, "value") else str(sev) if sev else "?"
+            sev_str = sev.value if hasattr(sev, "value") else str(sev) if sev else "?"  # type: ignore[union-attr]
             risk = getattr(m, "potential_risk_if_ignored", "")
             lines.append(f"### Dissent from `{source}` ({sev_str})")
             lines.append("")

@@ -124,7 +124,7 @@ def _run_critique(content: str, task_type: str) -> None:
 
     # Create critique config
     config = CritiqueConfigSchema(
-        content=content, task_type=TaskType(task_type) if task_type != "AUTO" else "AUTO"
+        content=content, task_type=TaskType(task_type)
     )
 
     engine = QuickCritiqueEngine()

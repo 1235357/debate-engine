@@ -279,7 +279,7 @@ class QuickCritiqueEngine:
                 )
                 continue
 
-            parsed, call_result = result
+            parsed, call_result = result  # type: ignore[misc]
             call_results.append(call_result)
             total_parse_attempts += call_result.parse_attempts
             if call_result.model_used:

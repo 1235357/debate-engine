@@ -36,7 +36,7 @@ class ProviderConfig:
     primary_provider: str = "nvidia"
     primary_model: str = "minimax-m2.7"
     primary_api_key: str | None = None
-    primary_api_base: str = "https://integrate.api.nvidia.com/v1"
+    primary_api_base: str | None = "https://integrate.api.nvidia.com/v1"
     backup_provider: str | None = None
     backup_model: str | None = None
     backup_api_key: str | None = None

@@ -2,6 +2,7 @@
 
 import json
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 import redis
@@ -20,6 +21,7 @@ class RedisStorage:
         redis_url:
             Redis connection URL.
         """
+        self.redis_client: redis.Redis | None = None
         try:
             self.redis_client = redis.from_url(redis_url, decode_responses=True)
             # Test connection
@@ -102,14 +104,13 @@ class RedisStorage:
                 return None
 
             data = json.loads(job_data)
-            from datetime import datetime
 
             job = DebateJob(
                 job_id=data["job_id"],
                 config=data["config"],
                 status=data["status"],
-                created_at=datetime.fromisoformat(data["created_at"]).replace(tzinfo=datetime.UTC),
-                updated_at=datetime.fromisoformat(data["updated_at"]).replace(tzinfo=datetime.UTC),
+                created_at=datetime.fromisoformat(data["created_at"]).replace(tzinfo=UTC),
+                updated_at=datetime.fromisoformat(data["updated_at"]).replace(tzinfo=UTC),
                 current_round=data["current_round"],
                 current_phase=data["current_phase"],
                 progress_pct=data["progress_pct"],
@@ -165,7 +166,7 @@ class RedisStorage:
             logger.warning("Failed to list jobs from Redis: %s", exc)
             return []
 
-    def close(self):
+    def close(self) -> None:
         """Close Redis connection."""
         if self.redis_client:
             try:

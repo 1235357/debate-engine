@@ -17,12 +17,14 @@ Usage::
     server = create_mcp_server()
 """
 
+from typing import Any
+
 from .server import mcp
 
 __all__ = ["mcp"]
 
 
-def create_mcp_server() -> type:
+def create_mcp_server() -> Any:
     """Create and return the FastMCP server instance.
 
     This is the public factory function for programmatic access to the

@@ -23,9 +23,9 @@ def consensus_to_sarif(consensus: Any) -> dict[str, Any]:
 
     for idx, critique in enumerate(critiques):
         defect_type = getattr(critique, "defect_type", None)
-        defect_value = defect_type.value if hasattr(defect_type, "value") else str(defect_type)
+        defect_value = defect_type.value if hasattr(defect_type, "value") else str(defect_type)  # type: ignore[union-attr]
         severity = getattr(critique, "severity", None)
-        sev_value = severity.value if hasattr(severity, "value") else str(severity)
+        sev_value = severity.value if hasattr(severity, "value") else str(severity)  # type: ignore[union-attr]
         target = getattr(critique, "target_area", "")
         evidence = getattr(critique, "evidence", "")
         fix = getattr(critique, "suggested_fix", "")

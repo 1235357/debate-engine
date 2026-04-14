@@ -600,7 +600,7 @@ class LLMProvider:
         except Exception:
             cost = 0.0
         self._cost_accumulated += cost
-        return cost
+        return float(cost)
 
     # -- Error classification -------------------------------------------------
 

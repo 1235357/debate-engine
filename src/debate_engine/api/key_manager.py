@@ -23,7 +23,7 @@ class APIKeyManager:
         )
         self.cooldown_period = 60
 
-    def get_next_key(self) -> str:
+    def get_next_key(self) -> str | None:
         """Get the next available API key for load balancing."""
         with self.lock:
             if not self.api_keys:
@@ -49,7 +49,7 @@ class APIKeyManager:
                     # Key is available
                     self.current_index = (self.current_index + 1) % len(self.api_keys)
                     stats["last_used"] = time.time()
-                    return key
+                    return key  # type: ignore[no-any-return]
 
                 # Key is inactive, try next
                 self.current_index = (self.current_index + 1) % len(self.api_keys)
@@ -60,7 +60,7 @@ class APIKeyManager:
             # Fallback: return the first key
             key = self.api_keys[0]
             self.key_stats[key]["last_used"] = time.time()
-            return key
+            return key  # type: ignore[no-any-return]
 
     def record_success(self, api_key: str) -> None:
         """Record a successful API call for a key."""

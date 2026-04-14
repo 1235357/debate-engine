@@ -126,7 +126,7 @@ class DebateOrchestrator:
             provider_config or ProviderConfig.from_env(), key_manager=key_manager
         )
         self._task_store: dict[str, DebateJob] = {}
-        self._cleanup_task: asyncio.Task | None = None
+        self._cleanup_task: asyncio.Task[None] | None = None
         # Initialize Redis storage
         import os
 
@@ -714,7 +714,7 @@ class DebateOrchestrator:
                     )
                 )
             else:
-                proposals.append(res)
+                proposals.append(res)  # type: ignore[arg-type]
         return proposals
 
     async def _generate_revisions(
@@ -794,7 +794,7 @@ class DebateOrchestrator:
                     )
                 )
             else:
-                revisions.append(res)
+                revisions.append(res)  # type: ignore[arg-type]
         return revisions
 
     # ------------------------------------------------------------------
@@ -865,7 +865,7 @@ class DebateOrchestrator:
                 )
                 continue
 
-            parsed, cr = res
+            parsed, cr = res  # type: ignore[misc]
             call_results.append(cr)
             if cr.status == "SUCCESS" and parsed is not None:
                 if hasattr(parsed, "role_id"):
