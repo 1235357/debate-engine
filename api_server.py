@@ -117,9 +117,6 @@ def load_api_keys() -> list[str]:
         if key:
             keys.append(key)
 
-    if not keys:
-        raise RuntimeError("At least one NVIDIA_API_KEY environment variable is required")
-
     return keys
 
 
@@ -128,15 +125,20 @@ DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "minimaxai/minimax-m2.7")
 
 try:
     API_KEYS = load_api_keys()
-    key_manager = APIKeyManager(API_KEYS, BASE_URL, DEFAULT_MODEL)
-    # Initialize DebateEngine with NVIDIA API keys
-    os.environ["NVIDIA_API_KEY"] = API_KEYS[0]
-    for i, key in enumerate(API_KEYS[1:], 1):
-        os.environ[f"NVIDIA_API_KEY_{i}"] = key
-    # Set provider mode to use NVIDIA
-    os.environ["DEBATE_ENGINE_PROVIDER_MODE"] = "diverse"
-    # Initialize the engine with key manager
-    engine = QuickCritiqueEngine(key_manager=key_manager)
+    if API_KEYS:
+        key_manager = APIKeyManager(API_KEYS, BASE_URL, DEFAULT_MODEL)
+        # Initialize DebateEngine with NVIDIA API keys
+        os.environ["NVIDIA_API_KEY"] = API_KEYS[0]
+        for i, key in enumerate(API_KEYS[1:], 1):
+            os.environ[f"NVIDIA_API_KEY_{i}"] = key
+        # Set provider mode to use NVIDIA
+        os.environ["DEBATE_ENGINE_PROVIDER_MODE"] = "diverse"
+        # Initialize the engine with key manager
+        engine = QuickCritiqueEngine(key_manager=key_manager)
+    else:
+        print("Warning: No NVIDIA API keys found. Engine will not be initialized.")
+        key_manager = None
+        engine = None
 except Exception as e:
     print(f"Warning: {e}")
     key_manager = None
@@ -182,6 +184,9 @@ async def get_stats():
 async def chat(request: ChatRequest):
     """Chat endpoint using DebateEngine with full multi-agent transparency."""
     try:
+        if not engine:
+            raise HTTPException(status_code=503, detail="DebateEngine not initialized. Please check API key configuration.")
+        
         # Extract user content from messages
         user_content = ""
         for msg in request.messages:
@@ -192,10 +197,10 @@ async def chat(request: ChatRequest):
         if not user_content:
             raise HTTPException(status_code=400, detail="No user content provided")
 
-        # Create critique config
+        # Create critique config with AUTO task type for automatic detection
         config = CritiqueConfigSchema(
             content=user_content,
-            task_type=TaskType.CODE_REVIEW,  # Default for now
+            task_type="AUTO",  # Let the engine detect task type automatically
         )
 
         # Run the full debate engine

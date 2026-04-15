@@ -25,6 +25,31 @@
             --border: #e0e0e0;
             --shadow: 0 4px 6px rgba(0,0,0,0.1);
             --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+            --header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: #121212;
+                --surface: #1e1e1e;
+                --text: #f0f0f0;
+                --text-secondary: #b0b0b0;
+                --border: #333333;
+                --shadow: 0 4px 6px rgba(0,0,0,0.4);
+                --shadow-lg: 0 10px 25px rgba(0,0,0,0.4);
+                --header-bg: linear-gradient(135deg, #4a56e2 0%, #6b46c1 100%);
+            }
+        }
+
+        .dark-mode {
+            --background: #121212;
+            --surface: #1e1e1e;
+            --text: #f0f0f0;
+            --text-secondary: #b0b0b0;
+            --border: #333333;
+            --shadow: 0 4px 6px rgba(0,0,0,0.4);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.4);
+            --header-bg: linear-gradient(135deg, #4a56e2 0%, #6b46c1 100%);
         }
 
         body {
@@ -42,7 +67,7 @@
         }
 
         header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            background: var(--header-bg);
             color: white;
             padding: 1rem 2rem;
             box-shadow: var(--shadow-lg);
@@ -63,6 +88,47 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            position: relative;
+        }
+
+        .version-badge {
+            position: absolute;
+            top: -10px;
+            right: -60px;
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .logo:hover .version-badge {
+            opacity: 1;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-toggle button {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .theme-toggle button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .dark-mode .theme-toggle button {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .dark-mode .theme-toggle button:hover {
+            background: rgba(255,255,255,0.2);
         }
 
         .model-info {
@@ -573,16 +639,24 @@
             <div class="header-content">
                 <div class="logo">
                     🎯 DebateEngine
+                    <div class="version-badge">v0.2.0-20260414-67e0746</div>
                 </div>
-                <div class="model-info">
-                    <div class="model-badge">
-                        🤖 NVIDIA minimax-m2.7
+                <div class="header-actions">
+                    <div class="model-info">
+                        <div class="model-badge">
+                            🤖 NVIDIA minimax-m2.7
+                        </div>
+                        <div class="model-badge">
+                            🌐 Real-time Streaming API
+                        </div>
+                        <div class="model-badge">
+                            ⚡ Low Latency
+                        </div>
                     </div>
-                    <div class="model-badge">
-                        🌐 Real-time Streaming API
-                    </div>
-                    <div class="model-badge">
-                        ⚡ Low Latency
+                    <div class="theme-toggle">
+                        <button id="dark-mode-toggle" class="model-badge">
+                            🌙 Dark Mode
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1022,6 +1096,31 @@
 
             // Test API connection
             testApiConnection();
+
+            // Dark mode toggle functionality
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            const body = document.body;
+
+            // Check for saved theme preference or use system preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                body.classList.add('dark-mode');
+                darkModeToggle.textContent = '☀️ Light Mode';
+            }
+
+            darkModeToggle.addEventListener('click', function() {
+                body.classList.toggle('dark-mode');
+                
+                if (body.classList.contains('dark-mode')) {
+                    darkModeToggle.textContent = '☀️ Light Mode';
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    darkModeToggle.textContent = '🌙 Dark Mode';
+                    localStorage.setItem('theme', 'light');
+                }
+            });
         });
     </script>
 </body>
