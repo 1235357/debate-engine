@@ -3,7 +3,18 @@
 
 import subprocess
 import os
+import re
 from datetime import datetime
+import tomllib
+
+def get_base_version():
+    """Get base version from pyproject.toml."""
+    pyproject_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pyproject.toml')
+    if os.path.exists(pyproject_path):
+        with open(pyproject_path, 'rb') as f:
+            pyproject = tomllib.load(f)
+        return pyproject.get('project', {}).get('version', '0.2.0')
+    return '0.2.0'
 
 def get_git_info():
     """Get git commit information."""
@@ -29,6 +40,7 @@ def get_git_info():
 
 def generate_version():
     """Generate dynamic version number."""
+    base_version = get_base_version()
     commit_hash, commit_date = get_git_info()
     
     if commit_hash:
@@ -37,12 +49,12 @@ def generate_version():
         date_str = commit_date.split(' ')[0]
         version_date = date_str.replace('-', '')
         
-        # Create version string: v0.2.0-<date>-<commit-hash>
-        version = f"v0.2.0-{version_date}-{commit_hash}"
+        # Create version string: v<base>-<date>-<commit-hash>
+        version = f"v{base_version}-{version_date}-{commit_hash}"
     else:
         # Fallback to timestamp-based version
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        version = f"v0.2.0-dev-{timestamp}"
+        version = f"v{base_version}-dev-{timestamp}"
     
     return version
 
@@ -55,10 +67,11 @@ def update_demo_version():
         with open(demo_path, 'r') as f:
             content = f.read()
         
-        # Replace the version badge content
-        updated_content = content.replace(
-            '<div class="version-badge">v0.2.0</div>',
-            f'<div class="version-badge">{version}</div>'
+        # Use regex to replace version badge content, aria-label and title, supports repeated runs
+        updated_content = re.sub(
+            r'<div class="version-badge" aria-label="版本 .*?" title="版本 .*?">.*?</div>',
+            f'<div class="version-badge" aria-label="版本 {version}" title="版本 {version}">{version}</div>',
+            content
         )
         
         with open(demo_path, 'w') as f:

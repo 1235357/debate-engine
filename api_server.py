@@ -4,6 +4,7 @@
 import os
 import threading
 import time
+import logging
 from collections import defaultdict
 
 from fastapi import FastAPI, HTTPException
@@ -13,6 +14,8 @@ from pydantic import BaseModel
 # Import DebateEngine components
 from debate_engine.orchestration.quick_critique import QuickCritiqueEngine
 from debate_engine.schemas import CritiqueConfigSchema, TaskType
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="DebateEngine API",
@@ -136,11 +139,11 @@ try:
         # Initialize the engine with key manager
         engine = QuickCritiqueEngine(key_manager=key_manager)
     else:
-        print("Warning: No NVIDIA API keys found. Engine will not be initialized.")
+        logger.warning("No NVIDIA API keys found. Engine will not be initialized.")
         key_manager = None
         engine = None
 except Exception as e:
-    print(f"Warning: {e}")
+    logger.exception(f"Failed to initialize engine: {e}")
     key_manager = None
     engine = None
 
@@ -200,7 +203,7 @@ async def chat(request: ChatRequest):
         # Create critique config with AUTO task type for automatic detection
         config = CritiqueConfigSchema(
             content=user_content,
-            task_type="AUTO",  # Let the engine detect task type automatically
+            task_type=TaskType("AUTO"),  # Let the engine detect task type automatically
         )
 
         # Run the full debate engine
@@ -257,7 +260,7 @@ async def quick_critique(request: CritiqueRequest):
         # Create critique config
         config = CritiqueConfigSchema(
             content=request.content,
-            task_type=TaskType(request.task_type) if request.task_type != "AUTO" else "AUTO",
+            task_type=TaskType(request.task_type) if request.task_type != "AUTO" else TaskType("AUTO"),
         )
 
         # Run the full debate engine

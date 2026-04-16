@@ -103,7 +103,16 @@
             transition: opacity 0.3s ease;
         }
 
-        .logo:hover .version-badge {
+        .logo:hover .version-badge,
+        .logo:focus-within .version-badge {
+            opacity: 1;
+        }
+
+        .logo {
+            outline: none;
+        }
+
+        .logo:focus .version-badge {
             opacity: 1;
         }
 
@@ -637,9 +646,9 @@
     <div class="container">
         <header>
             <div class="header-content">
-                <div class="logo">
+                <div class="logo" tabindex="0" role="group" aria-label="DebateEngine logo">
                     🎯 DebateEngine
-                    <div class="version-badge">v0.2.0-20260414-67e0746</div>
+                    <div class="version-badge" aria-label="版本 v0.2.0-20260415-c6c2c21" title="版本 v0.2.0-20260415-c6c2c21">v0.2.0-20260415-c6c2c21</div>
                 </div>
                 <div class="header-actions">
                     <div class="model-info">
