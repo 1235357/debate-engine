@@ -172,7 +172,13 @@ class StreamResponse(BaseModel):
 async def health():
     """Health check endpoint."""
     stats = key_manager.get_stats() if key_manager else {}
-    return {"status": "healthy", "model": DEFAULT_MODEL, "api_keys": stats}
+    engine_available = engine is not None
+    return {
+        "status": "healthy", 
+        "model": DEFAULT_MODEL, 
+        "api_keys": stats,
+        "engine_available": engine_available
+    }
 
 
 @app.get("/api/stats")
@@ -257,6 +263,9 @@ async def chat(request: ChatRequest):
 async def quick_critique(request: CritiqueRequest):
     """Quick critique endpoint using DebateEngine."""
     try:
+        if not engine:
+            raise HTTPException(status_code=503, detail="DebateEngine not initialized. Please check API key configuration.")
+        
         # Create critique config
         config = CritiqueConfigSchema(
             content=request.content,
