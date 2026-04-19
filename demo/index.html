@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DebateEngine - Real-time Multi-Agent Dialogue Interface</title>
+    <title>DebateEngine - Multi-Agent Analysis System</title>
     <style>
         * {
             margin: 0;
@@ -12,26 +12,24 @@
         }
 
         :root {
-            --primary: #4361ee;
-            --primary-light: #4895ef;
-            --secondary: #3a0ca3;
-            --success: #4cc9f0;
-            --warning: #f72585;
-            --danger: #f8961e;
-            --background: #f8f9fa;
-            --surface: #ffffff;
-            --text: #2b2d42;
-            --text-secondary: #6c757d;
-            --border: #e9ecef;
-            --shadow: 0 4px 6px rgba(0,0,0,0.05);
-            --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
-            --header-bg: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
-            --card-bg: #ffffff;
-            --card-border: #e9ecef;
+            --primary: #3b82f6;
+            --primary-light: #60a5fa;
+            --primary-dark: #2563eb;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --background: #ffffff;
+            --surface: #f9fafb;
+            --text: #111827;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --transition: all 0.2s ease-in-out;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
             color: var(--text);
             background: var(--background);
@@ -44,11 +42,14 @@
             min-height: 100vh;
         }
 
+        /* Header */
         header {
-            background: var(--header-bg);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
             padding: 1rem 2rem;
             box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 0;
             z-index: 100;
         }
 
@@ -62,61 +63,47 @@
 
         .logo {
             font-size: 1.5rem;
-            font-weight: bold;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
             position: relative;
         }
 
         .version-badge {
             position: absolute;
-            top: -10px;
+            top: -8px;
             right: -60px;
             background: rgba(255,255,255,0.2);
             padding: 0.25rem 0.5rem;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 0.7rem;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
 
-        .logo:hover .version-badge,
-        .logo:focus-within .version-badge {
+        .logo:hover .version-badge {
             opacity: 1;
         }
 
-        .logo {
-            outline: none;
-        }
-
-        .logo:focus .version-badge {
-            opacity: 1;
-        }
-
-        .header-actions {
+        .header-info {
             display: flex;
             align-items: center;
-            gap: 1rem;
-        }
-
-        .model-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
+            gap: 1.5rem;
             font-size: 0.9rem;
         }
 
         .model-badge {
             background: rgba(255,255,255,0.2);
-            padding: 0.25rem 0.75rem;
+            padding: 0.375rem 0.75rem;
             border-radius: 20px;
-            font-size: 0.8rem;
             display: flex;
             align-items: center;
-            gap: 0.25rem;
+            gap: 0.5rem;
+            font-size: 0.85rem;
         }
 
+        /* Main Content */
         main {
             flex: 1;
             display: flex;
@@ -126,11 +113,12 @@
             overflow: hidden;
         }
 
+        /* Sidebar */
         .sidebar {
             width: 320px;
             background: var(--surface);
             border-right: 1px solid var(--border);
-            padding: 1.5rem;
+            padding: 2rem;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
@@ -138,50 +126,56 @@
         }
 
         .sidebar-section {
-            background: var(--surface);
-            border-radius: 12px;
+            background: var(--background);
+            border-radius: var(--radius);
             padding: 1.5rem;
             box-shadow: var(--shadow);
-            border: 1px solid var(--card-border);
+            border: 1px solid var(--border);
         }
 
-        .sidebar h3 {
+        .sidebar-section h3 {
             margin-bottom: 1rem;
             color: var(--primary);
             font-size: 1.1rem;
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
+        /* Flow Diagram */
         .flow-diagram {
-            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
 
         .flow-step {
             display: flex;
             align-items: flex-start;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
+            gap: 1rem;
             padding: 1rem;
-            background: var(--surface);
-            border-radius: 8px;
+            background: var(--background);
+            border-radius: var(--radius);
             border-left: 3px solid var(--primary);
-            transition: all 0.3s ease;
+            transition: var(--transition);
             box-shadow: var(--shadow);
         }
 
-        .flow-step.active {
-            border-left-color: var(--success);
-            background: rgba(76, 201, 240, 0.05);
+        .flow-step:hover {
             transform: translateX(4px);
             box-shadow: var(--shadow-lg);
         }
 
+        .flow-step.active {
+            border-left-color: var(--secondary);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
         .flow-step-icon {
-            font-size: 1.2rem;
-            width: 36px;
-            height: 36px;
+            font-size: 1.25rem;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -189,30 +183,26 @@
             color: white;
             border-radius: 50%;
             flex-shrink: 0;
-            margin-top: 2px;
         }
 
         .flow-step.active .flow-step-icon {
-            background: var(--success);
+            background: var(--secondary);
         }
 
         .flow-step-content h4 {
-            font-size: 0.9rem;
-            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
             font-weight: 600;
+            margin-bottom: 0.25rem;
             color: var(--text);
         }
 
         .flow-step-content p {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: var(--text-secondary);
             line-height: 1.4;
         }
 
-        .system-info {
-            flex: 1;
-        }
-
+        /* System Metrics */
         .metrics {
             display: grid;
             grid-template-columns: 1fr;
@@ -221,12 +211,12 @@
         }
 
         .metric-card {
-            background: var(--surface);
+            background: var(--background);
             padding: 1.25rem;
-            border-radius: 8px;
+            border-radius: var(--radius);
             box-shadow: var(--shadow);
-            transition: all 0.3s ease;
-            border: 1px solid var(--card-border);
+            border: 1px solid var(--border);
+            transition: var(--transition);
         }
 
         .metric-card:hover {
@@ -242,28 +232,29 @@
         }
 
         .metric-name {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: var(--text-secondary);
             font-weight: 500;
         }
 
         .metric-value {
-            font-size: 1.3rem;
-            font-weight: bold;
+            font-size: 1.5rem;
+            font-weight: 700;
             color: var(--primary);
         }
 
         .metric-unit {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
             margin-left: 0.25rem;
         }
 
+        /* Chat Container */
         .chat-container {
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: var(--surface);
+            background: var(--background);
         }
 
         .chat-messages {
@@ -273,7 +264,7 @@
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
-            background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+            background: linear-gradient(to bottom, var(--surface) 0%, var(--background) 100%);
         }
 
         .message {
@@ -302,7 +293,7 @@
 
         .message-content {
             padding: 1.25rem;
-            border-radius: 12px;
+            border-radius: var(--radius);
             position: relative;
             box-shadow: var(--shadow);
         }
@@ -314,20 +305,20 @@
         }
 
         .agent-message.critic .message-content {
-            background: #e8f5e9;
-            border-left: 4px solid var(--success);
+            background: #ecfdf5;
+            border-left: 4px solid var(--secondary);
             border-bottom-left-radius: 4px;
         }
 
         .agent-message.devil-advocate .message-content {
-            background: #ffebee;
-            border-left: 4px solid var(--danger);
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
             border-bottom-left-radius: 4px;
         }
 
         .agent-message.judge .message-content {
-            background: #fff3e0;
-            border-left: 4px solid var(--warning);
+            background: #fef3c7;
+            border-left: 4px solid var(--accent);
             border-bottom-left-radius: 4px;
         }
 
@@ -340,7 +331,7 @@
         }
 
         .message-role {
-            font-weight: bold;
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -363,7 +354,7 @@
         .message-thought {
             background: rgba(0,0,0,0.05);
             padding: 0.75rem;
-            border-radius: 8px;
+            border-radius: var(--radius);
             margin-top: 0.75rem;
             font-style: italic;
             font-size: 0.9rem;
@@ -375,10 +366,11 @@
             border-left-color: rgba(255,255,255,0.3);
         }
 
+        /* Chat Input Area */
         .chat-input-area {
-            padding: 1.5rem 2rem;
+            padding: 2rem;
             border-top: 1px solid var(--border);
-            background: var(--surface);
+            background: var(--background);
             box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
         }
 
@@ -397,13 +389,13 @@
         .input-textarea textarea {
             width: 100%;
             padding: 1.25rem;
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
             resize: vertical;
             min-height: 120px;
             font-family: inherit;
             font-size: 1rem;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            transition: var(--transition);
             background: var(--surface);
             color: var(--text);
         }
@@ -411,7 +403,7 @@
         .input-textarea textarea:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
         .input-actions {
@@ -426,19 +418,19 @@
 
         .task-selector select {
             padding: 0.75rem;
-            border: 1px solid var(--border);
-            border-radius: 6px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
             font-size: 0.9rem;
             background: var(--surface);
             color: var(--text);
-            transition: border-color 0.2s ease;
+            transition: var(--transition);
             min-width: 180px;
         }
 
         .task-selector select:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
         .send-btn {
@@ -446,10 +438,10 @@
             background: var(--primary);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: var(--radius);
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+            transition: var(--transition);
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -458,23 +450,25 @@
         }
 
         .send-btn:hover {
-            background: var(--primary-light);
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+            background: var(--primary-dark);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transform: translateY(-1px);
         }
 
         .send-btn:active {
-            transform: translateY(1px);
+            transform: translateY(0);
         }
 
         .send-btn:disabled {
-            background: #ccc;
+            background: #9ca3af;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
 
+        /* Preset Inputs */
         .preset-inputs {
-            margin-top: 1.5rem;
+            margin-top: 2rem;
             max-width: 1000px;
             margin-left: auto;
             margin-right: auto;
@@ -482,27 +476,27 @@
         }
 
         .preset-inputs h4 {
-            font-size: 0.9rem;
-            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
             color: var(--text-secondary);
             font-weight: 600;
         }
 
         .preset-buttons {
             display: flex;
-            gap: 0.75rem;
+            gap: 1rem;
             flex-wrap: wrap;
         }
 
         .preset-btn {
-            padding: 0.65rem 1.25rem;
+            padding: 0.75rem 1.5rem;
             background: var(--surface);
             color: var(--text);
-            border: 1px solid var(--border);
-            border-radius: 6px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
             font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: var(--transition);
             font-weight: 500;
         }
 
@@ -510,26 +504,32 @@
             background: var(--primary);
             color: white;
             border-color: var(--primary);
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transform: translateY(-1px);
         }
 
+        .preset-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Loading */
         .loading {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 1.25rem;
+            gap: 1rem;
+            padding: 1.5rem;
             background: var(--surface);
-            border-radius: 8px;
+            border-radius: var(--radius);
             margin: 1rem 0;
             box-shadow: var(--shadow);
-            border: 1px solid var(--card-border);
+            border: 1px solid var(--border);
         }
 
         .loading-spinner {
-            width: 24px;
-            height: 24px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid var(--primary);
+            width: 28px;
+            height: 28px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -540,15 +540,16 @@
         }
 
         .loading-text {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: var(--text-secondary);
         }
 
+        /* Status Bar */
         .status-bar {
             background: var(--surface);
-            padding: 0.75rem 2rem;
+            padding: 1rem 2rem;
             border-top: 1px solid var(--border);
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: var(--text-secondary);
             display: flex;
             justify-content: space-between;
@@ -569,10 +570,10 @@
         }
 
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            background: var(--success);
+            background: var(--secondary);
             animation: pulse 2s infinite;
         }
 
@@ -591,9 +592,53 @@
             }
         }
 
+        /* Typing Indicator */
+        .typing-indicator {
+            display: flex;
+            gap: 0.25rem;
+            align-items: center;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0);
+            }
+            40% {
+                transform: scale(1);
+            }
+        }
+
+        /* Responsive Design */
         @media (max-width: 768px) {
             .sidebar {
                 display: none;
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .header-info {
+                flex-wrap: wrap;
+                gap: 0.75rem;
             }
 
             .chat-messages {
@@ -645,35 +690,18 @@
             }
         }
 
-        /* Animation for agent thinking */
-        .typing-indicator {
-            display: flex;
-            gap: 0.25rem;
-            align-items: center;
-        }
-
-        .typing-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--text-secondary);
-            animation: typing 1.4s infinite ease-in-out both;
-        }
-
-        .typing-dot:nth-child(1) {
-            animation-delay: -0.32s;
-        }
-
-        .typing-dot:nth-child(2) {
-            animation-delay: -0.16s;
-        }
-
-        @keyframes typing {
-            0%, 80%, 100% {
-                transform: scale(0);
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 280px;
+                padding: 1.5rem;
             }
-            40% {
-                transform: scale(1);
+
+            .chat-messages {
+                padding: 1.5rem;
+            }
+
+            .chat-input-area {
+                padding: 1.5rem;
             }
         }
     </style>
@@ -684,19 +712,17 @@
             <div class="header-content">
                 <div class="logo" tabindex="0" role="group" aria-label="DebateEngine logo">
                     🎯 DebateEngine
-                    <div class="version-badge" aria-label="版本 v0.2.0-20260419-e7a4410" title="版本 v0.2.0-20260419-e7a4410">v0.2.0-20260419-e7a4410</div>
+                    <div class="version-badge" aria-label="Version v0.2.0-20260419-e7a4410" title="Version v0.2.0-20260419-e7a4410">v0.2.0-20260419-e7a4410</div>
                 </div>
-                <div class="header-actions">
-                    <div class="model-info">
-                        <div class="model-badge">
-                            🤖 NVIDIA minimax-m2.7
-                        </div>
-                        <div class="model-badge">
-                            🌐 Real-time Streaming API
-                        </div>
-                        <div class="model-badge">
-                            ⚡ Low Latency
-                        </div>
+                <div class="header-info">
+                    <div class="model-badge">
+                        🤖 NVIDIA minimax-m2.7
+                    </div>
+                    <div class="model-badge">
+                        🌐 Real-time API
+                    </div>
+                    <div class="model-badge">
+                        ⚡ Low Latency
                     </div>
                 </div>
             </div>
@@ -745,7 +771,7 @@
                     </div>
                 </div>
 
-                <div class="sidebar-section system-info">
+                <div class="sidebar-section">
                     <h3>📊 System Metrics</h3>
                     <div class="metrics">
                         <div class="metric-card">
@@ -777,8 +803,8 @@
             </aside>
 
             <div class="chat-container">
-                <div class="chat-messages" id="chat-messages">
-                    <div class="message agent-message">
+                <div class="chat-messages" id="chat-messages" aria-label="Chat messages" role="log">
+                    <div class="message agent-message" role="region" aria-label="System message">
                         <div class="message-content">
                             <div class="message-header">
                                 <div class="message-role">
@@ -796,17 +822,18 @@
                 <div class="chat-input-area">
                     <div class="input-container">
                         <div class="input-textarea">
-                            <textarea id="input-content" placeholder="Enter your code, proposal, or text here..."></textarea>
+                            <textarea id="input-content" placeholder="Enter your code, proposal, or text here..." aria-label="Input content" aria-describedby="input-description"></textarea>
+                            <div id="input-description" class="sr-only">Enter your code, proposal, or text for analysis</div>
                         </div>
                         <div class="input-actions">
                             <div class="task-selector">
-                                <select id="task-type">
+                                <select id="task-type" aria-label="Task type">
                                     <option value="CODE_REVIEW">Code Review</option>
                                     <option value="RAG_VALIDATION">RAG Validation</option>
                                     <option value="ARCHITECTURE_DECISION">Architecture Decision</option>
                                 </select>
                             </div>
-                            <button class="send-btn" id="submit-btn">
+                            <button class="send-btn" id="submit-btn" aria-label="Send for analysis" type="button">
                                 🚀 Send
                             </button>
                         </div>
@@ -814,23 +841,23 @@
                     <div class="preset-inputs">
                         <h4>Preset Inputs:</h4>
                         <div class="preset-buttons">
-                            <button class="preset-btn" data-preset="code">Code Review Example</button>
-                            <button class="preset-btn" data-preset="rag">RAG Validation Example</button>
-                            <button class="preset-btn" data-preset="arch">Architecture Decision Example</button>
+                            <button class="preset-btn" data-preset="code" aria-label="Load Code Review example" type="button">Code Review Example</button>
+                            <button class="preset-btn" data-preset="rag" aria-label="Load RAG Validation example" type="button">RAG Validation Example</button>
+                            <button class="preset-btn" data-preset="arch" aria-label="Load Architecture Decision example" type="button">Architecture Decision Example</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="status-bar">
+                <div class="status-bar" role="status" aria-label="System status">
                     <div class="status-left">
                         <div class="status-indicator">
-                            <div class="status-dot"></div>
+                            <div class="status-dot" role="img" aria-label="System active"></div>
                             <span>Real-time multi-agent analysis</span>
                         </div>
                         <span>Using NVIDIA minimax-m2.7 API</span>
                     </div>
                     <div class="status-right">
-                        <span id="status-message">Ready</span>
+                        <span id="status-message" aria-live="polite">Ready</span>
                     </div>
                 </div>
             </div>
@@ -940,7 +967,7 @@
                         const reasoningContent = `
                             <div style="margin-bottom: 1rem;">
                                 <h4 style="margin-bottom: 0.5rem;">${roleName} Analysis</h4>
-                                <div style="background: rgba(0,0,0,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem;">
+                                <div style="background: rgba(0,0,0,0.05); padding: 1rem; border-radius: var(--radius); margin-bottom: 0.5rem;">
                                     <div style="margin-bottom: 0.5rem;"><strong>Target Area:</strong> ${critique.target_area}</div>
                                     <div style="margin-bottom: 0.5rem;"><strong>Severity:</strong> ${critique.severity}</div>
                                     <div style="margin-bottom: 0.5rem;"><strong>Defect Type:</strong> ${critique.defect_type}</div>
@@ -974,29 +1001,29 @@
                             <div class="message-thought" style="margin-top: 1rem;">
                                 <h5 style="margin-bottom: 0.5rem;">Consensus Details</h5>
                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
-                                    <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: 6px;">
+                                    <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: var(--radius);">
                                         <strong>Confidence</strong>
                                         <div style="font-size: 1.2rem; font-weight: bold; color: var(--primary);">${(data.consensus_confidence * 100).toFixed(0)}%</div>
                                     </div>
-                                    <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: 6px;">
+                                    <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: var(--radius);">
                                         <strong>Task Type</strong>
                                         <div>${data.debate_metadata.task_type}</div>
                                     </div>
-                                    <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: 6px;">
+                                    <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: var(--radius);">
                                         <strong>Rounds Completed</strong>
                                         <div>${data.debate_metadata.rounds_completed}</div>
                                     </div>
-                                    <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: 6px;">
+                                    <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: var(--radius);">
                                         <strong>Total Latency</strong>
                                         <div>${data.debate_metadata.total_latency_ms}ms</div>
                                     </div>
                                 </div>
                                 <h5 style="margin-bottom: 0.5rem;">Models Used</h5>
-                                <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem;">
+                                <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: var(--radius); margin-bottom: 1rem;">
                                     ${data.debate_metadata.models_used.join(', ')}
                                 </div>
                                 <h5 style="margin-bottom: 0.5rem;">Termination Reason</h5>
-                                <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: 6px;">
+                                <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: var(--radius);">
                                     ${data.debate_metadata.termination_reason}
                                 </div>
                             </div>
@@ -1036,6 +1063,8 @@
                     messageClass += ` ${role}`;
                 }
                 messageDiv.className = messageClass;
+                messageDiv.role = 'region';
+                messageDiv.setAttribute('aria-label', type === 'user' ? 'User message' : `${role ? role : 'Agent'} message`);
                 
                 const now = new Date();
                 const timeString = now.toLocaleTimeString();
@@ -1097,11 +1126,13 @@
                 const loadingDiv = document.createElement('div');
                 loadingDiv.className = 'loading';
                 loadingDiv.id = 'loading-' + Date.now();
+                loadingDiv.role = 'status';
+                loadingDiv.setAttribute('aria-label', 'Loading');
                 loadingDiv.innerHTML = `
-                    <div class="loading-spinner"></div>
+                    <div class="loading-spinner" aria-hidden="true"></div>
                     <div class="loading-text">
                         <div>Analyzing with multiple agents...</div>
-                        <div class="typing-indicator">
+                        <div class="typing-indicator" aria-hidden="true">
                             <div class="typing-dot"></div>
                             <div class="typing-dot"></div>
                             <div class="typing-dot"></div>
