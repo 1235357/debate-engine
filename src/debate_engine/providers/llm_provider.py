@@ -97,6 +97,7 @@ class LLMProvider:
         response_model: type[BaseModel] | None = None,
         role_type: str = "critic",
         temperature: float = 0.3,
+        model: str | None = None,
     ) -> tuple[Any, CallResult]:
         """Make an LLM call with retry, parse repair, and cost tracking.
 
@@ -123,7 +124,7 @@ class LLMProvider:
             instance of *response_model* when provided, otherwise the raw
             response string.  *call_result* carries metadata about the call.
         """
-        provider, model = self._get_model_for_role(role_type)
+        provider, model = self._get_model_for_role(role_type, model_override=model)
         model_display = f"{provider}/{model}"
 
         start = time.monotonic()
@@ -345,7 +346,7 @@ class LLMProvider:
             return "nvidia"
         return mapped_name
 
-    def _get_model_for_role(self, role_type: str) -> tuple[str, str]:
+    def _get_model_for_role(self, role_type: str, model_override: str | None = None) -> tuple[str, str]:
         """Return ``(provider, model)`` based on provider mode and role type.
 
         Uses the failover chain when available.  The first entry in the chain
@@ -367,6 +368,14 @@ class LLMProvider:
         * All other roles use the primary provider/model.
         """
         cfg = self.config
+
+        # If model override is provided, use it
+        if model_override:
+            # For NVIDIA-style models, keep the full name and use nvidia provider
+            if "/" in model_override:
+                return "nvidia", model_override
+            # For other models, use primary provider with the override model
+            return self._map_provider_name(cfg.primary_provider), model_override
 
         # Judge role -- always use the judge-specific provider/model
         if role_type == "judge":

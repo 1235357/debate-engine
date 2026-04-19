@@ -336,12 +336,13 @@ class Message(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: list[Message]
-    model: str = "minimaxai/minimax-m2.7"
+    model: str = "z-ai/glm4.7"
 
 
 class CritiqueRequest(BaseModel):
     content: str
     task_type: str = "CODE_REVIEW"
+    model: str = "z-ai/glm4.7"
 
 
 @app.post("/api/chat")
@@ -369,7 +370,7 @@ async def chat(request: ChatRequest):
             engine = get_quick_engine()
         except RuntimeError:
             raise HTTPException(status_code=503, detail="DebateEngine not initialized. Please check API key configuration.")
-        consensus = await _maybe_await(engine.critique, config)
+        consensus = await _maybe_await(engine.critique, config, request.model)
 
         # Convert to dict for JSON response
         result = {
@@ -436,7 +437,7 @@ async def quick_critique_api(request: CritiqueRequest):
             engine = get_quick_engine()
         except RuntimeError:
             raise HTTPException(status_code=503, detail="DebateEngine not initialized. Please check API key configuration.")
-        consensus = await _maybe_await(engine.critique, config)
+        consensus = await _maybe_await(engine.critique, config, request.model)
 
         # Convert to dict for JSON response
         result = {

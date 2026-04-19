@@ -146,7 +146,7 @@ class QuickCritiqueEngine:
             provider_config or ProviderConfig.from_env(), key_manager=key_manager
         )
 
-    async def critique(self, config: Any) -> Any:
+    async def critique(self, config: Any, model: str | None = None) -> Any:
         """Run the full quick_critique pipeline.
 
         Parameters
@@ -235,6 +235,7 @@ class QuickCritiqueEngine:
                 response_model=CritiqueSchema,
                 role_type=role_type,
                 temperature=0.3,
+                model=model,
             )
 
         # Check cost budget before launching roles
@@ -358,6 +359,7 @@ class QuickCritiqueEngine:
             response_model=ConsensusSchema,
             role_type="judge",
             temperature=0.2,
+            model=model,
         )
 
         total_parse_attempts += judge_result.parse_attempts

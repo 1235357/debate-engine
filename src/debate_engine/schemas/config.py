@@ -15,6 +15,7 @@ class CritiqueConfigSchema(BaseModel):
     enable_devil_advocate: bool = Field(default=True)
     cost_budget_usd: float = Field(default=0.30, gt=0.0)
     custom_role_prompts: dict[str, str] | None = None
+    model: str | None = None
 
 
 class DebateConfigSchema(CritiqueConfigSchema):
