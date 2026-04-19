@@ -499,6 +499,23 @@
             transform: none;
         }
 
+        .preset-btn {
+            padding: 0.5rem 1rem;
+            background: var(--background);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preset-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
         .loading {
             display: flex;
             align-items: center;
@@ -648,7 +665,7 @@
             <div class="header-content">
                 <div class="logo" tabindex="0" role="group" aria-label="DebateEngine logo">
                     🎯 DebateEngine
-                    <div class="version-badge" aria-label="版本 v0.2.0-20260415-c6c2c21" title="版本 v0.2.0-20260415-c6c2c21">v0.2.0-20260415-c6c2c21</div>
+                    <div class="version-badge" aria-label="版本 v0.2.0-20260418-d8c9889" title="版本 v0.2.0-20260418-d8c9889">v0.2.0-20260418-d8c9889</div>
                 </div>
                 <div class="header-actions">
                     <div class="model-info">
@@ -780,6 +797,14 @@
                             </button>
                         </div>
                     </div>
+                    <div class="preset-inputs" style="margin-top: 1rem; max-width: 1000px; margin-left: auto; margin-right: auto; padding: 0 2rem;">
+                        <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-secondary);">Preset Inputs:</h4>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="preset-btn" data-preset="code">Code Review Example</button>
+                            <button class="preset-btn" data-preset="rag">RAG Validation Example</button>
+                            <button class="preset-btn" data-preset="arch">Architecture Decision Example</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="status-bar">
@@ -897,14 +922,22 @@
                         const role = critique.is_devil_advocate ? 'devil-advocate' : 'critic';
                         const roleName = critique.is_devil_advocate ? "Devil's Advocate" : critique.role_id;
                         
-                        addMessage('agent', `
-                            <strong>Target Area:</strong> ${critique.target_area}<br>
-                            <strong>Severity:</strong> ${critique.severity}<br>
-                            <strong>Defect Type:</strong> ${critique.defect_type}<br>
-                            <strong>Evidence:</strong> ${critique.evidence}<br>
-                            <strong>Suggested Fix:</strong> ${critique.suggested_fix}<br>
-                            <strong>Confidence:</strong> ${(critique.confidence * 100).toFixed(0)}%
-                        `, role, `Analyzing from ${roleName} perspective...`);
+                        // Enhanced AI reasoning visualization
+                        const reasoningContent = `
+                            <div style="margin-bottom: 1rem;">
+                                <h4 style="margin-bottom: 0.5rem;">${roleName} Analysis</h4>
+                                <div style="background: rgba(0,0,0,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem;">
+                                    <div style="margin-bottom: 0.5rem;"><strong>Target Area:</strong> ${critique.target_area}</div>
+                                    <div style="margin-bottom: 0.5rem;"><strong>Severity:</strong> ${critique.severity}</div>
+                                    <div style="margin-bottom: 0.5rem;"><strong>Defect Type:</strong> ${critique.defect_type}</div>
+                                    <div style="margin-bottom: 0.5rem;"><strong>Evidence:</strong> ${critique.evidence}</div>
+                                    <div style="margin-bottom: 0.5rem;"><strong>Suggested Fix:</strong> ${critique.suggested_fix}</div>
+                                    <div><strong>Confidence:</strong> ${(critique.confidence * 100).toFixed(0)}%</div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        addMessage('agent', reasoningContent, role, `Analyzing from ${roleName} perspective...`);
                     });
 
                     // Update flow step to consensus
@@ -921,13 +954,37 @@
                                 <div class="message-meta">${timeString}</div>
                             </div>
                             <div class="message-body">
+                                <h4 style="margin-bottom: 1rem;">Final Consensus</h4>
                                 <p>${data.final_conclusion}</p>
                             </div>
-                            <div class="message-thought">
-                                <p>Consensus confidence: ${(data.consensus_confidence * 100).toFixed(0)}%</p>
-                                <p>Task type: ${data.debate_metadata.task_type}</p>
-                                <p>Models used: ${data.debate_metadata.models_used.join(', ')}</p>
-                                <p>Total latency: ${data.debate_metadata.total_latency_ms}ms</p>
+                            <div class="message-thought" style="margin-top: 1rem;">
+                                <h5 style="margin-bottom: 0.5rem;">Consensus Details</h5>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                                    <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: 6px;">
+                                        <strong>Confidence</strong>
+                                        <div style="font-size: 1.2rem; font-weight: bold; color: var(--primary);">${(data.consensus_confidence * 100).toFixed(0)}%</div>
+                                    </div>
+                                    <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: 6px;">
+                                        <strong>Task Type</strong>
+                                        <div>${data.debate_metadata.task_type}</div>
+                                    </div>
+                                    <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: 6px;">
+                                        <strong>Rounds Completed</strong>
+                                        <div>${data.debate_metadata.rounds_completed}</div>
+                                    </div>
+                                    <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: 6px;">
+                                        <strong>Total Latency</strong>
+                                        <div>${data.debate_metadata.total_latency_ms}ms</div>
+                                    </div>
+                                </div>
+                                <h5 style="margin-bottom: 0.5rem;">Models Used</h5>
+                                <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem;">
+                                    ${data.debate_metadata.models_used.join(', ')}
+                                </div>
+                                <h5 style="margin-bottom: 0.5rem;">Termination Reason</h5>
+                                <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: 6px;">
+                                    ${data.debate_metadata.termination_reason}
+                                </div>
                             </div>
                         </div>
                     `;
@@ -1129,6 +1186,72 @@
                     darkModeToggle.textContent = '🌙 Dark Mode';
                     localStorage.setItem('theme', 'light');
                 }
+            });
+
+            // Preset inputs functionality
+            const presetButtons = document.querySelectorAll('.preset-btn');
+            const inputContent = document.getElementById('input-content');
+            const taskType = document.getElementById('task-type');
+
+            const presets = {
+                code: `def calculate_factorial(n):
+    """Calculate factorial of a number"""
+    if n < 0:
+        return "Error: Negative number"
+    elif n == 0:
+        return 1
+    else:
+        result = 1
+        for i in range(1, n + 1):
+            result *= i
+        return result
+
+# Usage example
+print(calculate_factorial(5))
+print(calculate_factorial(-1))`,
+                rag: `Question: What are the main benefits of using React for frontend development?
+
+Retrieved Context:
+1. React is a JavaScript library for building user interfaces, developed by Facebook.
+2. It allows developers to create reusable UI components.
+3. React uses a virtual DOM which improves performance.
+4. It supports server-side rendering for better SEO.
+5. React has a large community and ecosystem.
+
+Generated Answer:
+React offers several key benefits for frontend development. It provides a component-based architecture that allows for reusable UI elements, making code more maintainable. The virtual DOM implementation improves performance by minimizing direct DOM manipulations. React also supports server-side rendering, which enhances SEO and initial load times. Additionally, its large community and extensive ecosystem provide ample resources and third-party libraries for developers.`,
+                arch: `Project: E-commerce Platform
+
+Current Architecture: Monolithic application with frontend and backend tightly coupled.
+
+Proposed Architecture: Microservices architecture with separate services for product catalog, order processing, payment processing, and user management.
+
+Decision Factors:
+- Scalability: Need to handle increasing traffic during peak seasons
+- Maintainability: Easier to update individual services without affecting the entire system
+- Technology flexibility: Ability to use different technologies for different services
+- Deployment: Faster deployment cycles for individual services
+
+Concerns:
+- Increased complexity in service coordination
+- Potential network latency between services
+- Data consistency across services`
+            };
+
+            presetButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const presetType = this.getAttribute('data-preset');
+                    inputContent.value = presets[presetType];
+                    
+                    // Update task type based on preset
+                    if (presetType === 'code') {
+                        taskType.value = 'CODE_REVIEW';
+                    } else if (presetType === 'rag') {
+                        taskType.value = 'RAG_VALIDATION';
+                    } else if (presetType === 'arch') {
+                        taskType.value = 'ARCHITECTURE_DECISION';
+                    }
+                });
             });
         });
     </script>

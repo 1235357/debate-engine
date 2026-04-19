@@ -467,8 +467,20 @@ class LLMProvider:
             full_messages.append({"role": "system", "content": system_prompt})
         full_messages.extend(messages)
 
+        # 修复 NVIDIA 模型格式 - 直接使用模型名称
+        if provider == "nvidia":
+            # 确保使用正确的 NVIDIA 模型格式
+            if model == "minimax-m2.7":
+                model_param = "minimaxai/minimax-m2.7"
+            elif "/" not in model:
+                model_param = f"nvidia/{model}"
+            else:
+                model_param = model
+        else:
+            model_param = f"{provider}/{model}" if "/" not in model else model
+        
         params: dict[str, Any] = {
-            "model": f"{provider}/{model}" if "/" not in model else model,
+            "model": model_param,
             "messages": full_messages,
             "temperature": temperature,
         }
