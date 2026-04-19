@@ -461,7 +461,7 @@ class LLMProvider:
         system_prompt: str | None,
         temperature: float,
     ) -> dict[str, Any]:
-        """Build kwargs for ``litellm.acompletion``."""
+        """Build kwargs for LLM completion."""
         full_messages: list[dict] = []
         if system_prompt:
             full_messages.append({"role": "system", "content": system_prompt})
@@ -473,12 +473,9 @@ class LLMProvider:
             "temperature": temperature,
         }
 
-        # 修复 NVIDIA 模型格式 - 根据官方文档直接使用模型名称
         if provider == "nvidia":
-            # NVIDIA API 使用 OpenAI 兼容格式
+            # NVIDIA API - 直接使用模型名称和API地址
             params["model"] = model
-            params["custom_llm_provider"] = "openai"
-            # 使用 NVIDIA 特定的 api_base
             if self.config.primary_api_base:
                 params["api_base"] = self.config.primary_api_base
             else:
@@ -504,23 +501,66 @@ class LLMProvider:
         params: dict[str, Any],
         response_model: type[BaseModel] | None,
     ) -> Any:
-        """Call LiteLLM, optionally with Instructor patching.
+        """Call LLM, using direct OpenAI client for NVIDIA API or LiteLLM otherwise.
 
         Returns either a ``(raw_text, response_obj)`` tuple or, when
         Instructor is used, the parsed Pydantic model directly.
         """
-        import litellm  # late import to avoid hard dependency at module level
-
         api_key = params.get("api_key")
+        
+        # 检查是否是NVIDIA API调用
+        model = params.get("model", "")
+        is_nvidia = model.startswith("minimaxai/") or params.get("api_base", "").find("nvidia.com") != -1
 
         try:
-            if response_model is not None and self._check_instructor():
-                result = await self._acompletion_with_instructor(params, response_model)
+            if is_nvidia:
+                # NVIDIA API - 直接使用OpenAI客户端，按照官方文档方式
+                from openai import AsyncOpenAI
+                
+                # 提取参数
+                api_base = params.get("api_base", "https://integrate.api.nvidia.com/v1")
+                messages = params.get("messages", [])
+                temperature = params.get("temperature", 0.7)
+                
+                # 创建客户端
+                client = AsyncOpenAI(
+                    base_url=api_base,
+                    api_key=api_key
+                )
+                
+                if response_model is not None:
+                    # 对于需要结构化输出的，我们先获取原始文本，然后手动解析
+                    response = await client.chat.completions.create(
+                        model=model,
+                        messages=messages,
+                        temperature=temperature,
+                        max_tokens=4096,
+                        stream=False
+                    )
+                    raw_text = response.choices[0].message.content or ""
+                    result = raw_text, response
+                else:
+                    # 标准调用
+                    response = await client.chat.completions.create(
+                        model=model,
+                        messages=messages,
+                        temperature=temperature,
+                        max_tokens=4096,
+                        stream=False
+                    )
+                    raw_text = response.choices[0].message.content or ""
+                    result = raw_text, response
             else:
-                # Standard litellm.acompletion
-                response = await litellm.acompletion(**params)
-                raw_text = response.choices[0].message.content or ""
-                result = raw_text, response
+                import litellm  # late import to avoid hard dependency at module level
+                
+                # 其他提供商使用LiteLLM
+                if response_model is not None and self._check_instructor():
+                    result = await self._acompletion_with_instructor(params, response_model)
+                else:
+                    # Standard litellm.acompletion
+                    response = await litellm.acompletion(**params)
+                    raw_text = response.choices[0].message.content or ""
+                    result = raw_text, response
 
             # Record success if API key was used
             if self.key_manager and api_key:
@@ -550,35 +590,49 @@ class LLMProvider:
         params: dict[str, Any],
         response_model: type[BaseModel],
     ) -> Any:
-        """Use Instructor for structured output extraction."""
-        import instructor
-        import litellm
+        """Use Instructor for structured output extraction, or fallback to manual parsing for NVIDIA."""
+        # 检查是否是NVIDIA API
+        model = params.get("model", "")
+        is_nvidia = model.startswith("minimaxai/") or params.get("api_base", "").find("nvidia.com") != -1
+        
+        if is_nvidia:
+            # NVIDIA API不使用Instructor，回退到手动解析
+            # 先调用标准API获取原始文本
+            result = await self._acompletion(params, None)
+            raw_text, response_obj = result
+            # 手动解析JSON
+            parsed = self._parse_json_response(raw_text, response_model)
+            return parsed
+        else:
+            # 其他提供商使用Instructor
+            import instructor
+            import litellm
 
-        api_key = params.get("api_key")
+            api_key = params.get("api_key")
 
-        client = instructor.from_litellm(litellm.AsyncOpenAI())
-        # Extract model string from params
-        model = params.pop("model")
-        messages = params.pop("messages")
-        temperature = params.pop("temperature", 0.3)
+            client = instructor.from_litellm(litellm.AsyncOpenAI())
+            # Extract model string from params
+            model = params.pop("model")
+            messages = params.pop("messages")
+            temperature = params.pop("temperature", 0.3)
 
-        try:
-            response = await client.chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=temperature,
-                response_model=response_model,
-                **params,
-            )
-            # Record success if API key was used
-            if self.key_manager and api_key:
-                self.key_manager.record_success(api_key)
-            return response
-        except Exception:
-            # Record failure if API key was used
-            if self.key_manager and api_key:
-                self.key_manager.record_failure(api_key)
-            raise
+            try:
+                response = await client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    temperature=temperature,
+                    response_model=response_model,
+                    **params,
+                )
+                # Record success if API key was used
+                if self.key_manager and api_key:
+                    self.key_manager.record_success(api_key)
+                return response
+            except Exception:
+                # Record failure if API key was used
+                if self.key_manager and api_key:
+                    self.key_manager.record_failure(api_key)
+                raise
 
     # -- Parsing helpers ------------------------------------------------------
 

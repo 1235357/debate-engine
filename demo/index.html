@@ -5,865 +5,990 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DebateEngine - Multi-Agent Analysis System</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         :root {
-            --primary: #3b82f6;
-            --primary-light: #60a5fa;
-            --primary-dark: #2563eb;
-            --secondary: #10b981;
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #ec4899;
             --accent: #f59e0b;
-            --background: #ffffff;
-            --surface: #f9fafb;
-            --text: #111827;
-            --text-secondary: #6b7280;
-            --border: #e5e7eb;
-            --shadow: 0 1px 3px rgba(0,0,0,0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
-            --radius: 8px;
-            --transition: all 0.2s ease-in-out;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --bg-card: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            --transition-fast: all 0.15s ease;
+            --transition-normal: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
+        
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             line-height: 1.6;
-            color: var(--text);
-            background: var(--background);
             min-height: 100vh;
+            overflow: hidden;
         }
-
-        .container {
+        
+        .app {
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            height: 100vh;
         }
-
+        
         /* Header */
         header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            padding: 1rem 2rem;
-            box-shadow: var(--shadow-lg);
-            position: sticky;
-            top: 0;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 1.25rem 2rem;
+            backdrop-filter: blur(10px);
+            position: relative;
             z-index: 100;
         }
-
-        .header-content {
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
+        }
+        
+        .header-inner {
+            max-width: 1600px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            position: relative;
-        }
-
-        .version-badge {
-            position: absolute;
-            top: -8px;
-            right: -60px;
-            background: rgba(255,255,255,0.2);
-            padding: 0.25rem 0.5rem;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .logo:hover .version-badge {
-            opacity: 1;
-        }
-
-        .header-info {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            font-size: 0.9rem;
-        }
-
-        .model-badge {
-            background: rgba(255,255,255,0.2);
-            padding: 0.375rem 0.75rem;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.85rem;
-        }
-
-        /* Main Content */
-        main {
-            flex: 1;
-            display: flex;
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
-            overflow: hidden;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 320px;
-            background: var(--surface);
-            border-right: 1px solid var(--border);
-            padding: 2rem;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
             gap: 2rem;
         }
-
-        .sidebar-section {
-            background: var(--background);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-        }
-
-        .sidebar-section h3 {
-            margin-bottom: 1rem;
-            color: var(--primary);
-            font-size: 1.1rem;
-            font-weight: 600;
+        
+        .logo-section {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-        }
-
-        /* Flow Diagram */
-        .flow-diagram {
-            display: flex;
-            flex-direction: column;
             gap: 1rem;
         }
-
-        .flow-step {
+        
+        .logo {
             display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-            padding: 1rem;
-            background: var(--background);
-            border-radius: var(--radius);
-            border-left: 3px solid var(--primary);
-            transition: var(--transition);
-            box-shadow: var(--shadow);
+            align-items: center;
+            gap: 0.875rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-
-        .flow-step:hover {
-            transform: translateX(4px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .flow-step.active {
-            border-left-color: var(--secondary);
-            background: rgba(16, 185, 129, 0.05);
-        }
-
-        .flow-step-icon {
-            font-size: 1.25rem;
-            width: 40px;
-            height: 40px;
+        
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 0.875rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--primary);
-            color: white;
-            border-radius: 50%;
-            flex-shrink: 0;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
         }
-
-        .flow-step.active .flow-step-icon {
-            background: var(--secondary);
+        
+        .version {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: var(--bg-tertiary);
+            padding: 0.25rem 0.625rem;
+            border-radius: 9999px;
+            border: 1px solid var(--border);
         }
-
-        .flow-step-content h4 {
-            font-size: 0.95rem;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-            color: var(--text);
+        
+        .header-stats {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
         }
-
-        .flow-step-content p {
-            font-size: 0.85rem;
+        
+        .stat-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 0.625rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
             color: var(--text-secondary);
+            transition: var(--transition-fast);
+        }
+        
+        .stat-pill:hover {
+            border-color: var(--primary);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+        
+        .stat-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Main Content */
+        .main-container {
+            flex: 1;
+            display: flex;
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            overflow: hidden;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 340px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+        }
+        
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        /* Flow Steps */
+        .flow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .flow-step {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            transition: var(--transition-normal);
+            cursor: default;
+        }
+        
+        .flow-step:hover {
+            border-color: var(--primary-light);
+            background: rgba(99, 102, 241, 0.05);
+        }
+        
+        .flow-step.active {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(236, 72, 153, 0.05) 100%);
+            box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.2);
+        }
+        
+        .step-number {
+            width: 32px;
+            height: 32px;
+            background: var(--bg-tertiary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+            transition: var(--transition-normal);
+        }
+        
+        .flow-step.active .step-number {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .step-desc {
+            color: var(--text-muted);
+            font-size: 0.825rem;
             line-height: 1.4;
         }
-
-        /* System Metrics */
-        .metrics {
+        
+        /* Metrics */
+        .metrics-grid {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 1rem;
-            margin-top: 1rem;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.875rem;
         }
-
-        .metric-card {
-            background: var(--background);
-            padding: 1.25rem;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
+        
+        .metric-item {
+            background: var(--bg-secondary);
             border: 1px solid var(--border);
-            transition: var(--transition);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            text-align: center;
+            transition: var(--transition-normal);
         }
-
-        .metric-card:hover {
+        
+        .metric-item:hover {
             transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-light);
         }
-
-        .metric-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-
-        .metric-name {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
+        
         .metric-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
         }
-
-        .metric-unit {
+        
+        .metric-label {
+            color: var(--text-muted);
             font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-left: 0.25rem;
+            font-weight: 500;
+            margin-top: 0.375rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-
-        /* Chat Container */
-        .chat-container {
+        
+        .metric-unit {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Chat Area */
+        .chat-area {
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: var(--background);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
         }
-
+        
         .chat-messages {
             flex: 1;
             padding: 2rem;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
-            background: linear-gradient(to bottom, var(--surface) 0%, var(--background) 100%);
+            gap: 1.25rem;
         }
-
+        
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 9999px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        /* Messages */
         .message {
-            max-width: 70%;
-            animation: slideIn 0.3s ease-out;
+            animation: messageSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 85%;
         }
-
-        @keyframes slideIn {
+        
+        @keyframes messageSlideIn {
             from {
                 opacity: 0;
-                transform: translateY(10px);
+                transform: translateY(10px) scale(0.98);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0) scale(1);
             }
         }
-
-        .user-message {
+        
+        .message.user {
             align-self: flex-end;
         }
-
-        .agent-message {
+        
+        .message.agent {
             align-self: flex-start;
         }
-
-        .message-content {
-            padding: 1.25rem;
-            border-radius: var(--radius);
+        
+        .message-bubble {
+            padding: 1.25rem 1.5rem;
+            border-radius: var(--radius-lg);
             position: relative;
             box-shadow: var(--shadow);
         }
-
-        .user-message .message-content {
-            background: var(--primary);
-            color: white;
-            border-bottom-right-radius: 4px;
+        
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-bottom-right-radius: 0.375rem;
         }
-
-        .agent-message.critic .message-content {
-            background: #ecfdf5;
-            border-left: 4px solid var(--secondary);
-            border-bottom-left-radius: 4px;
+        
+        .message.agent.critic .message-bubble {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--success);
+            border-bottom-left-radius: 0.375rem;
         }
-
-        .agent-message.devil-advocate .message-content {
-            background: #fef2f2;
-            border-left: 4px solid #ef4444;
-            border-bottom-left-radius: 4px;
+        
+        .message.agent.devil-advocate .message-bubble {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--secondary);
+            border-bottom-left-radius: 0.375rem;
         }
-
-        .agent-message.judge .message-content {
-            background: #fef3c7;
-            border-left: 4px solid var(--accent);
-            border-bottom-left-radius: 4px;
+        
+        .message.agent.judge .message-bubble {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
+            border-bottom-left-radius: 0.375rem;
         }
-
+        
         .message-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 0.75rem;
-            font-size: 0.8rem;
+            gap: 1rem;
         }
-
+        
         .message-role {
-            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
         }
-
-        .message-meta {
-            color: var(--text-secondary);
+        
+        .message.user .message-role {
+            color: white;
+        }
+        
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.625rem;
+            background: var(--bg-tertiary);
+            border-radius: 9999px;
             font-size: 0.75rem;
+            color: var(--text-secondary);
         }
-
-        .user-message .message-meta {
+        
+        .message.user .role-badge {
+            background: rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .message.user .message-time {
             color: rgba(255, 255, 255, 0.7);
         }
-
-        .message-body {
-            margin-bottom: 0.75rem;
-            line-height: 1.5;
+        
+        .message-content {
+            line-height: 1.7;
+            font-size: 0.975rem;
         }
-
+        
+        .message.user .message-content {
+            color: white;
+        }
+        
         .message-thought {
-            background: rgba(0,0,0,0.05);
-            padding: 0.75rem;
-            border-radius: var(--radius);
-            margin-top: 0.75rem;
-            font-style: italic;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: var(--radius-md);
+            border-left: 2px solid var(--primary);
             font-size: 0.9rem;
-            border-left: 3px solid rgba(0,0,0,0.1);
+            color: var(--text-secondary);
         }
-
-        .user-message .message-thought {
-            background: rgba(255,255,255,0.1);
-            border-left-color: rgba(255,255,255,0.3);
+        
+        .message.user .message-thought {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.85);
         }
-
-        /* Chat Input Area */
-        .chat-input-area {
-            padding: 2rem;
+        
+        /* Input Area */
+        .chat-input-section {
+            padding: 1.5rem 2rem;
+            background: var(--bg-secondary);
             border-top: 1px solid var(--border);
-            background: var(--background);
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
         }
-
+        
+        .input-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
         .input-container {
             display: flex;
             gap: 1rem;
             align-items: flex-end;
-            max-width: 1000px;
-            margin: 0 auto;
+            background: var(--bg-primary);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 0.75rem;
+            transition: var(--transition-normal);
         }
-
+        
+        .input-container:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+        
         .input-textarea {
             flex: 1;
         }
-
+        
         .input-textarea textarea {
             width: 100%;
-            padding: 1.25rem;
-            border: 2px solid var(--border);
-            border-radius: var(--radius);
-            resize: vertical;
-            min-height: 120px;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
             font-family: inherit;
             font-size: 1rem;
-            transition: var(--transition);
-            background: var(--surface);
-            color: var(--text);
+            resize: none;
+            line-height: 1.5;
+            min-height: 48px;
+            max-height: 160px;
         }
-
-        .input-textarea textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        
+        .input-textarea textarea::placeholder {
+            color: var(--text-muted);
         }
-
+        
         .input-actions {
             display: flex;
             flex-direction: column;
             gap: 0.75rem;
         }
-
-        .task-selector {
-            margin-bottom: 0.5rem;
-        }
-
+        
         .task-selector select {
-            padding: 0.75rem;
-            border: 2px solid var(--border);
-            border-radius: var(--radius);
-            font-size: 0.9rem;
-            background: var(--surface);
-            color: var(--text);
-            transition: var(--transition);
-            min-width: 180px;
+            padding: 0.625rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition-fast);
         }
-
+        
+        .task-selector select:hover {
+            border-color: var(--primary);
+        }
+        
         .task-selector select:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
-
+        
         .send-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
             padding: 0.75rem 1.75rem;
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
             border: none;
-            border-radius: var(--radius);
+            border-radius: var(--radius-md);
             font-weight: 600;
+            font-size: 0.95rem;
             cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            min-width: 180px;
-            justify-content: center;
+            transition: var(--transition-normal);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
-
-        .send-btn:hover {
-            background: var(--primary-dark);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-            transform: translateY(-1px);
+        
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
         }
-
-        .send-btn:active {
+        
+        .send-btn:active:not(:disabled) {
             transform: translateY(0);
         }
-
+        
         .send-btn:disabled {
-            background: #9ca3af;
+            opacity: 0.5;
             cursor: not-allowed;
             transform: none;
-            box-shadow: none;
         }
-
-        /* Preset Inputs */
-        .preset-inputs {
-            margin-top: 2rem;
-            max-width: 1000px;
-            margin-left: auto;
-            margin-right: auto;
-            padding: 0 2rem;
+        
+        /* Preset Buttons */
+        .preset-section {
+            margin-top: 1.25rem;
         }
-
-        .preset-inputs h4 {
-            font-size: 0.95rem;
-            margin-bottom: 1rem;
-            color: var(--text-secondary);
+        
+        .preset-label {
+            font-size: 0.825rem;
             font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-
+        
         .preset-buttons {
             display: flex;
-            gap: 1rem;
+            gap: 0.75rem;
             flex-wrap: wrap;
         }
-
+        
         .preset-btn {
-            padding: 0.75rem 1.5rem;
-            background: var(--surface);
-            color: var(--text);
-            border: 2px solid var(--border);
-            border-radius: var(--radius);
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: var(--transition);
+            padding: 0.625rem 1.25rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.875rem;
             font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-normal);
         }
-
+        
         .preset-btn:hover {
             background: var(--primary);
-            color: white;
             border-color: var(--primary);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-            transform: translateY(-1px);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
-
-        .preset-btn:active {
-            transform: translateY(0);
-        }
-
-        /* Loading */
-        .loading {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1.5rem;
-            background: var(--surface);
-            border-radius: var(--radius);
-            margin: 1rem 0;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-        }
-
-        .loading-spinner {
-            width: 28px;
-            height: 28px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            font-size: 0.95rem;
-            color: var(--text-secondary);
-        }
-
+        
         /* Status Bar */
         .status-bar {
-            background: var(--surface);
-            padding: 1rem 2rem;
+            background: var(--bg-secondary);
             border-top: 1px solid var(--border);
-            font-size: 0.85rem;
-            color: var(--text-secondary);
+            padding: 0.875rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 -1px 5px rgba(0,0,0,0.05);
+            font-size: 0.825rem;
+            color: var(--text-muted);
         }
-
+        
         .status-left {
             display: flex;
             align-items: center;
             gap: 1.5rem;
         }
-
+        
         .status-indicator {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.625rem;
         }
-
+        
         .status-dot {
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            background: var(--secondary);
-            animation: pulse 2s infinite;
+            background: var(--success);
+            animation: statusPulse 2s ease-in-out infinite;
         }
-
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
+        
+        @keyframes statusPulse {
+            0%, 100% {
                 opacity: 1;
+                transform: scale(1);
             }
             50% {
+                opacity: 0.6;
                 transform: scale(1.2);
-                opacity: 0.7;
-            }
-            100% {
-                transform: scale(1);
-                opacity: 1;
             }
         }
-
-        /* Typing Indicator */
-        .typing-indicator {
+        
+        /* Loading */
+        .loading-container {
             display: flex;
-            gap: 0.25rem;
             align-items: center;
+            gap: 1rem;
+            padding: 1.25rem 1.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            margin: 0.5rem 0;
         }
-
-        .typing-dot {
-            width: 8px;
-            height: 8px;
+        
+        .loading-spinner {
+            width: 28px;
+            height: 28px;
+            border: 3px solid var(--bg-tertiary);
+            border-top-color: var(--primary);
             border-radius: 50%;
-            background: var(--text-secondary);
-            animation: typing 1.4s infinite ease-in-out both;
+            animation: spin 0.8s linear infinite;
         }
-
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .loading-text {
+            flex: 1;
+        }
+        
+        .loading-text-main {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+        
+        .loading-text-sub {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        .typing-dots {
+            display: inline-flex;
+            gap: 0.25rem;
+            margin-left: 0.25rem;
+        }
+        
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
         .typing-dot:nth-child(1) {
             animation-delay: -0.32s;
         }
-
+        
         .typing-dot:nth-child(2) {
             animation-delay: -0.16s;
         }
-
+        
         @keyframes typing {
             0%, 80%, 100% {
                 transform: scale(0);
+                opacity: 0.4;
             }
             40% {
                 transform: scale(1);
+                opacity: 1;
             }
         }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 300px;
+            }
+        }
+        
+        @media (max-width: 968px) {
             .sidebar {
                 display: none;
             }
-
-            .header-content {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
+            
+            .main-container {
+                padding: 1rem;
             }
-
-            .header-info {
-                flex-wrap: wrap;
+            
+            .header-stats {
+                display: none;
+            }
+            
+            .chat-input-section {
+                padding: 1rem;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            header {
+                padding: 1rem;
+            }
+            
+            .logo {
+                font-size: 1.25rem;
+            }
+            
+            .main-container {
+                padding: 0.75rem;
                 gap: 0.75rem;
             }
-
+            
             .chat-messages {
-                padding: 1.5rem;
+                padding: 1.25rem;
             }
-
-            .message {
-                max-width: 85%;
-            }
-
+            
             .input-container {
                 flex-direction: column;
                 align-items: stretch;
             }
-
+            
             .input-actions {
                 flex-direction: row;
                 justify-content: space-between;
-                align-items: center;
             }
-
-            .task-selector {
-                margin-bottom: 0;
-                flex: 1;
-            }
-
-            .task-selector select {
-                min-width: auto;
-            }
-
-            .send-btn {
-                flex-shrink: 0;
-                min-width: 120px;
-            }
-
+            
             .preset-buttons {
                 flex-direction: column;
             }
-
+            
             .preset-btn {
                 width: 100%;
-                text-align: center;
-            }
-
-            .status-left {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
-            }
-        }
-
-        @media (max-width: 1024px) {
-            .sidebar {
-                width: 280px;
-                padding: 1.5rem;
-            }
-
-            .chat-messages {
-                padding: 1.5rem;
-            }
-
-            .chat-input-area {
-                padding: 1.5rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="app">
         <header>
-            <div class="header-content">
-                <div class="logo" tabindex="0" role="group" aria-label="DebateEngine logo">
-                    🎯 DebateEngine
-                    <div class="version-badge" aria-label="Version v0.2.0-20260419-e7a4410" title="Version v0.2.0-20260419-e7a4410">v0.2.0-20260419-e7a4410</div>
+            <div class="header-inner">
+                <div class="logo-section">
+                    <div class="logo">
+                        <div class="logo-icon">🎯</div>
+                        <span>DebateEngine</span>
+                    </div>
+                    <span class="version">v0.2.0</span>
                 </div>
-                <div class="header-info">
-                    <div class="model-badge">
-                        🤖 NVIDIA minimax-m2.7
+                <div class="header-stats">
+                    <div class="stat-pill">
+                        <div class="stat-icon">🤖</div>
+                        <span>NVIDIA minimax-m2.7</span>
                     </div>
-                    <div class="model-badge">
-                        🌐 Real-time API
+                    <div class="stat-pill">
+                        <div class="stat-icon">⚡</div>
+                        <span>Real-time</span>
                     </div>
-                    <div class="model-badge">
-                        ⚡ Low Latency
+                    <div class="stat-pill">
+                        <div class="stat-icon">🔄</div>
+                        <span>Multi-Agent</span>
                     </div>
                 </div>
             </div>
         </header>
-
-        <main>
+        
+        <div class="main-container">
             <aside class="sidebar">
-                <div class="sidebar-section">
-                    <h3>🔄 Multi-Agent Flow</h3>
-                    <div class="flow-diagram">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">🔄</div>
+                        <div class="card-title">Analysis Flow</div>
+                    </div>
+                    <div class="flow-steps">
                         <div class="flow-step" id="flow-step-1">
-                            <div class="flow-step-icon">1</div>
-                            <div class="flow-step-content">
-                                <h4>Input Analysis</h4>
-                                <p>User submits content for review</p>
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <div class="step-title">Input Analysis</div>
+                                <div class="step-desc">User submits content for review</div>
                             </div>
                         </div>
                         <div class="flow-step" id="flow-step-2">
-                            <div class="flow-step-icon">2</div>
-                            <div class="flow-step-content">
-                                <h4>Critique Agents</h4>
-                                <p>Multiple agents analyze from different perspectives</p>
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <div class="step-title">Critique Agents</div>
+                                <div class="step-desc">Multiple perspectives analyzed</div>
                             </div>
                         </div>
                         <div class="flow-step" id="flow-step-3">
-                            <div class="flow-step-icon">3</div>
-                            <div class="flow-step-content">
-                                <h4>Devil's Advocate</h4>
-                                <p>Challenges dominant opinions</p>
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <div class="step-title">Devil's Advocate</div>
+                                <div class="step-desc">Challenging opinions</div>
                             </div>
                         </div>
                         <div class="flow-step" id="flow-step-4">
-                            <div class="flow-step-icon">4</div>
-                            <div class="flow-step-content">
-                                <h4>Judge</h4>
-                                <p>Synthesizes all perspectives</p>
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <div class="step-title">Judge</div>
+                                <div class="step-desc">Synthesizing all views</div>
                             </div>
                         </div>
                         <div class="flow-step" id="flow-step-5">
-                            <div class="flow-step-icon">5</div>
-                            <div class="flow-step-content">
-                                <h4>Consensus</h4>
-                                <p>Provides final analysis and recommendations</p>
+                            <div class="step-number">5</div>
+                            <div class="step-content">
+                                <div class="step-title">Consensus</div>
+                                <div class="step-desc">Final recommendations</div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <div class="sidebar-section">
-                    <h3>📊 System Metrics</h3>
-                    <div class="metrics">
-                        <div class="metric-card">
-                            <div class="metric-header">
-                                <span class="metric-name">Response Time</span>
-                                <span class="metric-value" id="metric-time">25<span class="metric-unit">ms</span></span>
-                            </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">📊</div>
+                        <div class="card-title">System Metrics</div>
+                    </div>
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <div class="metric-value" id="metric-time">0<span class="metric-unit">ms</span></div>
+                            <div class="metric-label">Response Time</div>
                         </div>
-                        <div class="metric-card">
-                            <div class="metric-header">
-                                <span class="metric-name">Tokens Used</span>
-                                <span class="metric-value" id="metric-tokens">124</span>
-                            </div>
+                        <div class="metric-item">
+                            <div class="metric-value" id="metric-tokens">0</div>
+                            <div class="metric-label">Tokens Used</div>
                         </div>
-                        <div class="metric-card">
-                            <div class="metric-header">
-                                <span class="metric-name">Confidence</span>
-                                <span class="metric-value" id="metric-confidence">85<span class="metric-unit">%</span></span>
-                            </div>
+                        <div class="metric-item">
+                            <div class="metric-value" id="metric-confidence">0<span class="metric-unit">%</span></div>
+                            <div class="metric-label">Confidence</div>
                         </div>
-                        <div class="metric-card">
-                            <div class="metric-header">
-                                <span class="metric-name">Agents Active</span>
-                                <span class="metric-value" id="metric-agents">3</span>
-                            </div>
+                        <div class="metric-item">
+                            <div class="metric-value" id="metric-agents">0</div>
+                            <div class="metric-label">Active Agents</div>
                         </div>
                     </div>
                 </div>
             </aside>
-
-            <div class="chat-container">
-                <div class="chat-messages" id="chat-messages" aria-label="Chat messages" role="log">
-                    <div class="message agent-message" role="region" aria-label="System message">
-                        <div class="message-content">
+            
+            <div class="chat-area">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message agent">
+                        <div class="message-bubble">
                             <div class="message-header">
                                 <div class="message-role">
-                                    🎯 DebateEngine
+                                    <span class="role-badge">
+                                        <span>🎯</span>
+                                        <span>DebateEngine</span>
+                                    </span>
                                 </div>
-                                <div class="message-meta">00:00:00</div>
+                                <div class="message-time" id="welcome-time"></div>
                             </div>
-                            <div class="message-body">
-                                <p>Hello! I'm DebateEngine, a structured multi-agent system that uses multiple AI agents to analyze content from different perspectives. Please enter your code, proposal, or text below, and I'll show you how our agents work together to provide comprehensive analysis.</p>
+                            <div class="message-content">
+                                <p><strong>Hello! 👋</strong></p>
+                                <p style="margin-top: 0.75rem;">I'm <strong>DebateEngine</strong>, a structured multi-agent system that analyzes content from multiple perspectives using AI agents.</p>
+                                <p style="margin-top: 0.75rem;">Enter your code, proposal, or text below, and watch our agents collaborate to provide comprehensive analysis!</p>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <div class="chat-input-area">
-                    <div class="input-container">
-                        <div class="input-textarea">
-                            <textarea id="input-content" placeholder="Enter your code, proposal, or text here..." aria-label="Input content" aria-describedby="input-description"></textarea>
-                            <div id="input-description" class="sr-only">Enter your code, proposal, or text for analysis</div>
-                        </div>
-                        <div class="input-actions">
-                            <div class="task-selector">
-                                <select id="task-type" aria-label="Task type">
-                                    <option value="CODE_REVIEW">Code Review</option>
-                                    <option value="RAG_VALIDATION">RAG Validation</option>
-                                    <option value="ARCHITECTURE_DECISION">Architecture Decision</option>
-                                </select>
+                
+                <div class="chat-input-section">
+                    <div class="input-wrapper">
+                        <div class="input-container">
+                            <div class="input-textarea">
+                                <textarea id="input-content" placeholder="Enter your code, proposal, or text here..."></textarea>
                             </div>
-                            <button class="send-btn" id="submit-btn" aria-label="Send for analysis" type="button">
-                                🚀 Send
-                            </button>
+                            <div class="input-actions">
+                                <div class="task-selector">
+                                    <select id="task-type">
+                                        <option value="CODE_REVIEW">Code Review</option>
+                                        <option value="RAG_VALIDATION">RAG Validation</option>
+                                        <option value="ARCHITECTURE_DECISION">Architecture Decision</option>
+                                    </select>
+                                </div>
+                                <button class="send-btn" id="submit-btn">
+                                    <span>🚀</span>
+                                    <span>Analyze</span>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="preset-inputs">
-                        <h4>Preset Inputs:</h4>
-                        <div class="preset-buttons">
-                            <button class="preset-btn" data-preset="code" aria-label="Load Code Review example" type="button">Code Review Example</button>
-                            <button class="preset-btn" data-preset="rag" aria-label="Load RAG Validation example" type="button">RAG Validation Example</button>
-                            <button class="preset-btn" data-preset="arch" aria-label="Load Architecture Decision example" type="button">Architecture Decision Example</button>
+                        
+                        <div class="preset-section">
+                            <div class="preset-label">Quick Examples</div>
+                            <div class="preset-buttons">
+                                <button class="preset-btn" data-preset="code">💻 Code Review</button>
+                                <button class="preset-btn" data-preset="rag">📚 RAG Validation</button>
+                                <button class="preset-btn" data-preset="arch">🏗️ Architecture</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <div class="status-bar" role="status" aria-label="System status">
+                
+                <div class="status-bar">
                     <div class="status-left">
                         <div class="status-indicator">
-                            <div class="status-dot" role="img" aria-label="System active"></div>
-                            <span>Real-time multi-agent analysis</span>
+                            <div class="status-dot"></div>
+                            <span>System ready</span>
                         </div>
-                        <span>Using NVIDIA minimax-m2.7 API</span>
+                        <span>Powered by NVIDIA minimax-m2.7</span>
                     </div>
                     <div class="status-right">
-                        <span id="status-message" aria-live="polite">Ready</span>
+                        <span id="status-message">Ready</span>
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
     </div>
-
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const chatMessages = document.getElementById('chat-messages');
@@ -875,7 +1000,11 @@
             const metricTokens = document.getElementById('metric-tokens');
             const metricConfidence = document.getElementById('metric-confidence');
             const metricAgents = document.getElementById('metric-agents');
-
+            const welcomeTime = document.getElementById('welcome-time');
+            
+            const now = new Date();
+            welcomeTime.textContent = now.toLocaleTimeString();
+            
             let currentStep = 0;
             const flowSteps = [
                 document.getElementById('flow-step-1'),
@@ -884,61 +1013,27 @@
                 document.getElementById('flow-step-4'),
                 document.getElementById('flow-step-5')
             ];
-
-            // API endpoint - connected to Render deployment
+            
             const API_URL = 'https://debate-engine-api.onrender.com';
             
-            // Uncomment this for local testing
-            // const API_URL = 'http://localhost:8000';
-
             submitBtn.addEventListener('click', async function() {
                 const content = inputContent.value.trim();
                 if (!content) return;
-
-                // Add user message
+                
                 addMessage('user', content);
                 inputContent.value = '';
                 submitBtn.disabled = true;
-
-                // Update status
+                
                 updateStatus('Analyzing input...');
                 updateFlowStep(0);
-
+                
                 try {
-                    // Create a message container for the response
                     const messageId = 'streaming-' + Date.now();
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = 'message agent-message judge';
-                    messageDiv.id = messageId;
+                    const loadingId = addLoading('Initializing multi-agent analysis...');
                     
-                    const now = new Date();
-                    const timeString = now.toLocaleTimeString();
-                    
-                    messageDiv.innerHTML = `
-                        <div class="message-content">
-                            <div class="message-header">
-                                <div class="message-role">
-                                    ⚖️ Judge
-                                </div>
-                                <div class="message-meta">${timeString}</div>
-                            </div>
-                            <div class="message-body">
-                                <p>Analyzing with multiple agents...</p>
-                            </div>
-                            <div class="message-thought">
-                                <p>Starting multi-agent analysis process...</p>
-                            </div>
-                        </div>
-                    `;
-                    
-                    chatMessages.appendChild(messageDiv);
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-
-                    // Update flow steps
                     updateFlowStep(1);
                     updateStatus('Running critique agents...');
-
-                    // Make API call to get full multi-agent response
+                    
                     const response = await fetch(`${API_URL}/api/chat`, {
                         method: 'POST',
                         headers: {
@@ -951,93 +1046,89 @@
                             model: "minimaxai/minimax-m2.7"
                         })
                     });
-
+                    
                     if (!response.ok) {
                         throw new Error(`API error: ${response.status}`);
                     }
-
+                    
                     const data = await response.json();
-
-                    // Show all agent critiques with transparency
+                    removeLoading(loadingId);
+                    
+                    updateFlowStep(2);
+                    updateStatus('Gathering critique perspectives...');
+                    
                     data.critiques_summary.forEach((critique, index) => {
                         const role = critique.is_devil_advocate ? 'devil-advocate' : 'critic';
                         const roleName = critique.is_devil_advocate ? "Devil's Advocate" : critique.role_id;
                         
-                        // Enhanced AI reasoning visualization
-                        const reasoningContent = `
+                        const critiqueHTML = `
                             <div style="margin-bottom: 1rem;">
-                                <h4 style="margin-bottom: 0.5rem;">${roleName} Analysis</h4>
-                                <div style="background: rgba(0,0,0,0.05); padding: 1rem; border-radius: var(--radius); margin-bottom: 0.5rem;">
-                                    <div style="margin-bottom: 0.5rem;"><strong>Target Area:</strong> ${critique.target_area}</div>
-                                    <div style="margin-bottom: 0.5rem;"><strong>Severity:</strong> ${critique.severity}</div>
-                                    <div style="margin-bottom: 0.5rem;"><strong>Defect Type:</strong> ${critique.defect_type}</div>
-                                    <div style="margin-bottom: 0.5rem;"><strong>Evidence:</strong> ${critique.evidence}</div>
-                                    <div style="margin-bottom: 0.5rem;"><strong>Suggested Fix:</strong> ${critique.suggested_fix}</div>
+                                <div style="font-weight: 700; margin-bottom: 0.5rem; color: var(--primary-light);">${roleName} Analysis</div>
+                                <div style="display: grid; gap: 0.5rem; background: var(--bg-primary); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border);">
+                                    <div><strong>Target Area:</strong> ${critique.target_area}</div>
+                                    <div><strong>Severity:</strong> <span style="color: ${critique.severity === 'HIGH' ? 'var(--danger)' : critique.severity === 'MEDIUM' ? 'var(--warning)' : 'var(--success)'}">${critique.severity}</span></div>
+                                    <div><strong>Defect Type:</strong> ${critique.defect_type}</div>
+                                    <div><strong>Evidence:</strong> ${critique.evidence}</div>
+                                    <div><strong>Suggested Fix:</strong> ${critique.suggested_fix}</div>
                                     <div><strong>Confidence:</strong> ${(critique.confidence * 100).toFixed(0)}%</div>
                                 </div>
                             </div>
                         `;
                         
-                        addMessage('agent', reasoningContent, role, `Analyzing from ${roleName} perspective...`);
+                        addMessage('agent', critiqueHTML, role);
                     });
-
-                    // Update flow step to consensus
+                    
                     updateFlowStep(4);
                     updateStatus('Generating final consensus...');
-
-                    // Update the judge message with final conclusion
-                    messageDiv.innerHTML = `
-                        <div class="message-content">
-                            <div class="message-header">
-                                <div class="message-role">
-                                    ⚖️ Judge
+                    
+                    const conclusionHTML = `
+                        <div>
+                            <h4 style="margin-bottom: 1rem; font-size: 1.125rem; color: var(--primary-light);">Final Consensus</h4>
+                            <p style="line-height: 1.8;">${data.final_conclusion}</p>
+                        </div>
+                    `;
+                    
+                    const consensusDetails = `
+                        <div style="margin-top: 1.25rem;">
+                            <h5 style="margin-bottom: 1rem; font-size: 0.95rem; color: var(--text-secondary);">Analysis Details</h5>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin-bottom: 1rem;">
+                                <div style="background: var(--bg-primary); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border); text-align: center;">
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Confidence</div>
+                                    <div style="font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, var(--success) 0%, var(--primary-light) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">${(data.consensus_confidence * 100).toFixed(0)}%</div>
                                 </div>
-                                <div class="message-meta">${timeString}</div>
+                                <div style="background: var(--bg-primary); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border); text-align: center;">
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Task Type</div>
+                                    <div style="font-weight: 600; color: var(--text-primary);">${data.debate_metadata.task_type}</div>
+                                </div>
+                                <div style="background: var(--bg-primary); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border); text-align: center;">
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Rounds</div>
+                                    <div style="font-weight: 600; color: var(--text-primary);">${data.debate_metadata.rounds_completed}</div>
+                                </div>
+                                <div style="background: var(--bg-primary); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border); text-align: center;">
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Latency</div>
+                                    <div style="font-weight: 600; color: var(--text-primary);">${data.debate_metadata.total_latency_ms}ms</div>
+                                </div>
                             </div>
-                            <div class="message-body">
-                                <h4 style="margin-bottom: 1rem;">Final Consensus</h4>
-                                <p>${data.final_conclusion}</p>
+                            <div style="margin-top: 1rem;">
+                                <div style="font-size: 0.825rem; color: var(--text-muted); margin-bottom: 0.5rem;">Models Used</div>
+                                <div style="background: var(--bg-primary); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); font-size: 0.875rem;">${data.debate_metadata.models_used.join(', ')}</div>
                             </div>
-                            <div class="message-thought" style="margin-top: 1rem;">
-                                <h5 style="margin-bottom: 0.5rem;">Consensus Details</h5>
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
-                                    <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: var(--radius);">
-                                        <strong>Confidence</strong>
-                                        <div style="font-size: 1.2rem; font-weight: bold; color: var(--primary);">${(data.consensus_confidence * 100).toFixed(0)}%</div>
-                                    </div>
-                                    <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: var(--radius);">
-                                        <strong>Task Type</strong>
-                                        <div>${data.debate_metadata.task_type}</div>
-                                    </div>
-                                    <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: var(--radius);">
-                                        <strong>Rounds Completed</strong>
-                                        <div>${data.debate_metadata.rounds_completed}</div>
-                                    </div>
-                                    <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: var(--radius);">
-                                        <strong>Total Latency</strong>
-                                        <div>${data.debate_metadata.total_latency_ms}ms</div>
-                                    </div>
-                                </div>
-                                <h5 style="margin-bottom: 0.5rem;">Models Used</h5>
-                                <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: var(--radius); margin-bottom: 1rem;">
-                                    ${data.debate_metadata.models_used.join(', ')}
-                                </div>
-                                <h5 style="margin-bottom: 0.5rem;">Termination Reason</h5>
-                                <div style="background: rgba(0,0,0,0.05); padding: 0.75rem; border-radius: var(--radius);">
-                                    ${data.debate_metadata.termination_reason}
-                                </div>
+                            <div style="margin-top: 0.75rem;">
+                                <div style="font-size: 0.825rem; color: var(--text-muted); margin-bottom: 0.5rem;">Termination Reason</div>
+                                <div style="background: var(--bg-primary); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); font-size: 0.875rem;">${data.debate_metadata.termination_reason}</div>
                             </div>
                         </div>
                     `;
-
-                    // Update metrics
+                    
+                    addMessage('agent', conclusionHTML, 'judge', consensusDetails);
+                    
                     updateMetrics(
                         data.debate_metadata.total_latency_ms,
-                        data.debate_metadata.total_cost_usd * 1000, // Estimated tokens
+                        Math.round(data.debate_metadata.total_cost_usd * 1000),
                         (data.consensus_confidence * 100).toFixed(0),
                         data.critiques_summary.length
                     );
-
+                    
                     submitBtn.disabled = false;
                     updateStatus('Ready');
                 } catch (error) {
@@ -1045,118 +1136,114 @@
                     if (!API_URL) {
                         errorMessage = 'API URL is not configured. Please check the deployment guide.';
                     } else if (error.message.includes('Failed to fetch')) {
-                        errorMessage = 'Cannot connect to API server. Please check if the service is running and the URL is correct.';
+                        errorMessage = 'Cannot connect to API server. Please check if the service is running.';
                     } else if (error.message.includes('503')) {
                         errorMessage = 'API service is temporarily unavailable. Please try again in a few minutes.';
                     }
                     
-                    addMessage('agent', `Error: ${errorMessage}`, 'judge');
+                    addMessage('agent', `<strong>Error:</strong> ${errorMessage}`, 'judge');
                     submitBtn.disabled = false;
                     updateStatus('Error');
                 }
             });
-
+            
             function addMessage(type, content, role = '', thought = '') {
                 const messageDiv = document.createElement('div');
-                let messageClass = `message ${type}-message`;
-                if (role) {
-                    messageClass += ` ${role}`;
-                }
-                messageDiv.className = messageClass;
-                messageDiv.role = 'region';
-                messageDiv.setAttribute('aria-label', type === 'user' ? 'User message' : `${role ? role : 'Agent'} message`);
+                messageDiv.className = `message ${type}${role ? ` ${role}` : ''}`;
                 
                 const now = new Date();
                 const timeString = now.toLocaleTimeString();
                 
-                let messageHTML = '';
+                const roleIcons = {
+                    'critic': '✅',
+                    'devil-advocate': '🎭',
+                    'judge': '⚖️'
+                };
+                
+                const roleNames = {
+                    'critic': 'Critique Agent',
+                    'devil-advocate': "Devil's Advocate",
+                    'judge': 'Judge'
+                };
+                
+                let bubbleHTML = '';
+                
                 if (type === 'user') {
-                    messageHTML = `
-                        <div class="message-content">
+                    bubbleHTML = `
+                        <div class="message-bubble">
                             <div class="message-header">
                                 <div class="message-role">
-                                    👤 You
+                                    <span class="role-badge">
+                                        <span>👤</span>
+                                        <span>You</span>
+                                    </span>
                                 </div>
-                                <div class="message-meta">${timeString}</div>
+                                <div class="message-time">${timeString}</div>
                             </div>
-                            <div class="message-body">
-                                <p>${content}</p>
+                            <div class="message-content">
+                                <p>${content.replace(/\n/g, '<br>')}</p>
                             </div>
                         </div>
                     `;
                 } else {
-                    const roleIcons = {
-                        'critic': '✅',
-                        'devil-advocate': '🎭',
-                        'judge': '⚖️'
-                    };
+                    const icon = roleIcons[role] || '🤖';
+                    const name = roleNames[role] || 'Agent';
                     
-                    const roleNames = {
-                        'critic': 'Critique Agent',
-                        'devil-advocate': "Devil's Advocate",
-                        'judge': 'Judge'
-                    };
-                    
-                    messageHTML = `
-                        <div class="message-content">
+                    bubbleHTML = `
+                        <div class="message-bubble">
                             <div class="message-header">
                                 <div class="message-role">
-                                    ${roleIcons[role] || '🤖'} ${roleNames[role] || 'Agent'}
+                                    <span class="role-badge">
+                                        <span>${icon}</span>
+                                        <span>${name}</span>
+                                    </span>
                                 </div>
-                                <div class="message-meta">${timeString}</div>
+                                <div class="message-time">${timeString}</div>
                             </div>
-                            <div class="message-body">
-                                ${content}
-                            </div>
+                            <div class="message-content">${content}</div>
+                            ${thought ? `<div class="message-thought">${thought}</div>` : ''}
+                        </div>
                     `;
-                    
-                    if (thought) {
-                        messageHTML += `<div class="message-thought">${thought}</div>`;
-                    }
-                    
-                    messageHTML += `</div>`;
                 }
                 
-                messageDiv.innerHTML = messageHTML;
+                messageDiv.innerHTML = bubbleHTML;
                 chatMessages.appendChild(messageDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
-
-            function addLoading() {
+            
+            function addLoading(text = 'Analyzing...') {
                 const loadingDiv = document.createElement('div');
-                loadingDiv.className = 'loading';
-                loadingDiv.id = 'loading-' + Date.now();
-                loadingDiv.role = 'status';
-                loadingDiv.setAttribute('aria-label', 'Loading');
+                loadingDiv.className = 'message agent';
+                const id = 'loading-' + Date.now();
+                loadingDiv.id = id;
+                
                 loadingDiv.innerHTML = `
-                    <div class="loading-spinner" aria-hidden="true"></div>
-                    <div class="loading-text">
-                        <div>Analyzing with multiple agents...</div>
-                        <div class="typing-indicator" aria-hidden="true">
-                            <div class="typing-dot"></div>
-                            <div class="typing-dot"></div>
-                            <div class="typing-dot"></div>
+                    <div class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">
+                            <div class="loading-text-main">${text}</div>
+                            <div class="loading-text-sub">Analyzing with AI agents<span class="typing-dots"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></span></div>
                         </div>
                     </div>
                 `;
+                
                 chatMessages.appendChild(loadingDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
-                return loadingDiv.id;
+                return id;
             }
-
+            
             function removeLoading(id) {
                 const loadingDiv = document.getElementById(id);
                 if (loadingDiv) {
                     loadingDiv.remove();
                 }
             }
-
+            
             function updateStatus(message) {
                 statusMessage.textContent = message;
             }
-
+            
             function updateFlowStep(stepIndex) {
-                // Reset all steps
                 flowSteps.forEach((step, index) => {
                     if (index === stepIndex) {
                         step.classList.add('active');
@@ -1166,19 +1253,14 @@
                 });
                 currentStep = stepIndex;
             }
-
+            
             function updateMetrics(time, tokens, confidence, agents) {
                 metricTime.innerHTML = time + '<span class="metric-unit">ms</span>';
                 metricTokens.textContent = tokens;
                 metricConfidence.innerHTML = confidence + '<span class="metric-unit">%</span>';
                 metricAgents.textContent = agents;
             }
-
-            function delay(ms) {
-                return new Promise(resolve => setTimeout(resolve, ms));
-            }
-
-            // Test API connection on load
+            
             async function testApiConnection() {
                 try {
                     if (!API_URL) {
@@ -1201,16 +1283,12 @@
                     console.log('API connection error:', error);
                 }
             }
-
-            // Initialize with default metrics
+            
             updateMetrics(0, 0, 0, 0);
-
-            // Test API connection
             testApiConnection();
-
-            // Preset inputs functionality
+            
             const presetButtons = document.querySelectorAll('.preset-btn');
-
+            
             const presets = {
                 code: `def calculate_factorial(n):
     """Calculate factorial of a number"""
@@ -1224,10 +1302,9 @@
             result *= i
         return result
 
-# Usage example
 print(calculate_factorial(5))
 print(calculate_factorial(-1))`,
-                rag: `Question: What are the main benefits of using React for frontend development?
+                rag: `Question: What are the main benefits of using React?
 
 Retrieved Context:
 1. React is a JavaScript library for building user interfaces, developed by Facebook.
@@ -1237,7 +1314,7 @@ Retrieved Context:
 5. React has a large community and ecosystem.
 
 Generated Answer:
-React offers several key benefits for frontend development. It provides a component-based architecture that allows for reusable UI elements, making code more maintainable. The virtual DOM implementation improves performance by minimizing direct DOM manipulations. React also supports server-side rendering, which enhances SEO and initial load times. Additionally, its large community and extensive ecosystem provide ample resources and third-party libraries for developers.`,
+React offers several key benefits for frontend development. It provides a component-based architecture that allows for reusable UI elements, making code more maintainable. The virtual DOM implementation improves performance by minimizing direct DOM manipulations. React also supports server-side rendering, which enhances SEO and initial load times.`,
                 arch: `Project: E-commerce Platform
 
 Current Architecture: Monolithic application with frontend and backend tightly coupled.
@@ -1248,20 +1325,18 @@ Decision Factors:
 - Scalability: Need to handle increasing traffic during peak seasons
 - Maintainability: Easier to update individual services without affecting the entire system
 - Technology flexibility: Ability to use different technologies for different services
-- Deployment: Faster deployment cycles for individual services
 
 Concerns:
 - Increased complexity in service coordination
 - Potential network latency between services
 - Data consistency across services`
             };
-
+            
             presetButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const presetType = this.getAttribute('data-preset');
                     inputContent.value = presets[presetType];
                     
-                    // Update task type based on preset
                     if (presetType === 'code') {
                         taskType.value = 'CODE_REVIEW';
                     } else if (presetType === 'rag') {
