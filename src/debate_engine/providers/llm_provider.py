@@ -467,26 +467,35 @@ class LLMProvider:
             full_messages.append({"role": "system", "content": system_prompt})
         full_messages.extend(messages)
 
-        # 修复 NVIDIA 模型格式 - 直接使用模型名称
-        if provider == "nvidia":
-            # 确保使用正确的 NVIDIA 模型格式
-            if "/" not in model:
-                model_param = f"nvidia/{model}"
-            else:
-                model_param = model
-        else:
-            model_param = f"{provider}/{model}" if "/" not in model else model
-        
+        # 构建基础参数
         params: dict[str, Any] = {
-            "model": model_param,
             "messages": full_messages,
             "temperature": temperature,
         }
+
+        # 修复 NVIDIA 模型格式 - 根据官方文档直接使用模型名称
+        if provider == "nvidia":
+            # NVIDIA API 使用 OpenAI 兼容格式
+            params["model"] = model
+            params["custom_llm_provider"] = "openai"
+            # 使用 NVIDIA 特定的 api_base
+            if self.config.primary_api_base:
+                params["api_base"] = self.config.primary_api_base
+            else:
+                params["api_base"] = "https://integrate.api.nvidia.com/v1"
+        else:
+            # 其他提供商的处理
+            if "/" not in model:
+                params["model"] = f"{provider}/{model}"
+            else:
+                params["model"] = model
 
         # Add API key from key manager if available
         if self.key_manager:
             api_key = self.key_manager.get_next_key()
             params["api_key"] = api_key
+        elif self.config.primary_api_key:
+            params["api_key"] = self.config.primary_api_key
 
         return params
 
