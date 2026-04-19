@@ -4,6 +4,7 @@
 import os
 import threading
 import time
+import logging
 from collections import defaultdict
 
 from fastapi import FastAPI, HTTPException
@@ -13,6 +14,8 @@ from pydantic import BaseModel
 # Import DebateEngine components
 from debate_engine.orchestration.quick_critique import QuickCritiqueEngine
 from debate_engine.schemas import CritiqueConfigSchema, TaskType
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="DebateEngine API",
@@ -117,9 +120,6 @@ def load_api_keys() -> list[str]:
         if key:
             keys.append(key)
 
-    if not keys:
-        raise RuntimeError("At least one NVIDIA_API_KEY environment variable is required")
-
     return keys
 
 
@@ -128,17 +128,22 @@ DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "minimaxai/minimax-m2.7")
 
 try:
     API_KEYS = load_api_keys()
-    key_manager = APIKeyManager(API_KEYS, BASE_URL, DEFAULT_MODEL)
-    # Initialize DebateEngine with NVIDIA API keys
-    os.environ["NVIDIA_API_KEY"] = API_KEYS[0]
-    for i, key in enumerate(API_KEYS[1:], 1):
-        os.environ[f"NVIDIA_API_KEY_{i}"] = key
-    # Set provider mode to use NVIDIA
-    os.environ["DEBATE_ENGINE_PROVIDER_MODE"] = "diverse"
-    # Initialize the engine with key manager
-    engine = QuickCritiqueEngine(key_manager=key_manager)
+    if API_KEYS:
+        key_manager = APIKeyManager(API_KEYS, BASE_URL, DEFAULT_MODEL)
+        # Initialize DebateEngine with NVIDIA API keys
+        os.environ["NVIDIA_API_KEY"] = API_KEYS[0]
+        for i, key in enumerate(API_KEYS[1:], 1):
+            os.environ[f"NVIDIA_API_KEY_{i}"] = key
+        # Set provider mode to use NVIDIA
+        os.environ["DEBATE_ENGINE_PROVIDER_MODE"] = "diverse"
+        # Initialize the engine with key manager
+        engine = QuickCritiqueEngine(key_manager=key_manager)
+    else:
+        logger.warning("No NVIDIA API keys found. Engine will not be initialized.")
+        key_manager = None
+        engine = None
 except Exception as e:
-    print(f"Warning: {e}")
+    logger.exception(f"Failed to initialize engine: {e}")
     key_manager = None
     engine = None
 
@@ -167,7 +172,13 @@ class StreamResponse(BaseModel):
 async def health():
     """Health check endpoint."""
     stats = key_manager.get_stats() if key_manager else {}
-    return {"status": "healthy", "model": DEFAULT_MODEL, "api_keys": stats}
+    engine_available = engine is not None
+    return {
+        "status": "healthy", 
+        "model": DEFAULT_MODEL, 
+        "api_keys": stats,
+        "engine_available": engine_available
+    }
 
 
 @app.get("/api/stats")
@@ -182,6 +193,9 @@ async def get_stats():
 async def chat(request: ChatRequest):
     """Chat endpoint using DebateEngine with full multi-agent transparency."""
     try:
+        if not engine:
+            raise HTTPException(status_code=503, detail="DebateEngine not initialized. Please check API key configuration.")
+        
         # Extract user content from messages
         user_content = ""
         for msg in request.messages:
@@ -192,10 +206,10 @@ async def chat(request: ChatRequest):
         if not user_content:
             raise HTTPException(status_code=400, detail="No user content provided")
 
-        # Create critique config
+        # Create critique config with AUTO task type for automatic detection
         config = CritiqueConfigSchema(
             content=user_content,
-            task_type=TaskType.CODE_REVIEW,  # Default for now
+            task_type=TaskType("AUTO"),  # Let the engine detect task type automatically
         )
 
         # Run the full debate engine
@@ -249,10 +263,13 @@ async def chat(request: ChatRequest):
 async def quick_critique(request: CritiqueRequest):
     """Quick critique endpoint using DebateEngine."""
     try:
+        if not engine:
+            raise HTTPException(status_code=503, detail="DebateEngine not initialized. Please check API key configuration.")
+        
         # Create critique config
         config = CritiqueConfigSchema(
             content=request.content,
-            task_type=TaskType(request.task_type) if request.task_type != "AUTO" else "AUTO",
+            task_type=TaskType(request.task_type) if request.task_type != "AUTO" else TaskType("AUTO"),
         )
 
         # Run the full debate engine

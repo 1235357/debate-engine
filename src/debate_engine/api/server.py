@@ -302,12 +302,21 @@ async def cancel_debate(job_id: str) -> dict[str, Any]:
 async def health_compat():
     """Health check endpoint (compatible with api_server.py)."""
     stats = {}
+    engine_available = False
     try:
         key_manager = get_key_manager()
         stats = key_manager.get_stats()
     except RuntimeError:
         pass
-    return {"status": "healthy", "version": "0.2.0", "api_keys": stats}
+    
+    try:
+        # Check if engine is available
+        get_quick_engine()
+        engine_available = True
+    except RuntimeError:
+        engine_available = False
+    
+    return {"status": "healthy", "version": "0.2.0", "api_keys": stats, "engine_available": engine_available}
 
 
 @app.get("/api/stats")
@@ -349,14 +358,17 @@ async def chat(request: ChatRequest):
         if not user_content:
             raise HTTPException(status_code=400, detail="No user content provided")
 
-        # Create critique config
+        # Create critique config with AUTO task type
         config = CritiqueConfigSchema(
             content=user_content,
-            task_type=TaskType.CODE_REVIEW,  # Default for now
+            task_type=TaskType.AUTO,  # Auto-detect task type
         )
 
         # Run the full debate engine
-        engine = get_quick_engine()
+        try:
+            engine = get_quick_engine()
+        except RuntimeError:
+            raise HTTPException(status_code=503, detail="DebateEngine not initialized. Please check API key configuration.")
         consensus = await _maybe_await(engine.critique, config)
 
         # Convert to dict for JSON response
@@ -420,7 +432,10 @@ async def quick_critique_api(request: CritiqueRequest):
         config = CritiqueConfigSchema(content=request.content, task_type=task_type_val)
 
         # Run the full debate engine
-        engine = get_quick_engine()
+        try:
+            engine = get_quick_engine()
+        except RuntimeError:
+            raise HTTPException(status_code=503, detail="DebateEngine not initialized. Please check API key configuration.")
         consensus = await _maybe_await(engine.critique, config)
 
         # Convert to dict for JSON response
