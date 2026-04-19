@@ -831,9 +831,13 @@
                     <span class="version">v0.2.0</span>
                 </div>
                 <div class="header-stats">
-                    <div class="stat-pill">
+                    <div class="stat-pill" style="position: relative;">
                         <div class="stat-icon">🤖</div>
-                        <span>NVIDIA minimax-m2.7</span>
+                        <span id="current-model">NVIDIA glm-4.7</span>
+                        <select id="model-selector" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+                            <option value="minimaxai/minimax-m2.7">NVIDIA minimax-m2.7</option>
+                            <option value="z-ai/glm4.7" selected>NVIDIA glm-4.7</option>
+                        </select>
                     </div>
                     <div class="stat-pill">
                         <div class="stat-icon">⚡</div>
@@ -979,7 +983,7 @@
                             <div class="status-dot"></div>
                             <span>System ready</span>
                         </div>
-                        <span>Powered by NVIDIA minimax-m2.7</span>
+                        <span id="powered-by">Powered by NVIDIA glm-4.7</span>
                     </div>
                     <div class="status-right">
                         <span id="status-message">Ready</span>
@@ -1034,6 +1038,7 @@
                     updateFlowStep(1);
                     updateStatus('Running critique agents...');
                     
+                    const selectedModel = document.getElementById('model-selector').value;
                     const response = await fetch(`${API_URL}/api/chat`, {
                         method: 'POST',
                         headers: {
@@ -1043,7 +1048,7 @@
                             messages: [
                                 {"role": "user", "content": content}
                             ],
-                            model: "minimaxai/minimax-m2.7"
+                            model: selectedModel
                         })
                     });
                     
@@ -1345,6 +1350,22 @@ Concerns:
                         taskType.value = 'ARCHITECTURE_DECISION';
                     }
                 });
+            });
+            
+            // Model selector change event
+            const modelSelector = document.getElementById('model-selector');
+            const currentModel = document.getElementById('current-model');
+            const poweredBy = document.getElementById('powered-by');
+            
+            modelSelector.addEventListener('change', function() {
+                const selectedModel = this.value;
+                if (selectedModel === 'minimaxai/minimax-m2.7') {
+                    currentModel.textContent = 'NVIDIA minimax-m2.7';
+                    poweredBy.textContent = 'Powered by NVIDIA minimax-m2.7';
+                } else if (selectedModel === 'z-ai/glm4.7') {
+                    currentModel.textContent = 'NVIDIA glm-4.7';
+                    poweredBy.textContent = 'Powered by NVIDIA glm-4.7';
+                }
             });
         });
     </script>

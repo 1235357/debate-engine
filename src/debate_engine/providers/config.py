@@ -25,7 +25,7 @@ class ProviderEntry:
 _DEFAULT_FAILOVER_CHAIN: list[ProviderEntry] = [
     ProviderEntry(name="Google AI Studio", model="gemini-2.5-flash", priority=1),
     ProviderEntry(name="Groq", model="llama-3.3-70b-versatile", priority=2),
-    ProviderEntry(name="NVIDIA NIM", model="minimaxai/minimax-m2.7", priority=3),
+    ProviderEntry(name="NVIDIA NIM", model="z-ai/glm4.7", priority=3),
 ]
 
 
@@ -34,7 +34,7 @@ class ProviderConfig:
     mode: ProviderMode = ProviderMode.STABLE
     providers: list[ProviderEntry] = field(default_factory=list)
     primary_provider: str = "nvidia"
-    primary_model: str = "minimaxai/minimax-m2.7"
+    primary_model: str = "z-ai/glm4.7"
     primary_api_key: str | None = None
     primary_api_base: str | None = "https://integrate.api.nvidia.com/v1"
     backup_provider: str | None = None
@@ -98,7 +98,7 @@ class ProviderConfig:
         except ValueError:
             mode = ProviderMode.STABLE
         primary_provider = os.getenv("DEBATE_ENGINE_PROVIDER", "nvidia")
-        primary_model = os.getenv("DEBATE_ENGINE_MODEL", "minimaxai/minimax-m2.7")
+        primary_model = os.getenv("DEBATE_ENGINE_MODEL", "z-ai/glm4.7")
         primary_api_key = os.getenv("NVIDIA_API_KEY") or os.getenv("OPENAI_API_KEY")
         primary_api_base = os.getenv(
             "NVIDIA_API_BASE", "https://integrate.api.nvidia.com/v1"
@@ -119,7 +119,7 @@ class ProviderConfig:
             providers.append(
                 ProviderEntry(
                     name="NVIDIA NIM",
-                    model="minimaxai/minimax-m2.7",
+                    model="z-ai/glm4.7",
                     api_key=nvidia_key,
                     api_base="https://integrate.api.nvidia.com/v1",
                     priority=1,
