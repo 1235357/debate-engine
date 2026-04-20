@@ -762,10 +762,10 @@
                     </div>
                     <div class="model-selector">
                         <select id="heartbeat-interval" class="model-select" aria-label="Select heartbeat interval">
+                            <option value="300000" selected>5 minutes</option>
                             <option value="600000">10 minutes</option>
-                            <option value="720000" selected>12 minutes</option>
+                            <option value="720000">12 minutes</option>
                             <option value="900000">15 minutes</option>
-                            <option value="1200000">20 minutes</option>
                         </select>
                     </div>
                     <div class="model-badge">
@@ -1282,7 +1282,7 @@
 
             // Heartbeat mechanism to keep Render instance alive
             let heartbeatInterval;
-            const DEFAULT_HEARTBEAT_INTERVAL = 12 * 60 * 1000; // 12 minutes
+            const DEFAULT_HEARTBEAT_INTERVAL = 5 * 60 * 1000; // 5 minutes
             const HEARTBEAT_STORAGE_KEY = 'debate_engine_heartbeat_interval';
 
             function loadHeartbeatInterval() {
