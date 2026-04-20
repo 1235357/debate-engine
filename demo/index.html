@@ -596,6 +596,12 @@
             gap: 1.5rem;
         }
 
+        .heartbeat-status {
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
         .status-indicator {
             display: flex;
             align-items: center;
@@ -754,6 +760,14 @@
                             <option value="minimaxai/minimax-m2.7">NVIDIA minimax-m2.7</option>
                         </select>
                     </div>
+                    <div class="model-selector">
+                        <select id="heartbeat-interval" class="model-select" aria-label="Select heartbeat interval">
+                            <option value="600000">10 minutes</option>
+                            <option value="720000" selected>12 minutes</option>
+                            <option value="900000">15 minutes</option>
+                            <option value="1200000">20 minutes</option>
+                        </select>
+                    </div>
                     <div class="model-badge">
                         🌐 Real-time API
                     </div>
@@ -891,6 +905,7 @@
                         <span>Real-time multi-agent analysis</span>
                     </div>
                     <span id="current-model">Using NVIDIA z-ai/glm4.7 API</span>
+                    <span id="heartbeat-status" class="heartbeat-status">Heartbeat: Starting...</span>
                 </div>
                 <div class="status-right">
                     <span id="status-message" aria-live="polite">Ready</span>
@@ -1264,6 +1279,123 @@
 
             // Test API connection
             testApiConnection();
+
+            // Heartbeat mechanism to keep Render instance alive
+            let heartbeatInterval;
+            const DEFAULT_HEARTBEAT_INTERVAL = 12 * 60 * 1000; // 12 minutes
+            const HEARTBEAT_STORAGE_KEY = 'debate_engine_heartbeat_interval';
+
+            function loadHeartbeatInterval() {
+                try {
+                    const savedInterval = localStorage.getItem(HEARTBEAT_STORAGE_KEY);
+                    if (savedInterval) {
+                        return parseInt(savedInterval);
+                    }
+                } catch (error) {
+                    console.error('Error loading heartbeat interval:', error);
+                }
+                return DEFAULT_HEARTBEAT_INTERVAL;
+            }
+
+            function saveHeartbeatInterval(interval) {
+                try {
+                    localStorage.setItem(HEARTBEAT_STORAGE_KEY, interval.toString());
+                } catch (error) {
+                    console.error('Error saving heartbeat interval:', error);
+                }
+            }
+
+            function startHeartbeat(interval = DEFAULT_HEARTBEAT_INTERVAL) {
+                // Clear existing interval if any
+                if (heartbeatInterval) {
+                    clearInterval(heartbeatInterval);
+                }
+
+                // Start new interval
+                heartbeatInterval = setInterval(async () => {
+                    // Check network status
+                    if (!navigator.onLine) {
+                        console.warn('Network offline, skipping heartbeat');
+                        updateHeartbeatStatus(false);
+                        return;
+                    }
+
+                    try {
+                        if (API_URL) {
+                            const response = await fetch(`${API_URL}/health`, {
+                                timeout: 10000, // 10 seconds timeout
+                                cache: 'no-cache'
+                            });
+                            if (response.ok) {
+                                const data = await response.json();
+                                console.log('Heartbeat successful:', data);
+                                updateHeartbeatStatus(true);
+                            } else {
+                                console.warn('Heartbeat failed:', response.status);
+                                updateHeartbeatStatus(false);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Heartbeat error:', error);
+                        updateHeartbeatStatus(false);
+                    }
+                }, interval);
+
+                console.log(`Heartbeat started with interval: ${interval}ms`);
+            }
+
+            // Add network status listener
+            window.addEventListener('online', function() {
+                console.log('Network online, resuming heartbeat');
+                const currentInterval = loadHeartbeatInterval();
+                startHeartbeat(currentInterval);
+            });
+
+            window.addEventListener('offline', function() {
+                console.log('Network offline, pausing heartbeat');
+                stopHeartbeat();
+            });
+
+            function stopHeartbeat() {
+                if (heartbeatInterval) {
+                    clearInterval(heartbeatInterval);
+                    heartbeatInterval = null;
+                    console.log('Heartbeat stopped');
+                }
+            }
+
+            function updateHeartbeatStatus(success) {
+                const heartbeatStatus = document.getElementById('heartbeat-status');
+                if (heartbeatStatus) {
+                    if (success) {
+                        heartbeatStatus.textContent = `Heartbeat: Active (${new Date().toLocaleTimeString()})`;
+                        heartbeatStatus.style.color = 'var(--secondary)';
+                    } else {
+                        heartbeatStatus.textContent = `Heartbeat: Failed (${new Date().toLocaleTimeString()})`;
+                        heartbeatStatus.style.color = '#ef4444';
+                    }
+                }
+            }
+
+            // Initialize heartbeat interval selector
+            const heartbeatIntervalSelect = document.getElementById('heartbeat-interval');
+            if (heartbeatIntervalSelect) {
+                // Load saved interval
+                const savedInterval = loadHeartbeatInterval();
+                heartbeatIntervalSelect.value = savedInterval.toString();
+
+                // Add change event listener
+                heartbeatIntervalSelect.addEventListener('change', function() {
+                    const newInterval = parseInt(this.value);
+                    saveHeartbeatInterval(newInterval);
+                    startHeartbeat(newInterval);
+                    console.log(`Heartbeat interval changed to: ${newInterval}ms`);
+                });
+            }
+
+            // Start heartbeat when page loads
+            const initialInterval = loadHeartbeatInterval();
+            startHeartbeat(initialInterval);
 
             // Preset inputs functionality
             const presetButtons = document.querySelectorAll('.preset-btn');
