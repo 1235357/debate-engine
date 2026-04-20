@@ -103,6 +103,39 @@
             font-size: 0.85rem;
         }
 
+        .model-selector {
+            position: relative;
+        }
+
+        .model-select {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 180px;
+        }
+
+        .model-select:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .model-select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.4);
+        }
+
+        .model-select option {
+            background: #3b82f6;
+            color: white;
+            padding: 0.5rem;
+        }
+
         /* Main Content */
         main {
             flex: 1;
@@ -715,8 +748,11 @@
                     <div class="version-badge" aria-label="Version v0.2.0-20260419-e7a4410" title="Version v0.2.0-20260419-e7a4410">v0.2.0-20260419-e7a4410</div>
                 </div>
                 <div class="header-info">
-                    <div class="model-badge">
-                        🤖 NVIDIA minimax-m2.7
+                    <div class="model-selector">
+                        <select id="model-select" class="model-select" aria-label="Select LLM model">
+                            <option value="z-ai/glm4.7">NVIDIA z-ai/glm4.7</option>
+                            <option value="minimaxai/minimax-m2.7">NVIDIA minimax-m2.7</option>
+                        </select>
                     </div>
                     <div class="model-badge">
                         🌐 Real-time API
@@ -849,17 +885,17 @@
                 </div>
 
                 <div class="status-bar" role="status" aria-label="System status">
-                    <div class="status-left">
-                        <div class="status-indicator">
-                            <div class="status-dot" role="img" aria-label="System active"></div>
-                            <span>Real-time multi-agent analysis</span>
-                        </div>
-                        <span>Using NVIDIA minimax-m2.7 API</span>
+                <div class="status-left">
+                    <div class="status-indicator">
+                        <div class="status-dot" role="img" aria-label="System active"></div>
+                        <span>Real-time multi-agent analysis</span>
                     </div>
-                    <div class="status-right">
-                        <span id="status-message" aria-live="polite">Ready</span>
-                    </div>
+                    <span id="current-model">Using NVIDIA z-ai/glm4.7 API</span>
                 </div>
+                <div class="status-right">
+                    <span id="status-message" aria-live="polite">Ready</span>
+                </div>
+            </div>
             </div>
         </main>
     </div>
@@ -870,6 +906,7 @@
             const inputContent = document.getElementById('input-content');
             const submitBtn = document.getElementById('submit-btn');
             const taskType = document.getElementById('task-type');
+            const modelSelect = document.getElementById('model-select');
             const statusMessage = document.getElementById('status-message');
             const metricTime = document.getElementById('metric-time');
             const metricTokens = document.getElementById('metric-tokens');
@@ -939,6 +976,7 @@
                     updateStatus('Running critique agents...');
 
                     // Make API call to get full multi-agent response
+                    const selectedModel = modelSelect.value;
                     const response = await fetch(`${API_URL}/api/chat`, {
                         method: 'POST',
                         headers: {
@@ -948,7 +986,7 @@
                             messages: [
                                 {"role": "user", "content": content}
                             ],
-                            model: "minimaxai/minimax-m2.7"
+                            model: selectedModel
                         })
                     });
 
@@ -1041,19 +1079,25 @@
                     submitBtn.disabled = false;
                     updateStatus('Ready');
                 } catch (error) {
-                    let errorMessage = error.message;
-                    if (!API_URL) {
-                        errorMessage = 'API URL is not configured. Please check the deployment guide.';
-                    } else if (error.message.includes('Failed to fetch')) {
-                        errorMessage = 'Cannot connect to API server. Please check if the service is running and the URL is correct.';
-                    } else if (error.message.includes('503')) {
-                        errorMessage = 'API service is temporarily unavailable. Please try again in a few minutes.';
-                    }
-                    
-                    addMessage('agent', `Error: ${errorMessage}`, 'judge');
-                    submitBtn.disabled = false;
-                    updateStatus('Error');
+                let errorMessage = error.message;
+                if (!API_URL) {
+                    errorMessage = 'API URL is not configured. Please check the deployment guide.';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Cannot connect to API server. Please check if the service is running and the URL is correct.';
+                } else if (error.message.includes('503')) {
+                    errorMessage = 'API service is temporarily unavailable. Please try again in a few minutes.';
+                } else if (error.message.includes('500')) {
+                    errorMessage = 'Internal server error. The API may be experiencing issues. Please try again later.';
+                } else if (error.message.includes('429')) {
+                    errorMessage = 'Rate limit exceeded. Please wait a moment and try again.';
+                } else if (error.message.includes('401')) {
+                    errorMessage = 'Authentication failed. Please check your API key configuration.';
                 }
+                
+                addMessage('agent', `Error: ${errorMessage}`, 'judge');
+                submitBtn.disabled = false;
+                updateStatus('Error');
+            }
             });
 
             function addMessage(type, content, role = '', thought = '') {
@@ -1204,6 +1248,19 @@
 
             // Initialize with default metrics
             updateMetrics(0, 0, 0, 0);
+
+            // Update current model display
+            function updateCurrentModel() {
+                const selectedModel = modelSelect.value;
+                const modelDisplay = selectedModel.replace(/.*\//, '');
+                document.getElementById('current-model').textContent = `Using NVIDIA ${modelDisplay} API`;
+            }
+
+            // Add model change listener
+            modelSelect.addEventListener('change', updateCurrentModel);
+
+            // Initialize model display
+            updateCurrentModel();
 
             // Test API connection
             testApiConnection();

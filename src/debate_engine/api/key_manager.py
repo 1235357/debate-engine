@@ -29,35 +29,29 @@ class APIKeyManager:
             if not self.api_keys:
                 return ""
 
-            # Find the next active key
-            start_index = self.current_index
-            while True:
-                key = self.api_keys[self.current_index]
+            # 按成功率排序密钥
+            def key_score(key):
                 stats = self.key_stats[key]
+                total = stats["success_count"] + stats["failure_count"]
+                if total == 0:
+                    return 1.0
+                return stats["success_count"] / total
 
-                # Check if key is in cooldown
+            sorted_keys = sorted(self.api_keys, key=key_score, reverse=True)
+
+            # 查找第一个可用的密钥
+            for key in sorted_keys:
+                stats = self.key_stats[key]
                 if stats["is_active"]:
                     if stats["last_failed"] > 0:
                         time_since_failure = time.time() - stats["last_failed"]
                         if time_since_failure < self.cooldown_period:
-                            # Key is still in cooldown, try next
-                            self.current_index = (self.current_index + 1) % len(self.api_keys)
-                            if self.current_index == start_index:
-                                # All keys are in cooldown, return the first one
-                                break
                             continue
-                    # Key is available
-                    self.current_index = (self.current_index + 1) % len(self.api_keys)
+                    # 密钥可用
                     stats["last_used"] = time.time()
                     return key
 
-                # Key is inactive, try next
-                self.current_index = (self.current_index + 1) % len(self.api_keys)
-                if self.current_index == start_index:
-                    # All keys are inactive, return the first one
-                    break
-
-            # Fallback: return the first key
+            # 回退：返回第一个密钥
             key = self.api_keys[0]
             self.key_stats[key]["last_used"] = time.time()
             return key

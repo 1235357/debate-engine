@@ -473,9 +473,14 @@ class LLMProvider:
             if model == "minimax-m2.7":
                 model_param = "minimaxai/minimax-m2.7"
             elif "/" not in model:
-                model_param = f"nvidia/{model}"
+                # 检查是否已经是完整的模型路径
+                if not model.startswith(("nvidia/", "minimaxai/", "z-ai/")):
+                    model_param = f"nvidia/{model}"
+                else:
+                    model_param = model
             else:
                 model_param = model
+            logger.debug(f"Using NVIDIA model format: {model_param}")
         else:
             model_param = f"{provider}/{model}" if "/" not in model else model
         
@@ -483,12 +488,21 @@ class LLMProvider:
             "model": model_param,
             "messages": full_messages,
             "temperature": temperature,
+            "max_tokens": 1000,
+            "top_p": 0.9,
         }
 
         # Add API key from key manager if available
         if self.key_manager:
             api_key = self.key_manager.get_next_key()
-            params["api_key"] = api_key
+            if api_key:
+                params["api_key"] = api_key
+            else:
+                logger.warning("No API key available for NVIDIA")
+
+        # 添加NVIDIA特定的参数
+        if provider == "nvidia":
+            params["api_base"] = "https://integrate.api.nvidia.com/v1"
 
         return params
 
@@ -636,5 +650,8 @@ class LLMProvider:
             return True
         # LiteLLM-specific retryable errors
         if "timeout" in exc_str or "connection" in exc_str:
+            return True
+        # NVIDIA-specific errors
+        if "nvidia" in exc_str and ("internal" in exc_str or "server" in exc_str):
             return True
         return False
