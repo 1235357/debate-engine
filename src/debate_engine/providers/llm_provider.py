@@ -483,7 +483,7 @@ class LLMProvider:
             logger.debug(f"Using NVIDIA model format: {model_param}")
         else:
             model_param = f"{provider}/{model}" if "/" not in model else model
-        
+
         params: dict[str, Any] = {
             "model": model_param,
             "messages": full_messages,
