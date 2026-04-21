@@ -308,14 +308,14 @@ async def health_compat():
         stats = key_manager.get_stats()
     except RuntimeError:
         pass
-    
+
     try:
         # Check if engine is available
         get_quick_engine()
         engine_available = True
     except RuntimeError:
         engine_available = False
-    
+
     return {"status": "healthy", "version": "0.2.0", "api_keys": stats, "engine_available": engine_available}
 
 
