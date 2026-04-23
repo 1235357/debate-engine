@@ -42,7 +42,7 @@ class ProviderConfig:
     backup_api_key: str | None = None
     backup_api_base: str | None = None
     judge_model: str | None = None
-    timeout_seconds: float = 25.0
+    timeout_seconds: float = 120.0
     max_transport_retries: int = 2
     max_parse_retries: int = 1
 
@@ -108,7 +108,7 @@ class ProviderConfig:
         backup_api_key = os.getenv("ANTHROPIC_API_KEY")
         backup_api_base = os.getenv("ANTHROPIC_API_BASE")
         judge_model = os.getenv("DEBATE_ENGINE_JUDGE_MODEL")
-        timeout = float(os.getenv("DEBATE_ENGINE_TIMEOUT", "25.0"))
+        timeout = float(os.getenv("DEBATE_ENGINE_TIMEOUT", "120.0"))
         max_transport = int(os.getenv("DEBATE_ENGINE_MAX_TRANSPORT_RETRIES", "2"))
         max_parse = int(os.getenv("DEBATE_ENGINE_MAX_PARSE_RETRIES", "1"))
         google_key = os.getenv("GOOGLE_API_KEY")

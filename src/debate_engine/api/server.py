@@ -364,9 +364,17 @@ async def chat(request: ChatRequest):
             task_type=TaskType.AUTO,  # Auto-detect task type
         )
 
-        # Run the full debate engine
+        # Run the full debate engine with dynamic model if provided
         try:
-            engine = get_quick_engine()
+            if request.model:
+                provider_config = ProviderConfig.from_env()
+                # Determine provider from model string if possible, or default to nvidia
+                provider_config.primary_model = request.model
+                if "glm" in request.model.lower() or "z-ai" in request.model.lower():
+                    provider_config.primary_provider = "nvidia"
+                engine = QuickCritiqueEngine(provider_config, key_manager=get_key_manager())
+            else:
+                engine = get_quick_engine()
         except RuntimeError:
             raise HTTPException(status_code=503, detail="DebateEngine not initialized. Please check API key configuration.")
         consensus = await _maybe_await(engine.critique, config)
@@ -431,9 +439,15 @@ async def quick_critique_api(request: CritiqueRequest):
 
         config = CritiqueConfigSchema(content=request.content, task_type=task_type_val)
 
-        # Run the full debate engine
+        # Run the full debate engine with dynamic model if provided
         try:
-            engine = get_quick_engine()
+            request_model = getattr(request, "model", None)
+            if request_model:
+                provider_config = ProviderConfig.from_env()
+                provider_config.primary_model = request_model
+                engine = QuickCritiqueEngine(provider_config, key_manager=get_key_manager())
+            else:
+                engine = get_quick_engine()
         except RuntimeError:
             raise HTTPException(status_code=503, detail="DebateEngine not initialized. Please check API key configuration.")
         consensus = await _maybe_await(engine.critique, config)
