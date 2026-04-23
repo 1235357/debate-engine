@@ -480,6 +480,11 @@ class LLMProvider:
                     model_param = model
             else:
                 model_param = model
+                
+            # 添加 openai/ 前缀以解决 litellm "Provider NOT provided" 错误
+            if not model_param.startswith("openai/"):
+                model_param = f"openai/{model_param}"
+                
             logger.debug(f"Using NVIDIA model format: {model_param}")
         else:
             model_param = f"{provider}/{model}" if "/" not in model else model

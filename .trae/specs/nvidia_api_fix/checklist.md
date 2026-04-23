@@ -34,3 +34,7 @@
   - [x] 测试系统在高负载下的表现
   - [x] 验证API调用成功率
   - [x] 确保响应时间在可接受范围内
+
+- [x] 检查点 8: 修复 LiteLLM 前缀报错
+  - [x] 确保 `src/debate_engine/providers/llm_provider.py` 中为 `minimaxai/minimax-m2.7` 增加了 `openai/` 等前缀
+  - [x] 验证后端不再抛出 `LLM Provider NOT provided` 异常

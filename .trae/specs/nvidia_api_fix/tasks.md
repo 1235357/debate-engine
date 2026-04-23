@@ -77,3 +77,14 @@
   - `programmatic` TR-6.1: 验证端到端API调用成功率
   - `human-judgment` TR-6.2: 验证前端功能和用户体验
 - **Notes**: 测试不同场景下的系统表现，确保稳定性
+
+## [x] Task 7: 修复 LiteLLM Provider 缺失前缀问题
+- **Priority**: P0
+- **Depends On**: None
+- **Description**:
+  - 修复 `src/debate_engine/providers/llm_provider.py`，在 `_build_litellm_params` 方法中为 NVIDIA 模型添加正确的 LiteLLM 路由前缀（如 `openai/` 或 `nvidia_nim/`）。
+  - 解决 `litellm.BadRequestError: LLM Provider NOT provided` 报错。
+- **Acceptance Criteria Addressed**: AC-1
+- **Test Requirements**:
+  - `programmatic` TR-7.1: 验证调用 API 不再报 Provider NOT provided 错误。
+- **Notes**: 需要修改 `model_param` 赋值逻辑，以确保兼容 LiteLLM 的调用规范。
